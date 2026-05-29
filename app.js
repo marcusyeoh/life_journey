@@ -322,7 +322,7 @@ function navigateTo(viewName) {
   appState.currentView = viewName;
   
   // Hide all screens
-  const screens = ['view-user-landing', 'view-court-setup', 'view-player-entry', 'view-dashboard', 'view-stage2-review', 'view-admin-success'];
+  const screens = ['view-user-landing', 'view-court-setup', 'view-player-entry', 'view-dashboard', 'view-stage2-review', 'view-admin-success', 'view-global-leaderboard'];
   screens.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('view-hidden');
@@ -336,6 +336,7 @@ function navigateTo(viewName) {
   else if (viewName === 'dashboard') activeId = 'view-dashboard';
   else if (viewName === 'stage2-review') activeId = 'view-stage2-review';
   else if (viewName === 'admin-success') activeId = 'view-admin-success';
+  else if (viewName === 'global-leaderboard') activeId = 'view-global-leaderboard';
   
   const activeEl = document.getElementById(activeId);
   if (activeEl) activeEl.classList.remove('view-hidden');
@@ -420,6 +421,8 @@ function render() {
     renderStage2Review();
   } else if (appState.currentView === 'admin-success') {
     renderAdminSuccess();
+  } else if (appState.currentView === 'global-leaderboard') {
+    renderGlobalLeaderboard();
   }
   
   // 3. Render Modal if open
@@ -428,29 +431,21 @@ function render() {
   // 4. Toggle premium bottom navigation visibility & active tab states
   const bottomNav = document.querySelector('.bottom-nav');
   if (bottomNav) {
-    const shouldShow = appState.currentView === 'dashboard' && !appState.modal.open;
+    const shouldShow = (appState.currentView === 'dashboard' || appState.currentView === 'global-leaderboard') && !appState.modal.open;
     bottomNav.style.display = shouldShow ? 'flex' : 'none';
     
     if (shouldShow) {
       const btnRound1 = document.getElementById('nav-round1');
       const btnRound2 = document.getElementById('nav-round2');
+      const btnLeaderboard = document.getElementById('nav-leaderboard');
       
-      const isRound1Active = appState.currentStage === 1 || (appState.currentStage === 2 && appState.stage2ViewingQualifying);
+      const isLeaderboardActive = appState.currentView === 'global-leaderboard';
+      const isRound1Active = !isLeaderboardActive && (appState.currentStage === 1 || (appState.currentStage === 2 && appState.stage2ViewingQualifying));
+      const isRound2Active = !isLeaderboardActive && !isRound1Active;
       
-      if (btnRound1) {
-        if (isRound1Active) {
-          btnRound1.classList.add('active');
-        } else {
-          btnRound1.classList.remove('active');
-        }
-      }
-      if (btnRound2) {
-        if (!isRound1Active) {
-          btnRound2.classList.add('active');
-        } else {
-          btnRound2.classList.remove('active');
-        }
-      }
+      if (btnRound1) btnRound1.classList.toggle('active', isRound1Active);
+      if (btnRound2) btnRound2.classList.toggle('active', isRound2Active);
+      if (btnLeaderboard) btnLeaderboard.classList.toggle('active', isLeaderboardActive);
     }
   }
 }
@@ -915,7 +910,7 @@ function renderDashboard(activeCourts) {
     if (dashboardTitle) dashboardTitle.textContent = 'Live Dashboard';
     if (leaderboardTitleText) leaderboardTitleText.textContent = 'Live Leaderboard';
     
-    // Always show advancement options to Admin during Stage 1
+    // Always show advancement options during Round 1 (Stage 1) for Admins
     if (appState.currentStage === 1 && appState.isAdmin) {
       if (advanceCard) {
         advanceCard.style.display = 'flex';
@@ -950,7 +945,7 @@ function renderDashboard(activeCourts) {
     tab.className = `tab-chip ${isSelected ? 'active' : ''}`;
     
     const tabName = (appState.currentStage === 2 && !appState.stage2ViewingQualifying)
-      ? (TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`)
+      ? `${TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`} (Court ${c.courtNumber})`
       : `Court ${c.courtNumber}`;
       
     tab.textContent = tabName;
@@ -1011,6 +1006,9 @@ function renderDashboard(activeCourts) {
             <span class="pulse-dot"></span>
             <span>IN PROGRESS</span>
           `}
+        </div>
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); background: var(--surface-highest); padding: 4px 10px; border-radius: 6px; margin-left: auto; margin-right: ${match.isCompleted ? '12px' : '0'};">
+          Court ${court.courtNumber}
         </div>
         ${match.isCompleted ? `
           <div class="match-card-score">${match.team1Score} - ${match.team2Score}</div>
@@ -1328,7 +1326,7 @@ function setupEventListeners() {
       );
       appState.modal.open = false;
       
-      // Auto-advancement hook for Admin during Round 1
+      // Auto-advancement hook during Round 1 (Stage 1) for Admins
       if (appState.currentStage === 1 && checkStage1Completion() && appState.isAdmin) {
         advanceToStage2();
         saveStateToCloud(); // Save immediately to sync advanced stage and view
@@ -1418,8 +1416,8 @@ function setupEventListeners() {
           appState.selectedCourtNumber = activeCourts[0].courtNumber;
           appState.viewingRound = activeCourts[0].activeRound;
         }
-        render();
       }
+      navigateTo('dashboard');
     });
   }
   
@@ -1451,8 +1449,15 @@ function setupEventListeners() {
           appState.selectedCourtNumber = activeCourts[0].courtNumber;
           appState.viewingRound = activeCourts[0].activeRound;
         }
-        render();
       }
+      navigateTo('dashboard');
+    });
+  }
+  
+  const navLeaderboard = document.getElementById('nav-leaderboard');
+  if (navLeaderboard) {
+    navLeaderboard.addEventListener('click', () => {
+      navigateTo('global-leaderboard');
     });
   }
 }
@@ -1775,6 +1780,75 @@ function renderAdminSuccess() {
   
   const activeCourtsEl = document.getElementById('success-active-courts-count');
   if (activeCourtsEl) activeCourtsEl.textContent = `${activeCourts.length} Court${activeCourts.length === 1 ? '' : 's'}`;
+}
+
+// --- GLOBAL LEADERBOARD LOGIC ---
+function renderGlobalLeaderboard() {
+  const container = document.getElementById('global-leaderboard-container');
+  if (!container) return;
+  
+  let allPlayers = [];
+  
+  // Aggregate players from all courts
+  if (appState.courts && Array.isArray(appState.courts)) {
+    appState.courts.forEach(court => {
+      if (court.players && Array.isArray(court.players)) {
+        court.players.forEach(p => {
+          // ensure uniqueness by name
+          if (!allPlayers.some(existing => existing.name === p.name)) {
+            allPlayers.push({
+              name: p.name,
+              totalScore: p.totalScore || 0,
+              courtNumber: court.courtNumber,
+              pointsPlayed: p.pointsPlayed || 0
+            });
+          }
+        });
+      }
+    });
+  }
+  
+  // Sort descending by total score, then by points played (tiebreaker)
+  allPlayers.sort((a, b) => {
+    if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+    return b.pointsPlayed - a.pointsPlayed;
+  });
+  
+  if (allPlayers.length === 0) {
+    container.innerHTML = `<div class="empty-state">No players found in the system yet.</div>`;
+    return;
+  }
+  
+  container.innerHTML = allPlayers.map((p, index) => {
+    let rankColor = 'var(--text-secondary)';
+    let trophyIcon = '';
+    
+    if (index === 0) { rankColor = 'gold'; trophyIcon = '<span class="material-symbols-outlined" style="color: gold; font-size: 16px;">emoji_events</span>'; }
+    else if (index === 1) { rankColor = 'silver'; trophyIcon = '<span class="material-symbols-outlined" style="color: silver; font-size: 16px;">emoji_events</span>'; }
+    else if (index === 2) { rankColor = '#cd7f32'; trophyIcon = '<span class="material-symbols-outlined" style="color: #cd7f32; font-size: 16px;">emoji_events</span>'; }
+    
+    return `
+      <div class="leaderboard-item" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 28px; text-align: center; font-weight: 800; color: ${rankColor}; font-size: 16px;">
+            ${index + 1}
+          </div>
+          <div style="display: flex; flex-direction: column;">
+            <div style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px;">
+              ${p.name} ${trophyIcon}
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary);">
+              Qualifying Court ${p.courtNumber}
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+          <div style="font-weight: 800; color: var(--neon); font-size: 16px;">${p.totalScore} pts</div>
+          <div style="font-size: 10px; color: var(--text-secondary);">${p.pointsPlayed} played</div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // --- PREMIUM TOAST HELPER ---

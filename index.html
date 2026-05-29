@@ -481,19 +481,35 @@
     </div>
   </div>
 
+  <!-- SCREEN 5: GLOBAL LEADERBOARD SCREEN -->
+  <main id="view-global-leaderboard" class="screen-view view-hidden">
+    <div class="flex-col">
+      <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">GLOBAL STANDINGS</p>
+      <h2 class="title-lg">Global Leaderboard</h2>
+      <p class="subtitle-md">All players sorted by total score.</p>
+    </div>
+    <div id="global-leaderboard-container" class="card" style="margin-top: 16px;">
+      <!-- Leaderboard items will be injected here -->
+    </div>
+  </main>
+
   <!-- Premium Bottom Navigation Bar (User View Only) -->
-  <nav class="bottom-nav" style="display: none;">
+  <nav class="bottom-nav" id="bottom-nav" style="display: none;">
     <button class="nav-item active" id="nav-round1">
       <span class="material-symbols-outlined">sports_tennis</span>
-      <span>Round 1</span>
+      <span class="nav-text">Round 1</span>
     </button>
     <button class="nav-item" id="nav-round2">
       <span class="material-symbols-outlined">emoji_events</span>
-      <span>Round 2</span>
+      <span class="nav-text">Round 2</span>
+    </button>
+    <button class="nav-item" id="nav-leaderboard">
+      <span class="material-symbols-outlined">leaderboard</span>
+      <span class="nav-text">Leaderboard</span>
     </button>
   </nav>
 
   <!-- Application Script -->
-  <script type="module" src="app.js?v=2.0"></script>
+  <script type="module" src="app.js?v=2.2"></script>
 </body>
 </html>
