@@ -63,6 +63,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Life Journey Pickleball - PickleMix</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   
   <!-- Material Symbols Outlined -->
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -73,7 +74,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="index.css?v=2.0">
+  <link rel="stylesheet" href="index.css?v=2.1">
 </head>
 <body>
 
@@ -83,24 +84,7 @@
       <span class="material-symbols-outlined">arrow_back</span>
     </button>
     <h1 id="app-bar-title">Life Journey Pickleball</h1>
-    
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <!-- Save to Cloud Button -->
-      <button class="add-players-btn neon-glow-active" id="btn-cloud-save" style="height: 38px; border-radius: 19px; padding: 0 16px; font-size: 13px; display: none; width: auto; border-color: var(--neon); color: var(--neon);">
-        <span class="material-symbols-outlined" style="font-size: 16px;">cloud_upload</span>
-        Save to Cloud
-      </button>
-      
-      <!-- Cloud Sync Status Badge -->
-      <div class="sync-status status-syncing" id="cloud-sync-status" style="display: none;">
-        <span class="material-symbols-outlined" style="font-size: 14px;">cloud_sync</span>
-        <span class="sync-text">Connecting...</span>
-      </div>
-      
-      <div class="profile-card">
-        <span class="material-symbols-outlined">person</span>
-      </div>
-    </div>
+
   </header>
 
   <!-- SCREEN 0: USER STANDBY LANDING -->
@@ -108,7 +92,7 @@
     <div style="position: relative; display: flex; align-items: center; justify-content: center;">
       <!-- Glowing Animated Pulsating Pickleball Icon Container -->
       <div class="neon-glow" style="width: 96px; height: 96px; border-radius: 50%; background-color: var(--surface-high); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; position: relative;">
-        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); animation: pulse 2s infinite ease-in-out;">sports_tennis</span>
+        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); animation: pulse 2s infinite ease-in-out;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;"><g transform="rotate(45 12 12)"><rect x="7" y="2" width="10" height="13" rx="4"></rect><rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect><path d="M12 15v6" stroke-width="3"></path><path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path><path d="M10.5 21h3" stroke-width="2"></path></g><circle cx="18" cy="18" r="4" stroke-width="1.5"></circle><path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path></svg></span>
       </div>
       <div style="position: absolute; width: 114px; height: 114px; border-radius: 50%; border: 1px dashed var(--neon); opacity: 0.3; animation: spin 15s linear infinite;"></div>
     </div>
@@ -142,9 +126,26 @@
 
   <!-- SCREEN 1: COURT SETUP -->
   <main id="view-court-setup" class="screen-view view-hidden">
-    <div class="flex-col">
-      <h2 class="title-lg">New Mixer Setup</h2>
-      <p class="subtitle-md">Select the courts available for this tournament block. Add designated players if required.</p>
+    <!-- Dynamic Header Area -->
+    <div id="setup-header-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 16px;">
+        <h2 class="title-lg" id="setup-title" style="margin: 0; line-height: 1.2; word-break: break-word;">New Mixer Setup</h2>
+        
+        <!-- Resume Dashboard Button -->
+        <button id="btn-resume-dashboard" style="display: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--neon); color: var(--neon); background-color: rgba(195, 244, 0, 0.1); cursor: pointer; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 0.2s ease; flex-shrink: 0; height: fit-content; min-height: 36px; box-sizing: border-box;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">dashboard</span>
+          Resume
+        </button>
+      </div>
+      <p class="subtitle-md" id="setup-subtitle" style="margin: 0;">Select the courts available for this tournament block. Add designated players if required.</p>
+    </div>
+
+    <!-- Active Mixer Warning Banner -->
+    <div class="card neon-glow" id="setup-active-warning" style="display: none; margin-bottom: 24px; border-color: var(--neon); background-color: rgba(195, 244, 0, 0.05); padding: 12px 16px; flex-direction: row; align-items: flex-start; gap: 12px;">
+      <span class="material-symbols-outlined" style="color: var(--neon); animation: pulse 1s infinite; margin-top: 2px;">warning</span>
+      <p style="margin: 0; font-size: 13px; color: var(--text-primary); line-height: 1.5;">
+        <strong style="color: var(--neon);">Live Tournament in Progress.</strong> Modifying courts will require regenerating matches.
+      </p>
     </div>
     
     <!-- Courts List -->
@@ -170,11 +171,14 @@
 
     
     <!-- Tournament Control Utilities -->
-    <div class="card" style="margin-top: 16px; padding: 16px; border-color: rgba(248, 113, 113, 0.25);">
-      <h3 class="label-caps" style="color: var(--red); margin-bottom: 6px;">Tournament Controls</h3>
-      <p class="subtitle-md" style="margin-bottom: 12px;">Reset the current mixer state to start a completely new tournament.</p>
-      <button class="add-players-btn" id="btn-reset-mixer" style="border-color: var(--red); color: var(--red); border-radius: 12px; width: 100%; height: 44px; font-size: 14px;">
-        <span class="material-symbols-outlined">restart_alt</span>
+    <div class="card" id="setup-danger-zone" style="margin-top: 32px; padding: 20px; border: 1px solid rgba(248, 113, 113, 0.5); background-color: rgba(248, 113, 113, 0.05); border-radius: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+        <span class="material-symbols-outlined" style="color: var(--red); font-size: 20px;">warning</span>
+        <h3 class="label-caps" style="color: var(--red); margin: 0; font-size: 14px; letter-spacing: 1px;">Danger Zone</h3>
+      </div>
+      <p class="subtitle-md" style="margin-bottom: 16px; color: rgba(255, 255, 255, 0.7); font-size: 13px; line-height: 1.5;">Reset the current mixer state to start a completely new tournament. This action cannot be undone.</p>
+      <button class="add-players-btn" id="btn-reset-mixer" style="background-color: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); color: var(--red); border-radius: 12px; width: 100%; height: 48px; font-size: 14px; font-weight: 700; transition: all 0.2s ease;">
+        <span class="material-symbols-outlined" style="font-size: 20px;">delete_forever</span>
         Reset Mixer & Clear Cloud
       </button>
     </div>
@@ -212,7 +216,7 @@
       <div class="sticky-bottom-bar-content">
         <button class="btn-primary neon-glow neon-glow-active" id="entry-generate-btn" disabled>
           Generate Pairings & Start Tournament
-          <span class="material-symbols-outlined">sports_tennis</span>
+          <span class="material-symbols-outlined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;"><g transform="rotate(45 12 12)"><rect x="7" y="2" width="10" height="13" rx="4"></rect><rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect><path d="M12 15v6" stroke-width="3"></path><path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path><path d="M10.5 21h3" stroke-width="2"></path></g><circle cx="18" cy="18" r="4" stroke-width="1.5"></circle><path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path></svg></span>
         </button>
       </div>
     </div>
@@ -226,7 +230,7 @@
       <div style="position: absolute; width: 120px; height: 120px; border: 2px dashed var(--neon); border-radius: 50%; animation: spin 12s linear infinite;"></div>
       <!-- Pulse inner glow -->
       <div style="position: absolute; width: 88px; height: 88px; background: rgba(195, 244, 0, 0.1); border-radius: 50%; box-shadow: 0 0 30px var(--neon-glow);"></div>
-      <!-- Center checkmark / sports_tennis icon -->
+      <!-- Center checkmark / pickleball icon -->
       <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); z-index: 2; animation: pulse 2s infinite ease-in-out;">check_circle</span>
     </div>
 
@@ -275,8 +279,8 @@
   <main id="view-stage2-review" class="screen-view view-hidden">
     <div class="flex-col">
       <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
-      <h2 class="title-lg">Round 2 Seeding</h2>
-      <p class="subtitle-md">Review how players have been seeded based on Round 1 court rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
+      <h2 class="title-lg">Championship Stage Seeding</h2>
+      <p class="subtitle-md">Review how players have been seeded based on Group Stage court rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
     </div>
 
     <!-- Seeding Tiers Container -->
@@ -290,7 +294,7 @@
     <div class="sticky-bottom-bar">
       <div class="sticky-bottom-bar-content">
         <button class="btn-primary neon-glow neon-glow-active" id="btn-confirm-stage2" style="border-radius: 32px;">
-          Confirm & Start Round 2
+          Confirm & Start Championship Stage
           <span class="material-symbols-outlined">military_tech</span>
         </button>
       </div>
@@ -300,8 +304,8 @@
   <!-- SCREEN 3: TOURNAMENT DASHBOARD -->
   <main id="view-dashboard" class="screen-view view-hidden">
     <div>
-      <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">SUMMER SMASH INVITATIONAL</p>
-      <h2 class="title-lg" id="dashboard-title">Live Dashboard</h2>
+
+      <h2 class="title-lg" id="dashboard-title">Group Stage Dashboard</h2>
       <div id="dashboard-stage-badge" style="display: none; margin-top: 8px;">
         <span class="label-caps" style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">CHAMPIONSHIP STAGE</span>
       </div>
@@ -311,12 +315,12 @@
     <div class="card neon-glow" id="dashboard-advance-card" style="margin-top: 20px; display: none; border-color: var(--neon); background-color: rgba(195, 244, 0, 0.05); padding: 16px; flex-direction: column; gap: 12px;">
       <div style="display: flex; align-items: center; gap: 12px;">
         <span class="material-symbols-outlined" id="dashboard-advance-icon" style="color: var(--neon); animation: pulse 1s infinite;">celebration</span>
-        <h4 id="dashboard-advance-title" style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Round 1 Completed!</h4>
+        <h4 id="dashboard-advance-title" style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Group Stage Completed!</h4>
       </div>
       <p class="subtitle-md" id="dashboard-advance-desc" style="margin: 0;">All qualifying matches across all courts have been completed. Seeding tiers are ready!</p>
       <button class="add-players-btn neon-glow-active" id="btn-dashboard-advance" style="border-radius: 12px; width: 100%;">
         <span class="material-symbols-outlined">double_arrow</span>
-        <span id="btn-dashboard-advance-text">Advance to Round 2</span>
+        <span id="btn-dashboard-advance-text">Advance to Championship Stage</span>
       </button>
     </div>
 
@@ -373,7 +377,7 @@
     <!-- Live Leaderboard Section -->
     <div class="leaderboard-title-row">
       <span class="material-symbols-outlined">leaderboard</span>
-      <h3 id="leaderboard-title-text">Live Leaderboard</h3>
+      <h3 id="leaderboard-title-text">Live Leaderboard (Group Stage)</h3>
     </div>
 
     <!-- Leaderboard rankings card -->
@@ -479,6 +483,24 @@
         Confirm Score
       </button>
     </div>
+    </div>
+  </div>
+
+  <!-- GENERIC CONFIRMATION MODAL -->
+  <div class="modal-overlay view-hidden" id="confirm-modal">
+    <div class="modal-content" style="max-height: 400px; justify-content: center; padding: 32px 24px;">
+      
+      <div class="flex-col" style="align-items: center; text-align: center; margin-bottom: 32px;">
+        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); margin-bottom: 16px;" id="confirm-modal-icon">settings</span>
+        <h2 class="title-lg" id="confirm-modal-title" style="margin-bottom: 8px;">Go to Setup?</h2>
+        <p class="subtitle-md" id="confirm-modal-message">Are you sure you want to go back to the setup page? You will leave the active dashboard.</p>
+      </div>
+
+      <div style="display: flex; gap: 12px; width: 100%;">
+        <button class="add-players-btn" id="confirm-modal-cancel" style="flex: 1; border-color: rgba(255,255,255,0.2); color: var(--text-primary); font-size: 14px; height: 52px; background: transparent;">Cancel</button>
+        <button class="btn-primary neon-glow" id="confirm-modal-ok" style="flex: 1; font-size: 14px; height: 52px; border-radius: 12px; justify-content: center;">Yes, Go</button>
+      </div>
+    </div>
   </div>
 
   <!-- SCREEN 5: GLOBAL LEADERBOARD SCREEN -->
@@ -496,20 +518,24 @@
   <!-- Premium Bottom Navigation Bar (User View Only) -->
   <nav class="bottom-nav" id="bottom-nav" style="display: none;">
     <button class="nav-item active" id="nav-round1">
-      <span class="material-symbols-outlined">sports_tennis</span>
-      <span class="nav-text">Round 1</span>
+      <span class="material-symbols-outlined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;"><g transform="rotate(45 12 12)"><rect x="7" y="2" width="10" height="13" rx="4"></rect><rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect><path d="M12 15v6" stroke-width="3"></path><path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path><path d="M10.5 21h3" stroke-width="2"></path></g><circle cx="18" cy="18" r="4" stroke-width="1.5"></circle><path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path></svg></span>
+      <span class="nav-text">Group Stage</span>
     </button>
     <button class="nav-item" id="nav-round2">
       <span class="material-symbols-outlined">emoji_events</span>
-      <span class="nav-text">Round 2</span>
+      <span class="nav-text">Championship Stage</span>
     </button>
     <button class="nav-item" id="nav-leaderboard">
       <span class="material-symbols-outlined">leaderboard</span>
       <span class="nav-text">Leaderboard</span>
     </button>
+    <button class="nav-item" id="nav-setup" style="display: none;">
+      <span class="material-symbols-outlined">settings</span>
+      <span class="nav-text">Setup</span>
+    </button>
   </nav>
 
   <!-- Application Script -->
-  <script type="module" src="app.js?v=2.2"></script>
+  <script type="module" src="app.js?v=2.6"></script>
 </body>
 </html>

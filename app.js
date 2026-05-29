@@ -61,6 +61,37 @@ const appState = {
   }
 };
 
+let confirmCallback = null;
+
+function showCustomConfirm(title, message, icon, onConfirm) {
+  const modal = document.getElementById('confirm-modal');
+  if (!modal) return;
+  
+  const titleEl = document.getElementById('confirm-modal-title');
+  const messageEl = document.getElementById('confirm-modal-message');
+  const iconEl = document.getElementById('confirm-modal-icon');
+  
+  if (titleEl) titleEl.textContent = title;
+  if (messageEl) messageEl.textContent = message;
+  if (iconEl) iconEl.textContent = icon || 'warning';
+  
+  confirmCallback = onConfirm;
+  
+  modal.classList.remove('view-hidden');
+  setTimeout(() => {
+    document.body.classList.add('modal-open');
+  }, 10);
+}
+
+function hideCustomConfirm() {
+  const modal = document.getElementById('confirm-modal');
+  if (modal) {
+    modal.classList.add('view-hidden');
+    document.body.classList.remove('modal-open');
+  }
+}
+
+
 // Match Model Class
 class Match {
   constructor(team1Player1, team1Player2, team2Player1, team2Player2) {
@@ -79,6 +110,7 @@ class Player {
   constructor(name, initialIndex) {
     this.name = name;
     this.totalScore = 0;
+    this.pointsPlayed = 0;
     this.initialIndex = initialIndex;
   }
 }
@@ -87,7 +119,10 @@ function recalculateScoresForCourt(court) {
   if (!court || !court.players) return;
   
   // 1. Reset all players scores to 0
-  court.players.forEach(p => p.totalScore = 0);
+  court.players.forEach(p => {
+    p.totalScore = 0;
+    p.pointsPlayed = 0;
+  });
   
   // 2. Iterate through all completed matches and add the point differentials to players
   if (court.matches) {
@@ -98,16 +133,16 @@ function recalculateScoresForCourt(court) {
         
         // Safely find player in court.players and increment
         const p1 = court.players.find(p => p.name === match.team1Player1.name);
-        if (p1) p1.totalScore += diff1;
+        if (p1) { p1.totalScore += diff1; p1.pointsPlayed += match.team1Score; }
         
         const p2 = court.players.find(p => p.name === match.team1Player2.name);
-        if (p2) p2.totalScore += diff1;
+        if (p2) { p2.totalScore += diff1; p2.pointsPlayed += match.team1Score; }
         
         const p3 = court.players.find(p => p.name === match.team2Player1.name);
-        if (p3) p3.totalScore += diff2;
+        if (p3) { p3.totalScore += diff2; p3.pointsPlayed += match.team2Score; }
         
         const p4 = court.players.find(p => p.name === match.team2Player2.name);
-        if (p4) p4.totalScore += diff2;
+        if (p4) { p4.totalScore += diff2; p4.pointsPlayed += match.team2Score; }
       }
     });
   }
@@ -136,11 +171,12 @@ function generatePairingsForCourt(court) {
     court.matches.push(new Match(p[4], p[2], p[0], p[1])); // Bye: p[3]
   } else if (n === 6) {
     // 6 rounds - perfect rotation, every player plays exactly 4 rounds, no duplicate partnerships
+    // Matches are interleaved to prevent any player from sitting out two consecutive rounds
     court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5]
-    court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5]
     court.matches.push(new Match(p[0], p[4], p[1], p[5])); // Byes: p[2], p[3]
-    court.matches.push(new Match(p[0], p[5], p[1], p[4])); // Byes: p[2], p[3]
     court.matches.push(new Match(p[2], p[4], p[3], p[5])); // Byes: p[0], p[1]
+    court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5]
+    court.matches.push(new Match(p[0], p[5], p[1], p[4])); // Byes: p[2], p[3]
     court.matches.push(new Match(p[2], p[5], p[3], p[4])); // Byes: p[0], p[1]
   }
 }
@@ -377,7 +413,7 @@ function render() {
     if (syncStatusEl) syncStatusEl.style.display = 'inline-flex'; // Reassure sync is active
     barTitle.textContent = appState.currentView === 'user-landing' 
       ? 'Life Journey Pickleball' 
-      : (appState.currentStage === 2 ? 'Championship Mixer' : 'Mixer Dashboard');
+      : '';
   } else {
     // Admin Mode behavior
     if (appState.currentView === 'court-setup') {
@@ -392,7 +428,7 @@ function render() {
       if (syncStatusEl) syncStatusEl.style.display = 'inline-flex';
     } else if (appState.currentView === 'dashboard') {
       if (backBtn) backBtn.style.visibility = 'visible';
-      barTitle.textContent = appState.currentStage === 2 ? 'Championship Mixer' : 'Mixer Dashboard';
+      barTitle.textContent = '';
       if (cloudSaveBtn) cloudSaveBtn.style.display = 'inline-flex';
       if (syncStatusEl) syncStatusEl.style.display = 'inline-flex';
     } else if (appState.currentView === 'stage2-review') {
@@ -402,7 +438,7 @@ function render() {
       if (syncStatusEl) syncStatusEl.style.display = 'none';
     } else if (appState.currentView === 'admin-success') {
       if (backBtn) backBtn.style.visibility = 'hidden';
-      barTitle.textContent = 'Mixer Dashboard';
+      barTitle.textContent = '';
       if (cloudSaveBtn) cloudSaveBtn.style.display = 'none';
       if (syncStatusEl) syncStatusEl.style.display = 'inline-flex';
     }
@@ -422,7 +458,7 @@ function render() {
   } else if (appState.currentView === 'admin-success') {
     renderAdminSuccess();
   } else if (appState.currentView === 'global-leaderboard') {
-    renderGlobalLeaderboard();
+    renderGlobalLeaderboard(sourceCourts);
   }
   
   // 3. Render Modal if open
@@ -438,6 +474,7 @@ function render() {
       const btnRound1 = document.getElementById('nav-round1');
       const btnRound2 = document.getElementById('nav-round2');
       const btnLeaderboard = document.getElementById('nav-leaderboard');
+      const btnSetup = document.getElementById('nav-setup');
       
       const isLeaderboardActive = appState.currentView === 'global-leaderboard';
       const isRound1Active = !isLeaderboardActive && (appState.currentStage === 1 || (appState.currentStage === 2 && appState.stage2ViewingQualifying));
@@ -446,6 +483,11 @@ function render() {
       if (btnRound1) btnRound1.classList.toggle('active', isRound1Active);
       if (btnRound2) btnRound2.classList.toggle('active', isRound2Active);
       if (btnLeaderboard) btnLeaderboard.classList.toggle('active', isLeaderboardActive);
+      
+      if (btnSetup) {
+        btnSetup.style.display = appState.isAdmin ? 'flex' : 'none';
+        btnSetup.classList.remove('active');
+      }
     }
   }
 }
@@ -507,10 +549,34 @@ function renderCourtSetup() {
     container.appendChild(card);
   });
   
-  // Next button activation
+  // Dynamic UI state based on active mixer
+  const hasActiveMixer = (appState.courts && appState.courts.some(c => c.isActive && c.matches && c.matches.length > 0)) || appState.currentStage > 1;
+  const title = document.getElementById('setup-title');
+  const subtitle = document.getElementById('setup-subtitle');
+  const warningBanner = document.getElementById('setup-active-warning');
+  const resumeBtn = document.getElementById('btn-resume-dashboard');
+
+  if (hasActiveMixer) {
+    if (title) title.textContent = 'Tournament Settings';
+    if (subtitle) subtitle.textContent = 'Modify active courts or players. Warning: Editing active courts may require match regeneration.';
+    if (warningBanner) warningBanner.style.display = 'flex';
+    if (resumeBtn) resumeBtn.style.display = 'flex';
+  } else {
+    if (title) title.textContent = 'New Mixer Setup';
+    if (subtitle) subtitle.textContent = 'Select the courts available for this tournament block. Add designated players if required.';
+    if (warningBanner) warningBanner.style.display = 'none';
+    if (resumeBtn) resumeBtn.style.display = 'none';
+  }
+
+  // Next button activation & label
   const hasActive = appState.courts.some(c => c.isActive);
   const nextBtn = document.getElementById('setup-next-btn');
-  nextBtn.disabled = !hasActive;
+  if (nextBtn) {
+    nextBtn.disabled = !hasActive;
+    nextBtn.innerHTML = hasActiveMixer 
+      ? `Edit Players & Regenerate <span class="material-symbols-outlined">refresh</span>`
+      : `Next: Enter Players <span class="material-symbols-outlined">arrow_forward</span>`;
+  }
 }
 
 // --- SCREEN 2: PLAYER ENTRY RENDER ---
@@ -890,27 +956,27 @@ function renderDashboard(activeCourts) {
   const leaderboardTitleText = document.getElementById('leaderboard-title-text');
   
   if (appState.currentStage === 2) {
-    if (stageBadge) stageBadge.style.display = 'block';
+    if (stageBadge) stageBadge.style.display = appState.stage2ViewingQualifying ? 'none' : 'block';
     if (advanceCard) advanceCard.style.display = 'none';
     if (backLinkContainer) backLinkContainer.style.display = 'flex';
     
-    const toggleText = appState.stage2ViewingQualifying ? 'Back to Round 2 Standings' : 'View Round 1 Standings';
+    const toggleText = appState.stage2ViewingQualifying ? 'Back to Championship Stage Standings' : 'View Group Stage Standings';
     const btnToggleText = document.getElementById('btn-toggle-stage-text');
     if (btnToggleText) btnToggleText.textContent = toggleText;
     
     if (dashboardTitle) {
-      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Round 1 Dashboard' : 'Round 2 Dashboard';
+      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Group Stage Dashboard' : 'Championship Stage Dashboard';
     }
     if (leaderboardTitleText) {
-      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Round 1)' : 'Live Leaderboard (Round 2)';
+      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Group Stage)' : 'Live Leaderboard (Championship Stage)';
     }
   } else {
     if (stageBadge) stageBadge.style.display = 'none';
     if (backLinkContainer) backLinkContainer.style.display = 'none';
-    if (dashboardTitle) dashboardTitle.textContent = 'Live Dashboard';
-    if (leaderboardTitleText) leaderboardTitleText.textContent = 'Live Leaderboard';
+    if (dashboardTitle) dashboardTitle.textContent = 'Group Stage Dashboard';
+    if (leaderboardTitleText) leaderboardTitleText.textContent = 'Live Leaderboard (Group Stage)';
     
-    // Always show advancement options during Round 1 (Stage 1) for Admins
+    // Always show advancement options during Group Stage (Stage 1) for Admins
     if (appState.currentStage === 1 && appState.isAdmin) {
       if (advanceCard) {
         advanceCard.style.display = 'flex';
@@ -921,14 +987,14 @@ function renderDashboard(activeCourts) {
         
         if (checkStage1Completion()) {
           if (advanceIcon) advanceIcon.textContent = 'celebration';
-          if (advanceTitle) advanceTitle.textContent = 'Round 1 Completed!';
+          if (advanceTitle) advanceTitle.textContent = 'Group Stage Completed!';
           if (advanceDesc) advanceDesc.textContent = 'All qualifying matches across all courts have been completed. Seeding tiers are ready!';
-          if (advanceBtnText) advanceBtnText.textContent = 'Advance to Round 2';
+          if (advanceBtnText) advanceBtnText.textContent = 'Advance to Championship Stage';
         } else {
           if (advanceIcon) advanceIcon.textContent = 'warning';
-          if (advanceTitle) advanceTitle.textContent = 'Round 2 Transition';
-          if (advanceDesc) advanceDesc.textContent = 'Round 1 qualifying matches are still in progress. You can manually force-advance to Round 2 based on current scores.';
-          if (advanceBtnText) advanceBtnText.textContent = 'Force-Start Round 2';
+          if (advanceTitle) advanceTitle.textContent = 'Championship Stage Transition';
+          if (advanceDesc) advanceDesc.textContent = 'Group Stage qualifying matches are still in progress. You can manually force-advance to Championship Stage based on current scores.';
+          if (advanceBtnText) advanceBtnText.textContent = 'Force-Start Championship Stage';
         }
       }
     } else {
@@ -1326,7 +1392,7 @@ function setupEventListeners() {
       );
       appState.modal.open = false;
       
-      // Auto-advancement hook during Round 1 (Stage 1) for Admins
+      // Auto-advancement hook during Group Stage (Stage 1) for Admins
       if (appState.currentStage === 1 && checkStage1Completion() && appState.isAdmin) {
         advanceToStage2();
         saveStateToCloud(); // Save immediately to sync advanced stage and view
@@ -1348,7 +1414,21 @@ function setupEventListeners() {
   const resetMixerBtn = document.getElementById('btn-reset-mixer');
   if (resetMixerBtn) {
     resetMixerBtn.addEventListener('click', () => {
-      resetMixer();
+      showCustomConfirm(
+        "DANGER ZONE",
+        "Are you absolutely sure you want to reset the mixer? This will permanently delete all current scores, pairings, and cloud data for this tournament.",
+        "delete_forever",
+        () => {
+          resetMixer();
+        }
+      );
+    });
+  }
+
+  const resumeDashboardBtn = document.getElementById('btn-resume-dashboard');
+  if (resumeDashboardBtn) {
+    resumeDashboardBtn.addEventListener('click', () => {
+      navigateTo('dashboard');
     });
   }
   
@@ -1403,7 +1483,7 @@ function setupEventListeners() {
   if (navRound1) {
     navRound1.addEventListener('click', () => {
       if (appState.currentStage === 1) {
-        // Already in Round 1
+        // Already in Group Stage
         return;
       }
       
@@ -1428,14 +1508,14 @@ function setupEventListeners() {
         if (appState.isAdmin) {
           const hasCompleted = checkStage1Completion();
           const msg = hasCompleted 
-            ? "All Round 1 matches are completed! Do you want to advance to Round 2?"
-            : "Round 1 matches are not all completed. Do you want to force-advance to Round 2 based on current scores?";
+            ? "All Group Stage matches are completed! Do you want to advance to Championship Stage?"
+            : "Group Stage matches are not all completed. Do you want to force-advance to Championship Stage based on current scores?";
           if (confirm(msg)) {
             advanceToStage2();
             saveStateToCloud();
           }
         } else {
-          showPremiumToast("Round 2 (Championship Playoff) will begin once the admin advances the tournament!");
+          showPremiumToast("Championship Stage will begin once the admin advances the tournament!");
         }
         return;
       }
@@ -1458,6 +1538,39 @@ function setupEventListeners() {
   if (navLeaderboard) {
     navLeaderboard.addEventListener('click', () => {
       navigateTo('global-leaderboard');
+    });
+  }
+  
+  const navSetup = document.getElementById('nav-setup');
+  if (navSetup) {
+    navSetup.addEventListener('click', () => {
+      if (appState.isAdmin) {
+        showCustomConfirm(
+          "Go to Setup?",
+          "Are you sure you want to go back to the setup page? You will leave the active dashboard.",
+          "settings",
+          () => {
+            navigateTo('court-setup');
+          }
+        );
+      }
+    });
+  }
+
+  // Setup Confirm Modal Handlers
+  const confirmModalCancel = document.getElementById('confirm-modal-cancel');
+  const confirmModalOk = document.getElementById('confirm-modal-ok');
+  
+  if (confirmModalCancel) {
+    confirmModalCancel.addEventListener('click', hideCustomConfirm);
+  }
+  
+  if (confirmModalOk) {
+    confirmModalOk.addEventListener('click', () => {
+      hideCustomConfirm();
+      if (confirmCallback) {
+        confirmCallback();
+      }
     });
   }
 }
@@ -1783,16 +1896,16 @@ function renderAdminSuccess() {
 }
 
 // --- GLOBAL LEADERBOARD LOGIC ---
-function renderGlobalLeaderboard() {
+function renderGlobalLeaderboard(sourceCourts) {
   const container = document.getElementById('global-leaderboard-container');
   if (!container) return;
   
   let allPlayers = [];
   
   // Aggregate players from all courts
-  if (appState.courts && Array.isArray(appState.courts)) {
-    appState.courts.forEach(court => {
-      if (court.players && Array.isArray(court.players)) {
+  if (sourceCourts && Array.isArray(sourceCourts)) {
+    sourceCourts.forEach(court => {
+      if (court.isActive && court.players && Array.isArray(court.players)) {
         court.players.forEach(p => {
           // ensure uniqueness by name
           if (!allPlayers.some(existing => existing.name === p.name)) {
