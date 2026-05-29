@@ -1285,7 +1285,7 @@ function submitScore(courtNumber, matchIndex, score1, score2) {
 // ----------------------------------------------------
 
 function setupEventListeners() {
-  // AppBar Back Button Handler
+  // AppBar Back Button Handler (Hidden by CSS, kept for safety)
   const backBtn = document.getElementById('app-back-btn');
   if (backBtn) {
     backBtn.addEventListener('click', () => {
@@ -1295,6 +1295,23 @@ function setupEventListeners() {
       } else if (appState.currentView === 'dashboard') {
         navigateTo('court-setup');
       }
+    });
+  }
+  
+  // Inline Back Buttons
+  const inlineBackEntry = document.getElementById('inline-back-entry');
+  if (inlineBackEntry) {
+    inlineBackEntry.addEventListener('click', () => {
+      if (!appState.isAdmin) return;
+      navigateTo('court-setup');
+    });
+  }
+
+  const inlineBackStage2 = document.getElementById('inline-back-stage2');
+  if (inlineBackStage2) {
+    inlineBackStage2.addEventListener('click', () => {
+      if (!appState.isAdmin) return;
+      navigateTo('dashboard');
     });
   }
   

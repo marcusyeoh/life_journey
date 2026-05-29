@@ -198,9 +198,14 @@
 
   <!-- SCREEN 2: PLAYER ENTRY -->
   <main id="view-player-entry" class="screen-view view-hidden">
-    <div>
-      <h2 class="title-lg">Add Players</h2>
-      <p class="subtitle-md">Enter player names to generate matches.</p>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+      <button class="icon-btn" id="inline-back-entry" style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+        <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
+      </button>
+      <div>
+        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Add Players</h2>
+        <p class="subtitle-md" style="margin: 4px 0 0 0;">Enter player names to generate matches.</p>
+      </div>
     </div>
 
     <!-- New Kanban-style Board Layout -->
@@ -277,10 +282,15 @@
 
   <!-- SCREEN 4: STAGE 2 REVIEW SCREEN -->
   <main id="view-stage2-review" class="screen-view view-hidden">
-    <div class="flex-col">
-      <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
-      <h2 class="title-lg">Championship Stage Seeding</h2>
-      <p class="subtitle-md">Review how players have been seeded based on Group Stage court rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
+    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px;">
+      <button class="icon-btn" id="inline-back-stage2" style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 4px;">
+        <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
+      </button>
+      <div class="flex-col">
+        <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
+        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Championship Stage Seeding</h2>
+        <p class="subtitle-md" style="margin: 4px 0 0 0;">Review how players have been seeded based on Group Stage court rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
+      </div>
     </div>
 
     <!-- Seeding Tiers Container -->
