@@ -275,8 +275,8 @@
   <main id="view-stage2-review" class="screen-view view-hidden">
     <div class="flex-col">
       <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
-      <h2 class="title-lg">Championship Seeding</h2>
-      <p class="subtitle-md">Review how players have been seeded based on Stage 1 court rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
+      <h2 class="title-lg">Round 2 Seeding</h2>
+      <p class="subtitle-md">Review how players have been seeded based on Round 1 court rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
     </div>
 
     <!-- Seeding Tiers Container -->
@@ -290,7 +290,7 @@
     <div class="sticky-bottom-bar">
       <div class="sticky-bottom-bar-content">
         <button class="btn-primary neon-glow neon-glow-active" id="btn-confirm-stage2" style="border-radius: 32px;">
-          Confirm & Start Championship
+          Confirm & Start Round 2
           <span class="material-symbols-outlined">military_tech</span>
         </button>
       </div>
@@ -310,13 +310,13 @@
     <!-- Stage 2 Advance Banner Card -->
     <div class="card neon-glow" id="dashboard-advance-card" style="margin-top: 20px; display: none; border-color: var(--neon); background-color: rgba(195, 244, 0, 0.05); padding: 16px; flex-direction: column; gap: 12px;">
       <div style="display: flex; align-items: center; gap: 12px;">
-        <span class="material-symbols-outlined" style="color: var(--neon); animation: pulse 1s infinite;">celebration</span>
-        <h4 style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Stage 1 Completed!</h4>
+        <span class="material-symbols-outlined" id="dashboard-advance-icon" style="color: var(--neon); animation: pulse 1s infinite;">celebration</span>
+        <h4 id="dashboard-advance-title" style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Round 1 Completed!</h4>
       </div>
-      <p class="subtitle-md" style="margin: 0;">All qualifying matches across all courts have been completed. Seeding tiers are ready!</p>
+      <p class="subtitle-md" id="dashboard-advance-desc" style="margin: 0;">All qualifying matches across all courts have been completed. Seeding tiers are ready!</p>
       <button class="add-players-btn neon-glow-active" id="btn-dashboard-advance" style="border-radius: 12px; width: 100%;">
         <span class="material-symbols-outlined">double_arrow</span>
-        Advance to Championship
+        <span id="btn-dashboard-advance-text">Advance to Round 2</span>
       </button>
     </div>
 

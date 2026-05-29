@@ -428,7 +428,7 @@ function render() {
   // 4. Toggle premium bottom navigation visibility & active tab states
   const bottomNav = document.querySelector('.bottom-nav');
   if (bottomNav) {
-    const shouldShow = !appState.isAdmin && appState.currentView === 'dashboard' && !appState.modal.open;
+    const shouldShow = appState.currentView === 'dashboard' && !appState.modal.open;
     bottomNav.style.display = shouldShow ? 'flex' : 'none';
     
     if (shouldShow) {
@@ -899,15 +899,15 @@ function renderDashboard(activeCourts) {
     if (advanceCard) advanceCard.style.display = 'none';
     if (backLinkContainer) backLinkContainer.style.display = 'flex';
     
-    const toggleText = appState.stage2ViewingQualifying ? 'Back to Championship Standings' : 'View Stage 1 Standings';
+    const toggleText = appState.stage2ViewingQualifying ? 'Back to Round 2 Standings' : 'View Round 1 Standings';
     const btnToggleText = document.getElementById('btn-toggle-stage-text');
     if (btnToggleText) btnToggleText.textContent = toggleText;
     
     if (dashboardTitle) {
-      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Qualifying Dashboard' : 'Championship Dashboard';
+      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Round 1 Dashboard' : 'Round 2 Dashboard';
     }
     if (leaderboardTitleText) {
-      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Stage 1)' : 'Live Leaderboard (Stage 2)';
+      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Round 1)' : 'Live Leaderboard (Round 2)';
     }
   } else {
     if (stageBadge) stageBadge.style.display = 'none';
@@ -915,9 +915,27 @@ function renderDashboard(activeCourts) {
     if (dashboardTitle) dashboardTitle.textContent = 'Live Dashboard';
     if (leaderboardTitleText) leaderboardTitleText.textContent = 'Live Leaderboard';
     
-    // Show completion alert in Stage 1 when all matches are done (Admin only)
-    if (checkStage1Completion() && appState.isAdmin) {
-      if (advanceCard) advanceCard.style.display = 'flex';
+    // Always show advancement options to Admin during Stage 1
+    if (appState.currentStage === 1 && appState.isAdmin) {
+      if (advanceCard) {
+        advanceCard.style.display = 'flex';
+        const advanceIcon = document.getElementById('dashboard-advance-icon');
+        const advanceTitle = document.getElementById('dashboard-advance-title');
+        const advanceDesc = document.getElementById('dashboard-advance-desc');
+        const advanceBtnText = document.getElementById('btn-dashboard-advance-text');
+        
+        if (checkStage1Completion()) {
+          if (advanceIcon) advanceIcon.textContent = 'celebration';
+          if (advanceTitle) advanceTitle.textContent = 'Round 1 Completed!';
+          if (advanceDesc) advanceDesc.textContent = 'All qualifying matches across all courts have been completed. Seeding tiers are ready!';
+          if (advanceBtnText) advanceBtnText.textContent = 'Advance to Round 2';
+        } else {
+          if (advanceIcon) advanceIcon.textContent = 'warning';
+          if (advanceTitle) advanceTitle.textContent = 'Round 2 Transition';
+          if (advanceDesc) advanceDesc.textContent = 'Round 1 qualifying matches are still in progress. You can manually force-advance to Round 2 based on current scores.';
+          if (advanceBtnText) advanceBtnText.textContent = 'Force-Start Round 2';
+        }
+      }
     } else {
       if (advanceCard) advanceCard.style.display = 'none';
     }
@@ -1309,8 +1327,15 @@ function setupEventListeners() {
         appState.modal.score2
       );
       appState.modal.open = false;
-      render();
-      saveStateToCloud(); // Save automatically to Firestore
+      
+      // Auto-advancement hook for Admin during Round 1
+      if (appState.currentStage === 1 && checkStage1Completion() && appState.isAdmin) {
+        advanceToStage2();
+        saveStateToCloud(); // Save immediately to sync advanced stage and view
+      } else {
+        render();
+        saveStateToCloud(); // Save automatically to Firestore
+      }
     });
   }
   
@@ -1402,8 +1427,18 @@ function setupEventListeners() {
   if (navRound2) {
     navRound2.addEventListener('click', () => {
       if (appState.currentStage === 1) {
-        // Not yet in Round 2! Show a beautiful HSL toast.
-        showPremiumToast("Round 2 (Championship Playoff) will begin after Round 1 matches are completed!");
+        if (appState.isAdmin) {
+          const hasCompleted = checkStage1Completion();
+          const msg = hasCompleted 
+            ? "All Round 1 matches are completed! Do you want to advance to Round 2?"
+            : "Round 1 matches are not all completed. Do you want to force-advance to Round 2 based on current scores?";
+          if (confirm(msg)) {
+            advanceToStage2();
+            saveStateToCloud();
+          }
+        } else {
+          showPremiumToast("Round 2 (Championship Playoff) will begin once the admin advances the tournament!");
+        }
         return;
       }
       
