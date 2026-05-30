@@ -43,6 +43,9 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Clean and sanitize API key to remove trailing spaces, newlines, or carriage returns
+    apiKey = apiKey.trim().replace(/[\r\n]+/g, '');
+
     if (provider === 'openai') {
       await proxyOpenAI(apiKey, clientPayload, res);
     } else if (provider === 'gemini') {

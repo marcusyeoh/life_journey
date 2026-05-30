@@ -141,6 +141,9 @@ function handleAIProxy(req, res) {
         return;
       }
 
+      // Clean and sanitize API key to remove trailing spaces, newlines, or carriage returns
+      apiKey = apiKey.trim().replace(/[\r\n]+/g, '');
+
       if (provider === 'openai') {
         proxyOpenAI(apiKey, payload, res);
       } else if (provider === 'gemini') {
