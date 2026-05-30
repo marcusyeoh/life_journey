@@ -32,6 +32,7 @@ const appState = {
   stage1Courts: null,
   stage2ViewingQualifying: false,
   stage2PreviewTiers: [],
+  leaderboardViewMode: 'cumulative', // 'cumulative' | 'stage2' | 'stage1'
   
   // List of 6 Courts
   courts: Array.from({ length: 6 }, (_, i) => ({
@@ -178,28 +179,37 @@ function generatePairingsForCourt(court) {
     court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5]
     court.matches.push(new Match(p[0], p[5], p[1], p[4])); // Byes: p[2], p[3]
     court.matches.push(new Match(p[2], p[5], p[3], p[4])); // Byes: p[0], p[1]
+  } else if (n === 7) {
+    // 7 rounds custom rotation - every player plays exactly 4 games, sits out exactly 3 games, no duplicate partnerships, byes distributed evenly
+    court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5], p[6]
+    court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5], p[6]
+    court.matches.push(new Match(p[0], p[4], p[5], p[6])); // Byes: p[1], p[2], p[3]
+    court.matches.push(new Match(p[1], p[2], p[3], p[4])); // Byes: p[0], p[5], p[6]
+    court.matches.push(new Match(p[0], p[5], p[1], p[6])); // Byes: p[2], p[3], p[4]
+    court.matches.push(new Match(p[2], p[5], p[4], p[6])); // Byes: p[0], p[1], p[3]
+    court.matches.push(new Match(p[3], p[6], p[4], p[5])); // Byes: p[0], p[1], p[2]
   }
 }
 
 // ----------------------------------------------------
 // INTEGER PARTITIONING ALGORITHM
 // ----------------------------------------------------
-function findOptimalPartition(playerCount) {
-  if (playerCount < 4 || playerCount > 36) return null;
+function findOptimalPartition(playerCount, maxCourts = 6) {
+  if (playerCount < 4 || playerCount > 42) return null; // Supported up to 6 courts * 7 players = 42
   
   const results = [];
   
   function backtrack(remaining, currentPartition) {
     if (remaining === 0) {
-      if (currentPartition.length <= 6) {
+      if (currentPartition.length <= maxCourts) {
         results.push([...currentPartition]);
       }
       return;
     }
-    if (currentPartition.length >= 6) return;
+    if (currentPartition.length >= maxCourts) return;
     
-    // Try sizes 6, 5, 4 (prefer larger group sizes first as possibilities)
-    for (let size of [6, 5, 4]) {
+    // Try sizes 7, 6, 5, 4 (prefer larger group sizes first as possibilities)
+    for (let size of [7, 6, 5, 4]) {
       if (remaining >= size) {
         currentPartition.push(size);
         backtrack(remaining - size, currentPartition);
@@ -291,13 +301,28 @@ async function startApp() {
         appState.entryState = data.entryState;
       }
       
+      // SELF-HEALING AUTOMATIC RE-SEED IN CHAMPIONSHIP STAGE
+      if (appState.currentStage === 2) {
+        const activeStage1Courts = appState.stage1Courts ? appState.stage1Courts.filter(c => c.isActive) : [];
+        const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
+        const currentActiveCourtsCount = appState.courts.filter(c => c.isActive).length;
+        if (currentActiveCourtsCount > maxCourts) {
+          console.log("Self-healing: Seeding mismatch detected. Automatically re-seeding to exactly " + maxCourts + " courts...");
+          launchChampionshipStageAutomatically();
+          return;
+        }
+      }
+      
       // Determine navigation dynamically based on role and mixer activity
       const hasActiveMixer = appState.courts && appState.courts.some(c => c.isActive && c.matches && c.matches.length > 0);
       
       let targetView = 'user-landing';
       if (appState.isAdmin) {
-        // Admins follow the saved view
+        // Admins follow the saved view, but we prevent loading the dashboard view in admin mode
         targetView = data.currentView || 'court-setup';
+        if (targetView === 'dashboard') {
+          targetView = 'court-setup';
+        }
         
         // Ensure selections are valid inside the active courts list
         const activeCourts = appState.courts.filter(c => c.isActive);
@@ -610,23 +635,29 @@ function renderPlayerEntry(activeCourts) {
     const filledCount = entry.names.filter(n => n && n.trim() !== '').length;
 
     // Capacity validation badge styling
-    let badgeText = `${filledCount}/6 Players`;
+    let badgeText = `${filledCount}/7 Players`;
     let badgeClass = 'valid';
 
     if (filledCount < 4) {
-      badgeText = `Needs 4-6 Players`;
+      badgeText = `Needs 4-7 Players`;
       badgeClass = 'invalid';
-    } else if (filledCount === 6) {
-      badgeText = `6/6 (Full)`;
+    } else if (filledCount === 7) {
+      badgeText = `7/7 (Full)`;
       badgeClass = 'valid';
     }
+
+    const avgDupr = getCourtAverageDUPR(entry.names);
+    const avgBadgeHtml = avgDupr > 0 
+      ? `<span class="avg-dupr-badge" style="font-size: 11px; font-weight: 800; font-family: 'Hanken Grotesk', sans-serif; color: var(--neon); background: rgba(195, 244, 0, 0.1); border: 1px solid rgba(195, 244, 0, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(195, 244, 0, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;">Avg: ${avgDupr.toFixed(2)}</span>`
+      : '';
 
     const colHeader = document.createElement('div');
     colHeader.className = 'board-column-header';
     colHeader.innerHTML = `
-      <div class="board-column-title">
+      <div class="board-column-title" style="display: flex; align-items: center;">
         <span class="material-symbols-outlined">grid_view</span>
         <span>Court ${court.courtNumber}</span>
+        ${avgBadgeHtml}
       </div>
       <span class="capacity-badge ${badgeClass}">${badgeText}</span>
     `;
@@ -652,25 +683,50 @@ function renderPlayerEntry(activeCourts) {
       const input = item.querySelector('.player-drag-input');
       if (input) {
         input.addEventListener('input', (e) => {
-          entry.names[idx] = e.target.value.trim();
+          entry.names[idx] = e.target.value;
           
           // Dynamically update count badge and bottom generate button state
           const updatedFilled = entry.names.filter(n => n && n.trim() !== '').length;
           const badge = col.querySelector('.capacity-badge');
           if (badge) {
             if (updatedFilled < 4) {
-              badge.textContent = `Needs 4-6 Players`;
+              badge.textContent = `Needs 4-7 Players`;
               badge.className = 'capacity-badge invalid';
-            } else if (updatedFilled === 6) {
-              badge.textContent = `6/6 (Full)`;
+            } else if (updatedFilled === 7) {
+              badge.textContent = `7/7 (Full)`;
               badge.className = 'capacity-badge valid';
             } else {
-              badge.textContent = `${updatedFilled}/6 Players`;
+              badge.textContent = `${updatedFilled}/7 Players`;
               badge.className = 'capacity-badge valid';
+            }
+          }
+
+          // Dynamically update average DUPR badge
+          const avgDupr = getCourtAverageDUPR(entry.names);
+          let avgBadge = col.querySelector('.avg-dupr-badge');
+          const titleArea = col.querySelector('.board-column-title');
+          if (avgDupr > 0) {
+            if (!avgBadge && titleArea) {
+              avgBadge = document.createElement('span');
+              avgBadge.className = 'avg-dupr-badge';
+              avgBadge.style.cssText = "font-size: 11px; font-weight: 800; font-family: 'Hanken Grotesk', sans-serif; color: var(--neon); background: rgba(195, 244, 0, 0.1); border: 1px solid rgba(195, 244, 0, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(195, 244, 0, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;";
+              titleArea.appendChild(avgBadge);
+            }
+            if (avgBadge) {
+              avgBadge.textContent = `Avg: ${avgDupr.toFixed(2)}`;
+            }
+          } else {
+            if (avgBadge) {
+              avgBadge.remove();
             }
           }
           
           validateEntryGeneration(activeCourts);
+        });
+
+        input.addEventListener('blur', (e) => {
+          entry.names[idx] = e.target.value.trim();
+          saveStateToCloud();
         });
       }
 
@@ -680,6 +736,7 @@ function renderPlayerEntry(activeCourts) {
         deleteBtn.addEventListener('click', () => {
           entry.names.splice(idx, 1);
           renderPlayerEntry(activeCourts);
+          saveStateToCloud();
         });
       }
 
@@ -688,8 +745,8 @@ function renderPlayerEntry(activeCourts) {
 
     col.appendChild(dragList);
 
-    // Inline + Add Player button at bottom of court list (max 6 players)
-    if (entry.names.length < 6) {
+    // Inline + Add Player button at bottom of court list (max 7 players)
+    if (entry.names.length < 7) {
       const addBtn = document.createElement('button');
       addBtn.className = 'inline-add-player-btn';
       addBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">add</span> Add Player`;
@@ -734,8 +791,8 @@ function validateEntryGeneration(activeCourts) {
       break;
     }
     const filledCount = entry.names.filter(n => n.trim() !== '').length;
-    // Each active court must have EXACTLY 4, 5, or 6 players to generate pairings
-    if (filledCount !== 4 && filledCount !== 5 && filledCount !== 6) {
+    // Each active court must have 4, 5, 6, or 7 players to generate pairings
+    if (filledCount < 4 || filledCount > 7) {
       allValid = false;
       break;
     }
@@ -836,8 +893,8 @@ function initDragAndDrop(activeCourts) {
           currentTargetList = hoveredCol.querySelector('.player-drag-list');
           const targetListId = currentTargetList.getAttribute('data-list-id');
 
-          // Enforce max 6 player slots on courts
-          const targetCapacity = 6;
+          // Enforce max 7 player slots on courts
+          const targetCapacity = 7;
           const targetNames = appState.entryState[targetListId].names;
           const currentCount = targetNames.length;
           
@@ -936,6 +993,15 @@ function initDragAndDrop(activeCourts) {
 }
 
 
+// --- HELPER TO STRIP DUPR RATING FOR PLAYERS ---
+function formatPlayerName(name) {
+  if (!appState.isAdmin && name) {
+    // Strips " (X.XX)" or " (X.X)"
+    return name.replace(/\s*\(\d+\.\d+\)/, '');
+  }
+  return name;
+}
+
 // --- SCREEN 3: DASHBOARD RENDER ---
 function renderDashboard(activeCourts) {
   // If no selected court, default to the first active court
@@ -957,7 +1023,29 @@ function renderDashboard(activeCourts) {
   
   if (appState.currentStage === 2) {
     if (stageBadge) stageBadge.style.display = appState.stage2ViewingQualifying ? 'none' : 'block';
-    if (advanceCard) advanceCard.style.display = 'none';
+    
+    // Check if there is an active court mismatch (seeding exceeded available courts)
+    const activeStage1Courts = appState.stage1Courts ? appState.stage1Courts.filter(c => c.isActive) : [];
+    const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
+    const currentActiveCourtsCount = appState.courts.filter(c => c.isActive).length;
+    
+    if (currentActiveCourtsCount > maxCourts && appState.isAdmin) {
+      if (advanceCard) {
+        advanceCard.style.display = 'flex';
+        const advanceIcon = document.getElementById('dashboard-advance-icon');
+        const advanceTitle = document.getElementById('dashboard-advance-title');
+        const advanceDesc = document.getElementById('dashboard-advance-desc');
+        const advanceBtnText = document.getElementById('btn-dashboard-advance-text');
+        
+        if (advanceIcon) advanceIcon.textContent = 'build';
+        if (advanceTitle) advanceTitle.textContent = 'Seeding Mismatch Detected';
+        if (advanceDesc) advanceDesc.textContent = `Championship Stage is running on ${currentActiveCourtsCount} courts, but you set up only ${maxCourts} courts in Group Stage. Click below to instantly re-seed into exactly ${maxCourts} tiers.`;
+        if (advanceBtnText) advanceBtnText.textContent = 'Re-Seed Championship Stage';
+      }
+    } else {
+      if (advanceCard) advanceCard.style.display = 'none';
+    }
+    
     if (backLinkContainer) backLinkContainer.style.display = 'flex';
     
     const toggleText = appState.stage2ViewingQualifying ? 'Back to Championship Stage Standings' : 'View Group Stage Standings';
@@ -1007,14 +1095,26 @@ function renderDashboard(activeCourts) {
   courtTabs.innerHTML = '';
   activeCourts.forEach(c => {
     const isSelected = c.courtNumber === appState.selectedCourtNumber;
+    
+    const completedCount = c.matches ? c.matches.filter(m => m.isCompleted).length : 0;
+    const totalCount = c.matches ? c.matches.length : 0;
+    const courtCompleted = totalCount > 0 && completedCount === totalCount;
+    
     const tab = document.createElement('div');
-    tab.className = `tab-chip ${isSelected ? 'active' : ''}`;
+    tab.className = `tab-chip ${isSelected ? 'active' : ''} ${courtCompleted ? 'completed' : ''}`;
     
     const tabName = (appState.currentStage === 2 && !appState.stage2ViewingQualifying)
       ? `${TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`} (Court ${c.courtNumber})`
       : `Court ${c.courtNumber}`;
       
-    tab.textContent = tabName;
+    if (courtCompleted) {
+      tab.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>${tabName}`;
+    } else if (completedCount > 0) {
+      tab.innerHTML = `${tabName}<span class="tab-progress-badge">${completedCount}/${totalCount}</span>`;
+    } else {
+      tab.textContent = tabName;
+    }
+    
     tab.addEventListener('click', () => {
       appState.selectedCourtNumber = c.courtNumber;
       appState.viewingRound = c.activeRound;
@@ -1030,10 +1130,17 @@ function renderDashboard(activeCourts) {
   for (let i = 1; i <= totalRounds; i++) {
     const isViewing = i === appState.viewingRound;
     const isActiveRound = i === court.activeRound;
+    const isCompleted = court.matches[i - 1] && court.matches[i - 1].isCompleted;
     
     const chip = document.createElement('div');
-    chip.className = `round-chip ${isViewing ? 'viewing' : ''} ${isActiveRound ? 'active-round' : ''}`;
-    chip.textContent = `Round ${i}`;
+    chip.className = `round-chip ${isViewing ? 'viewing' : ''} ${isActiveRound ? 'active-round' : ''} ${isCompleted ? 'completed' : ''}`;
+    
+    if (isCompleted) {
+      chip.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>Round ${i}`;
+    } else {
+      chip.textContent = `Round ${i}`;
+    }
+    
     chip.addEventListener('click', () => {
       appState.viewingRound = i;
       render();
@@ -1047,20 +1154,7 @@ function renderDashboard(activeCourts) {
   const match = court.matches[matchIndex];
   
   if (match) {
-    const byes = [];
-    const playing = new Set([
-      match.team1Player1.name,
-      match.team1Player2.name,
-      match.team2Player1.name,
-      match.team2Player2.name
-    ]);
-    
-    court.players.forEach(p => {
-      if (!playing.has(p.name)) {
-        byes.push(p.name);
-      }
-    });
-    
+
     // Render Card Contents
     matchCard.innerHTML = `
       <div class="match-card-status-row">
@@ -1077,18 +1171,23 @@ function renderDashboard(activeCourts) {
           Court ${court.courtNumber}
         </div>
         ${match.isCompleted ? `
-          <div class="match-card-score">${match.team1Score} - ${match.team2Score}</div>
+          <div class="match-card-score-container">
+            <div class="match-card-score">${match.team1Score} - ${match.team2Score}</div>
+            <div class="match-card-score-diff">
+              Diff: ${Math.abs(match.team1Score - match.team2Score)}
+            </div>
+          </div>
         ` : ''}
       </div>
       <div class="match-teams-row">
         <div class="match-team">
           <h4>Team Alpha</h4>
-          <p>${match.team1Player1.name}<br>${match.team1Player2.name}</p>
+          <p>${formatPlayerName(match.team1Player1.name)}<br>${formatPlayerName(match.team1Player2.name)}</p>
         </div>
         <div class="vs-badge">VS</div>
         <div class="match-team team-2">
           <h4>Team Bravo</h4>
-          <p>${match.team2Player1.name}<br>${match.team2Player2.name}</p>
+          <p>${formatPlayerName(match.team2Player1.name)}<br>${formatPlayerName(match.team2Player2.name)}</p>
         </div>
       </div>
       <button class="match-action-btn neon-glow-active">
@@ -1109,18 +1208,31 @@ function renderDashboard(activeCourts) {
           appState.modal.score1 = match.team1Score;
           appState.modal.score2 = match.team2Score;
         } else {
-          appState.modal.score1 = 15;
-          appState.modal.score2 = 10;
+          appState.modal.score1 = 0;
+          appState.modal.score2 = 0;
         }
         
         render();
       });
     }
     
-    // 4. Render On Deck Byes list
+    // 4. Render Next Round info
     const deckNames = document.getElementById('dashboard-on-deck-names');
-    if (byes.length > 0) {
-      deckNames.textContent = byes.join(' & ');
+    if (matchIndex + 1 < court.matches.length) {
+      const nextMatch = court.matches[matchIndex + 1];
+      deckNames.innerHTML = `
+        <div class="next-team">
+          <span>${formatPlayerName(nextMatch.team1Player1.name)}</span>
+          <span class="next-amp">&</span>
+          <span>${formatPlayerName(nextMatch.team1Player2.name)}</span>
+        </div>
+        <div class="next-vs">VS</div>
+        <div class="next-team">
+          <span>${formatPlayerName(nextMatch.team2Player1.name)}</span>
+          <span class="next-amp">&</span>
+          <span>${formatPlayerName(nextMatch.team2Player2.name)}</span>
+        </div>
+      `;
       document.getElementById('dashboard-on-deck-banner').style.display = 'flex';
     } else {
       document.getElementById('dashboard-on-deck-banner').style.display = 'none';
@@ -1165,7 +1277,7 @@ function renderDashboard(activeCourts) {
     item.className = `leaderboard-item ${isFirst ? 'first-place' : ''}`;
     item.innerHTML = `
       <span class="leaderboard-rank">${rank}</span>
-      <span class="leaderboard-name">${player.name}</span>
+      <span class="leaderboard-name">${formatPlayerName(player.name)}</span>
       <span class="leaderboard-score-chip ${scoreClass}">${prefix}${score}</span>
     `;
     leaderboardContainer.appendChild(item);
@@ -1193,14 +1305,14 @@ function renderScoreModal() {
   
   // Set players names in modal
   document.getElementById('modal-court-round-badge').textContent = `Court ${court.courtNumber} • Round ${appState.modal.matchIndex + 1}`;
-  document.getElementById('modal-team1-names').textContent = `${match.team1Player1.name} & ${match.team1Player2.name}`;
-  document.getElementById('modal-team2-names').textContent = `${match.team2Player1.name} & ${match.team2Player2.name}`;
+  document.getElementById('modal-team1-names').textContent = `${formatPlayerName(match.team1Player1.name)} & ${formatPlayerName(match.team1Player2.name)}`;
+  document.getElementById('modal-team2-names').textContent = `${formatPlayerName(match.team2Player1.name)} & ${formatPlayerName(match.team2Player2.name)}`;
   
   // Steppers Score Text
   const val1 = document.getElementById('stepper-val-1');
   const val2 = document.getElementById('stepper-val-2');
-  val1.textContent = appState.modal.score1;
-  val2.textContent = appState.modal.score2;
+  if (val1) val1.value = appState.modal.score1;
+  if (val2) val2.value = appState.modal.score2;
   
   // Color highlights on winning stepper
   if (appState.modal.score1 > appState.modal.score2) {
@@ -1352,7 +1464,7 @@ function setupEventListeners() {
   const stepperPlus1 = document.getElementById('stepper-plus-1');
   if (stepperPlus1) {
     stepperPlus1.addEventListener('click', () => {
-      if (appState.modal.score1 < 99) {
+      if (appState.modal.score1 < 21) {
         appState.modal.score1++;
         render();
       }
@@ -1372,7 +1484,7 @@ function setupEventListeners() {
   const stepperPlus2 = document.getElementById('stepper-plus-2');
   if (stepperPlus2) {
     stepperPlus2.addEventListener('click', () => {
-      if (appState.modal.score2 < 99) {
+      if (appState.modal.score2 < 21) {
         appState.modal.score2++;
         render();
       }
@@ -1386,6 +1498,22 @@ function setupEventListeners() {
         appState.modal.score2--;
         render();
       }
+    });
+  }
+
+  const val1Select = document.getElementById('stepper-val-1');
+  if (val1Select) {
+    val1Select.addEventListener('change', (e) => {
+      appState.modal.score1 = parseInt(e.target.value, 10) || 0;
+      render();
+    });
+  }
+  
+  const val2Select = document.getElementById('stepper-val-2');
+  if (val2Select) {
+    val2Select.addEventListener('change', (e) => {
+      appState.modal.score2 = parseInt(e.target.value, 10) || 0;
+      render();
     });
   }
   
@@ -1409,10 +1537,14 @@ function setupEventListeners() {
       );
       appState.modal.open = false;
       
-      // Auto-advancement hook during Group Stage (Stage 1) for Admins
-      if (appState.currentStage === 1 && checkStage1Completion() && appState.isAdmin) {
-        advanceToStage2();
-        saveStateToCloud(); // Save immediately to sync advanced stage and view
+      // Auto-advancement hook during Group Stage (Stage 1) for both Admins and Players
+      if (appState.currentStage === 1 && checkStage1Completion()) {
+        launchChampionshipStageAutomatically();
+        if (appState.isAdmin) {
+          navigateTo('admin-success');
+        } else {
+          navigateTo('dashboard');
+        }
       } else {
         render();
         saveStateToCloud(); // Save automatically to Firestore
@@ -1442,10 +1574,20 @@ function setupEventListeners() {
     });
   }
 
+  const redirectToPlayerDashboard = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('admin');
+    url.hash = ''; // Clear any hash
+    if (url.pathname.endsWith('admin.html')) {
+      url.pathname = url.pathname.replace('admin.html', 'index.html');
+    }
+    window.open(url.toString(), '_blank');
+  };
+
   const resumeDashboardBtn = document.getElementById('btn-resume-dashboard');
   if (resumeDashboardBtn) {
     resumeDashboardBtn.addEventListener('click', () => {
-      navigateTo('dashboard');
+      redirectToPlayerDashboard();
     });
   }
   
@@ -1453,7 +1595,22 @@ function setupEventListeners() {
   const dashboardAdvanceBtn = document.getElementById('btn-dashboard-advance');
   if (dashboardAdvanceBtn) {
     dashboardAdvanceBtn.addEventListener('click', () => {
-      advanceToStage2();
+      if (appState.currentStage === 2) {
+        if (confirm("Are you sure you want to re-seed the Championship Stage? This will overwrite current Championship matches and scores, but your Group Stage scores are 100% safe.")) {
+          launchChampionshipStageAutomatically();
+          render();
+        }
+        return;
+      }
+      
+      const hasCompleted = checkStage1Completion();
+      const msg = hasCompleted 
+        ? "All Group Stage matches are completed! Do you want to automatically launch the Championship Stage?"
+        : "Group Stage matches are not all completed. Do you want to force-launch the Championship Stage based on current scores?";
+      if (confirm(msg)) {
+        launchChampionshipStageAutomatically();
+        navigateTo('admin-success');
+      }
     });
   }
 
@@ -1480,18 +1637,24 @@ function setupEventListeners() {
     });
   }
 
-  // Admin Success Screen Bindings
   const successViewLiveBtn = document.getElementById('btn-success-view-live');
   if (successViewLiveBtn) {
     successViewLiveBtn.addEventListener('click', () => {
-      navigateTo('dashboard');
+      redirectToPlayerDashboard();
     });
   }
   
   const successResetBtn = document.getElementById('btn-success-reset');
   if (successResetBtn) {
     successResetBtn.addEventListener('click', () => {
-      resetMixer();
+      showCustomConfirm(
+        "RESET TOURNAMENT",
+        "Are you sure you want to reset the entire tournament? This will clear all players, matches, and scores across all courts locally and in the Cloud.",
+        "delete_forever",
+        () => {
+          resetMixer();
+        }
+      );
     });
   }
   
@@ -1500,7 +1663,11 @@ function setupEventListeners() {
   if (navRound1) {
     navRound1.addEventListener('click', () => {
       if (appState.currentStage === 1) {
-        // Already in Group Stage
+        if (appState.currentView === 'dashboard') {
+          // Already in Group Stage dashboard
+          return;
+        }
+        navigateTo('dashboard');
         return;
       }
       
@@ -1522,17 +1689,26 @@ function setupEventListeners() {
   if (navRound2) {
     navRound2.addEventListener('click', () => {
       if (appState.currentStage === 1) {
+        const hasCompleted = checkStage1Completion();
+        if (hasCompleted) {
+          // Fail-safe: if all Group Stage matches are completed, clicking the tab auto-launches Stage 2!
+          launchChampionshipStageAutomatically();
+          if (appState.isAdmin) {
+            navigateTo('admin-success');
+          } else {
+            navigateTo('dashboard');
+          }
+          return;
+        }
+        
         if (appState.isAdmin) {
-          const hasCompleted = checkStage1Completion();
-          const msg = hasCompleted 
-            ? "All Group Stage matches are completed! Do you want to advance to Championship Stage?"
-            : "Group Stage matches are not all completed. Do you want to force-advance to Championship Stage based on current scores?";
+          const msg = "Group Stage matches are not all completed. Do you want to force-launch the Championship Stage based on current scores?";
           if (confirm(msg)) {
-            advanceToStage2();
-            saveStateToCloud();
+            launchChampionshipStageAutomatically();
+            navigateTo('admin-success');
           }
         } else {
-          showPremiumToast("Championship Stage will begin once the admin advances the tournament!");
+          showPremiumToast("Championship Stage will begin automatically once all Group Stage matches are completed!");
         }
         return;
       }
@@ -1590,6 +1766,9 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Set up AI magic auto fill
+  setupMagicAutoFill();
 }
 
 // ----------------------------------------------------
@@ -1631,14 +1810,16 @@ function updateSyncStatus(status) {
 
 async function saveStateToCloud() {
   const cloudSaveBtn = document.getElementById('btn-cloud-save');
-  if (!cloudSaveBtn) return;
   
-  const originalHtml = cloudSaveBtn.innerHTML;
-  cloudSaveBtn.disabled = true;
-  cloudSaveBtn.innerHTML = `
-    <span class="material-symbols-outlined" style="font-size: 16px; animation: pulse 1s infinite ease-in-out;">sync</span>
-    Saving...
-  `;
+  let originalHtml = '';
+  if (cloudSaveBtn) {
+    originalHtml = cloudSaveBtn.innerHTML;
+    cloudSaveBtn.disabled = true;
+    cloudSaveBtn.innerHTML = `
+      <span class="material-symbols-outlined" style="font-size: 16px; animation: pulse 1s infinite ease-in-out;">sync</span>
+      Saving...
+    `;
+  }
   updateSyncStatus('syncing');
   
   try {
@@ -1657,28 +1838,28 @@ async function saveStateToCloud() {
     await setDoc(mixerDocRef, serializedState);
     
     updateSyncStatus('saved');
-    cloudSaveBtn.innerHTML = `
-      <span class="material-symbols-outlined" style="font-size: 16px; color: var(--green);">check_circle</span>
-      Saved!
-    `;
-    
-    setTimeout(() => {
-      cloudSaveBtn.disabled = false;
-      cloudSaveBtn.innerHTML = originalHtml;
-    }, 2000);
+    if (cloudSaveBtn) {
+      cloudSaveBtn.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 16px; color: var(--green);">check_circle</span>
+        Saved!
+      `;
+      
+      setTimeout(() => {
+        cloudSaveBtn.disabled = false;
+        cloudSaveBtn.innerHTML = originalHtml;
+      }, 2000);
+    }
   } catch (error) {
     console.error("Firestore cloud save error:", error);
     updateSyncStatus('error');
-    cloudSaveBtn.disabled = false;
-    cloudSaveBtn.innerHTML = originalHtml;
+    if (cloudSaveBtn) {
+      cloudSaveBtn.disabled = false;
+      cloudSaveBtn.innerHTML = originalHtml;
+    }
   }
 }
 
 async function resetMixer() {
-  if (!confirm("Are you sure you want to reset the entire tournament? This will clear all players, matches, and scores across all courts locally and in the Cloud.")) {
-    return;
-  }
-  
   const resetBtn = document.getElementById('btn-reset-mixer');
   const originalHtml = resetBtn.innerHTML;
   resetBtn.disabled = true;
@@ -1763,6 +1944,107 @@ function checkStage1Completion() {
   });
 }
 
+function launchChampionshipStageAutomatically() {
+  const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
+  const allPlayers = [];
+  
+  const sourceCourtsForSeeding = (appState.currentStage === 2 && appState.stage1Courts)
+    ? appState.stage1Courts
+    : appState.courts;
+    
+  // Gather and seed all players from Stage 1 active courts
+  sourceCourtsForSeeding.filter(c => c.isActive).forEach(court => {
+    // Sort this court stably to compute ranks
+    const sorted = [...court.players].sort((a, b) => {
+      if (b.totalScore !== a.totalScore) {
+        return b.totalScore - a.totalScore;
+      }
+      return a.initialIndex - b.initialIndex;
+    });
+    
+    sorted.forEach((p, idx) => {
+      allPlayers.push({
+        name: p.name,
+        stage1Score: p.totalScore,
+        courtNumber: court.courtNumber,
+        courtRank: idx + 1
+      });
+    });
+  });
+  
+  // Seeding sort order:
+  // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
+  // 2. Higher qualifying score differential breaks ties
+  allPlayers.sort((a, b) => {
+    if (a.courtRank !== b.courtRank) {
+      return a.courtRank - b.courtRank;
+    }
+    return b.stage1Score - a.stage1Score;
+  });
+  
+  // Partition into optimal tier sizes for Stage 2
+  const activeStage1Courts = sourceCourtsForSeeding.filter(c => c.isActive);
+  const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
+  const partition = findOptimalPartition(allPlayers.length, maxCourts);
+  if (!partition) {
+    alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, or 6.");
+    return;
+  }
+  
+  let playerIdx = 0;
+  const tiers = partition.map((size, tierIdx) => {
+    const tierPlayers = [];
+    for (let j = 0; j < size; j++) {
+      tierPlayers.push({
+        ...allPlayers[playerIdx++],
+        seedRank: playerIdx
+      });
+    }
+    return {
+      tierName: TIER_NAMES[tierIdx] || `Tier ${tierIdx + 1}`,
+      players: tierPlayers
+    };
+  });
+  
+  // Archive Stage 1 courts and scores
+  appState.stage1Courts = JSON.parse(JSON.stringify(appState.courts));
+  
+  // Deactivate all courts first
+  appState.courts.forEach(c => {
+    c.isActive = false;
+    c.players = [];
+    c.matches = [];
+    c.activeRound = 1;
+  });
+  
+  // Setup Stage 2 tiered courts
+  tiers.forEach((tier, tierIdx) => {
+    const courtNum = tierIdx + 1;
+    const court = appState.courts[tierIdx];
+    court.isActive = true;
+    
+    // Initialize new Player structures starting at 0, stable indices
+    court.players = tier.players.map((p, pIdx) => new Player(p.name, pIdx));
+    
+    // Set entryState caches just in case they switch screens
+    appState.entryState[courtNum] = {
+      names: tier.players.map(p => p.name),
+      count: tier.players.length
+    };
+    
+    // Build Stage 2 Double Round-Robin pairings for this tier
+    generatePairingsForCourt(court);
+  });
+  
+  appState.currentStage = 2;
+  appState.stage2ViewingQualifying = false;
+  appState.selectedCourtNumber = 1;
+  appState.viewingRound = 1;
+  
+  // Save new Championship stage to Cloud!
+  saveStateToCloud();
+}
+
 function advanceToStage2() {
   const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
   const allPlayers = [];
@@ -1798,7 +2080,9 @@ function advanceToStage2() {
   });
   
   // Partition into optimal tier sizes for Stage 2
-  const partition = findOptimalPartition(allPlayers.length);
+  const activeStage1Courts = appState.courts ? appState.courts.filter(c => c.isActive) : [];
+  const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
+  const partition = findOptimalPartition(allPlayers.length, maxCourts);
   if (!partition) {
     alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, or 6.");
     return;
@@ -1839,7 +2123,7 @@ function renderStage2Review() {
       const scorePrefix = p.stage1Score > 0 ? '+' : '';
       playersListHtml += `
         <div class="tier-player-item">
-          <span style="font-weight: 700; color: var(--text-primary);">${p.name}</span>
+          <span style="font-weight: 700; color: var(--text-primary);">${formatPlayerName(p.name)}</span>
           <span class="seed-badge">
             Rank ${p.courtRank} (Court ${p.courtNumber}) • ${scorePrefix}${p.stage1Score} diff
           </span>
@@ -1900,8 +2184,8 @@ function confirmStage2() {
   // Save new Championship stage to Cloud!
   saveStateToCloud();
   
-  // Navigate to Dashboard
-  navigateTo('dashboard');
+  // Navigate to Success Screen
+  navigateTo('admin-success');
 }
 
 // --- ADMIN SUCCESS RENDER ---
@@ -1910,6 +2194,19 @@ function renderAdminSuccess() {
   
   const activeCourtsEl = document.getElementById('success-active-courts-count');
   if (activeCourtsEl) activeCourtsEl.textContent = `${activeCourts.length} Court${activeCourts.length === 1 ? '' : 's'}`;
+  
+  // Dynamic header based on stage
+  const headerContainer = document.querySelector('#view-admin-success h2');
+  const subtitleContainer = document.querySelector('#view-admin-success p.subtitle-md');
+  if (headerContainer && subtitleContainer) {
+    if (appState.currentStage === 2) {
+      headerContainer.textContent = "Championship Launched!";
+      subtitleContainer.textContent = "Seeding tiers and real-time scoreboards for the Championship Stage are now active. Player dashboards are synced!";
+    } else {
+      headerContainer.textContent = "Tournament Launched!";
+      subtitleContainer.textContent = "Court pairings and real-time scoreboards are now active. All player dashboards are synced and running!";
+    }
+  }
 }
 
 // --- GLOBAL LEADERBOARD LOGIC ---
@@ -1917,25 +2214,129 @@ function renderGlobalLeaderboard(sourceCourts) {
   const container = document.getElementById('global-leaderboard-container');
   if (!container) return;
   
+  const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
+  
+  // Handle Stage 2 segmented toggle switcher
+  const toggleContainer = document.getElementById('leaderboard-stage-toggle-container');
+  const btnCumulative = document.getElementById('btn-leaderboard-cumulative');
+  const btnStage2 = document.getElementById('btn-leaderboard-stage2');
+  const btnStage1 = document.getElementById('btn-leaderboard-stage1');
+  const subtitle = document.getElementById('leaderboard-subtitle');
+  
+  if (appState.currentStage === 2) {
+    if (toggleContainer) toggleContainer.style.display = 'flex';
+    
+    const mode = appState.leaderboardViewMode;
+    
+    if (btnCumulative) {
+      btnCumulative.classList.toggle('active', mode === 'cumulative');
+      btnCumulative.style.color = mode === 'cumulative' ? 'var(--neon)' : 'var(--text-secondary)';
+    }
+    if (btnStage2) {
+      btnStage2.classList.toggle('active', mode === 'stage2');
+      btnStage2.style.color = mode === 'stage2' ? 'var(--neon)' : 'var(--text-secondary)';
+    }
+    if (btnStage1) {
+      btnStage1.classList.toggle('active', mode === 'stage1');
+      btnStage1.style.color = mode === 'stage1' ? 'var(--neon)' : 'var(--text-secondary)';
+    }
+    
+    if (subtitle) {
+      if (mode === 'cumulative') {
+        subtitle.textContent = "All players sorted by cumulative total score (Stage 1 + Stage 2).";
+      } else if (mode === 'stage2') {
+        subtitle.textContent = "All players sorted by Championship Stage total score.";
+      } else {
+        subtitle.textContent = "All players sorted by Group Stage total score.";
+      }
+    }
+    
+    // Bind listeners
+    if (btnCumulative && !btnCumulative.onclick) {
+      btnCumulative.onclick = () => {
+        appState.leaderboardViewMode = 'cumulative';
+        render();
+      };
+    }
+    if (btnStage2 && !btnStage2.onclick) {
+      btnStage2.onclick = () => {
+        appState.leaderboardViewMode = 'stage2';
+        render();
+      };
+    }
+    if (btnStage1 && !btnStage1.onclick) {
+      btnStage1.onclick = () => {
+        appState.leaderboardViewMode = 'stage1';
+        render();
+      };
+    }
+  } else {
+    if (toggleContainer) toggleContainer.style.display = 'none';
+    if (subtitle) subtitle.textContent = "All players sorted by total score.";
+  }
+  
   let allPlayers = [];
   
-  // Aggregate players from all courts
-  if (sourceCourts && Array.isArray(sourceCourts)) {
-    sourceCourts.forEach(court => {
-      if (court.isActive && court.players && Array.isArray(court.players)) {
-        court.players.forEach(p => {
-          // ensure uniqueness by name
-          if (!allPlayers.some(existing => existing.name === p.name)) {
-            allPlayers.push({
+  // Aggregate players based on active mode
+  if (appState.currentStage === 2 && appState.leaderboardViewMode === 'cumulative') {
+    // 1. Gather all players from Stage 1 archived courts
+    const stage1Map = new Map();
+    if (appState.stage1Courts) {
+      appState.stage1Courts.forEach(court => {
+        if (court.isActive && court.players) {
+          court.players.forEach(p => {
+            stage1Map.set(p.name, {
               name: p.name,
               totalScore: p.totalScore || 0,
-              courtNumber: court.courtNumber,
-              pointsPlayed: p.pointsPlayed || 0
+              pointsPlayed: p.pointsPlayed || 0,
+              qualifyingCourt: court.courtNumber
             });
-          }
-        });
-      }
-    });
+          });
+        }
+      });
+    }
+    
+    // 2. Gather players from Stage 2 tiered courts and merge them
+    if (appState.courts) {
+      appState.courts.forEach(court => {
+        if (court.isActive && court.players) {
+          court.players.forEach(p => {
+            const s1 = stage1Map.get(p.name) || { totalScore: 0, pointsPlayed: 0, qualifyingCourt: null };
+            allPlayers.push({
+              name: p.name,
+              totalScore: s1.totalScore + (p.totalScore || 0),
+              pointsPlayed: s1.pointsPlayed + (p.pointsPlayed || 0),
+              courtNumber: court.courtNumber, // current Stage 2 court for tier display
+              qualifyingCourt: s1.qualifyingCourt,
+              isCumulative: true
+            });
+          });
+        }
+      });
+    }
+  } else {
+    // Standard single stage view
+    const targetCourts = (appState.currentStage === 2 && appState.leaderboardViewMode === 'stage1')
+      ? appState.stage1Courts
+      : appState.courts;
+      
+    if (targetCourts && Array.isArray(targetCourts)) {
+      targetCourts.forEach(court => {
+        if (court.isActive && court.players && Array.isArray(court.players)) {
+          court.players.forEach(p => {
+            if (!allPlayers.some(existing => existing.name === p.name)) {
+              allPlayers.push({
+                name: p.name,
+                totalScore: p.totalScore || 0,
+                courtNumber: court.courtNumber,
+                pointsPlayed: p.pointsPlayed || 0,
+                isCumulative: false
+              });
+            }
+          });
+        }
+      });
+    }
   }
   
   // Sort descending by total score, then by points played (tiebreaker)
@@ -1945,7 +2346,7 @@ function renderGlobalLeaderboard(sourceCourts) {
   });
   
   if (allPlayers.length === 0) {
-    container.innerHTML = `<div class="empty-state">No players found in the system yet.</div>`;
+    container.innerHTML = `<div class="empty-state" style="padding: 40px; text-align: center; color: var(--text-secondary); font-size: 14px;">No players found in the system yet.</div>`;
     return;
   }
   
@@ -1957,6 +2358,15 @@ function renderGlobalLeaderboard(sourceCourts) {
     else if (index === 1) { rankColor = 'silver'; trophyIcon = '<span class="material-symbols-outlined" style="color: silver; font-size: 16px;">emoji_events</span>'; }
     else if (index === 2) { rankColor = '#cd7f32'; trophyIcon = '<span class="material-symbols-outlined" style="color: #cd7f32; font-size: 16px;">emoji_events</span>'; }
     
+    let subtitleHtml = '';
+    if (p.isCumulative) {
+      subtitleHtml = `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} • Group Court ${p.qualifyingCourt || 'N/A'}`;
+    } else {
+      subtitleHtml = (appState.currentStage === 2 && appState.leaderboardViewMode !== 'stage1')
+        ? `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} (Court ${p.courtNumber})`
+        : `Qualifying Court ${p.courtNumber}`;
+    }
+      
     return `
       <div class="leaderboard-item" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="display: flex; align-items: center; gap: 14px;">
@@ -1965,15 +2375,15 @@ function renderGlobalLeaderboard(sourceCourts) {
           </div>
           <div style="display: flex; flex-direction: column;">
             <div style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px;">
-              ${p.name} ${trophyIcon}
+              ${formatPlayerName(p.name)} ${trophyIcon}
             </div>
             <div style="font-size: 11px; color: var(--text-secondary);">
-              Qualifying Court ${p.courtNumber}
+              ${subtitleHtml}
             </div>
           </div>
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end;">
-          <div style="font-weight: 800; color: var(--neon); font-size: 16px;">${p.totalScore} pts</div>
+          <div style="font-weight: 800; color: var(--neon); font-size: 16px;">${p.totalScore >= 0 ? '+' : ''}${p.totalScore} pts</div>
           <div style="font-size: 10px; color: var(--text-secondary);">${p.pointsPlayed} played</div>
         </div>
       </div>
@@ -2025,4 +2435,268 @@ function showPremiumToast(message) {
     toast.style.transform = 'translateX(-50%) translateY(-20px)';
     toast.style.opacity = '0';
   }, 3500);
+}
+
+// ----------------------------------------------------
+// AI MAGIC AUTO-FILL & SNAKE DRAFT BALANCING
+// ----------------------------------------------------
+
+function getCourtAverageDUPR(namesArray) {
+  if (!namesArray || namesArray.length === 0) return 0;
+  let totalDupr = 0;
+  let count = 0;
+  namesArray.forEach(name => {
+    if (name && name.trim() !== '') {
+      // Find DUPR suffix in the name, e.g. (3.42) or (2.312)
+      const match = name.match(/\((\d+(?:\.\d+)?)\)/);
+      if (match) {
+        totalDupr += parseFloat(match[1]);
+      } else {
+        totalDupr += 2.50; // Fallback unrated players to 2.50 if name has content
+      }
+      count++;
+    }
+  });
+  return count > 0 ? totalDupr / count : 0;
+}
+
+function convertFileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+async function extractPlayersAndDUPRFromImages(base64Images) {
+  const apiKey = "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";
+  const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names and DUPR ratings from the provided screenshot(s) of player profiles.
+
+GRID FORMAT & ALIGNMENT EXPLANATION:
+- The screenshot displays participants in a grid of 4 columns.
+- Systematic grouping: Every participant profile is an isolated vertical group containing:
+  1. A circular profile picture avatar at the top.
+  2. The player's name directly below the avatar (e.g. 'YIP YK', 'Ng C T', 'Adrian Low', 'Victor Lee', 'Jackson Yap').
+  3. Optional green text 'Friend' or yellow icon 'Reserved' below the name.
+  4. Optional blue 'DUPR X.XXX' or 'DUPR X' badge at the bottom of the group.
+
+CRITICAL NAME INTEGRITY RULES:
+- Every circular avatar represents EXACTLY ONE player. There are exactly 25 circular avatars representing 25 unique players.
+- The text directly below a single circular avatar, even if it spans multiple lines (e.g., 'Adrian\nLow', 'Pui Yee\nLeong', 'HOCK\nSOON HO'), is the full name of a single player. Combine these lines into one player's full name (e.g., "Pui Yee Leong", "Adrian Low", "Hock Soon Ho").
+- NEVER split a single player's name into multiple players (e.g., do NOT output one player named 'Pui Yee' and another named 'Leong').
+
+CRITICAL ALIGNMENT RULES:
+- Never mix elements from different columns.
+- Each circular avatar marks a separate player. Count them carefully to ensure no player is skipped!
+- For each column, map the name and the DUPR badge directly aligned under it vertically in that column.
+- A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name in that column.
+- If a player has a green 'Friend' label, look further down in that same column to see if a blue DUPR badge exists. For example, 'Adrian Low' has a green 'Friend' label AND a blue 'DUPR 3.218' badge below it, so his rating is 3.218. 'Yen' has a green 'Friend' label but NO blue DUPR badge below it, so her rating is 2.50.
+- DUPR badges can contain integer values as well (e.g. 'DUPR 2'). If the badge says 'DUPR 2', the rating is 2.00.
+- If there is NO blue DUPR badge in the vertical group for a player, they have NO rating and must be assigned 2.50. Do NOT borrow ratings from adjacent columns or rows!
+
+EACH DUPR BADGE IS UNIQUE:
+- Each blue DUPR badge on the screen belongs to exactly ONE player profile.
+- NEVER assign a single blue DUPR badge to more than one player (e.g. if Ahh Yik has 'DUPR 2.587', do NOT assign '2.587' to Marcus Yeoh as well; Marcus Yeoh has no badge and must be 2.50. If HOCK SOON HO has 'DUPR 2.169', do NOT assign '2.169' to Jackson Yap as well).
+- If a player has no blue DUPR badge directly aligned under their name in their vertical slot, they MUST default to 2.50. Never reuse or borrow a rating from an adjacent player.
+
+OCR NUMBER PRECISION:
+- Be extremely precise when transcribing the digits of DUPR badges.
+- Read every digit carefully (e.g., distinguish between '3' and '4' to prevent reading '2.312' as '2.412'). Check the pixels twice to ensure zero transcription errors.
+
+To prevent lazy scanning and ensure extreme accuracy for small numbers or decimal parts, you MUST follow a strict Chain-of-Thought:
+1. Scan the image grid systematically row by row, from left to right.
+2. For each participant profile card, transcribe the EXACT name of the player. Do not shorten or alter the name.
+3. Explicitly transcribe the exact subtext/label/badge content below the player's name (e.g. "DUPR 3.754", "DUPR 3.842", "Friend / DUPR 3.218", "Reserved", "Unrated", or empty).
+4. Parse the numeric rating from that subtext with FULL 3-decimal digit precision (e.g. "3.754", "3.842", "2.836", "2.312", "2.148"). DO NOT round or truncate this number to 2 decimals under any circumstances! For example, "3.172" must remain "3.172" and "2.836" must remain "2.836".
+5. If no valid numeric DUPR badge or rating exists (e.g. labeled "Friend" with no rating, "Reserved", "Unrated", or empty), assign a default rating of 2.50.
+
+Respond ONLY with a JSON object in this format:
+{
+  "chain_of_thought": "Write your detailed step-by-step transcription of each player's name and the exact subtext below their name before parsing the rating.",
+  "players": [
+    {
+      "name": "Player Name",
+      "transcribed_subtext": "Exact subtext text under name",
+      "dupr": 3.754
+    }
+  ]
+}`;
+
+  const content = [
+    {
+      type: "text",
+      text: promptText
+    },
+    ...base64Images.map(b64 => ({
+      type: "image_url",
+      image_url: {
+        url: `data:image/jpeg;base64,${b64}`
+      }
+    }))
+  ];
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "user",
+          content: content
+        }
+      ],
+      max_tokens: 2000
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+  }
+
+  const resultData = await response.json();
+  const parsed = JSON.parse(resultData.choices[0].message.content);
+  console.log("CoT Extraction Result:", parsed.chain_of_thought);
+  return parsed.players || [];
+}
+
+function assignBalancedPlayersToCourts(extractedPlayers) {
+  // extractedPlayers is an array of objects: { name: string, dupr: number }
+  // Sort descending by dupr
+  extractedPlayers.sort((a, b) => b.dupr - a.dupr);
+
+  // Get active courts
+  const activeCourts = appState.courts ? appState.courts.filter(c => c.isActive) : [];
+  if (activeCourts.length === 0) return;
+
+  const numCourts = activeCourts.length;
+
+  // Initialize player list for each active court
+  const courtPlayersList = Array.from({ length: numCourts }, () => []);
+
+  // Snake draft distribution: C1 -> C2 -> C3 -> C3 -> C2 -> C1...
+  let goingForward = true;
+  let courtIndex = 0;
+  for (let i = 0; i < extractedPlayers.length; i++) {
+    const player = extractedPlayers[i];
+    let formattedDupr = player.dupr.toString();
+    const dotIdx = formattedDupr.indexOf('.');
+    if (dotIdx === -1) {
+      formattedDupr = player.dupr.toFixed(2);
+    } else {
+      const decimals = formattedDupr.length - dotIdx - 1;
+      if (decimals < 2) {
+        formattedDupr = player.dupr.toFixed(2);
+      }
+    }
+    const nameWithDupr = `${player.name} (${formattedDupr})`;
+    courtPlayersList[courtIndex].push(nameWithDupr);
+
+    // Move to next court in snake draft sequence
+    if (goingForward) {
+      if (courtIndex === numCourts - 1) {
+        goingForward = false;
+      } else {
+        courtIndex++;
+      }
+    } else {
+      if (courtIndex === 0) {
+        goingForward = true;
+      } else {
+        courtIndex--;
+      }
+    }
+  }
+
+  // Assign to court entryState and pad to at least 4
+  activeCourts.forEach((court, idx) => {
+    const names = courtPlayersList[idx];
+    while (names.length < 4) {
+      names.push('');
+    }
+    if (names.length > 7) {
+      names.length = 7;
+    }
+    
+    appState.entryState[court.courtNumber] = {
+      names: names,
+      count: names.length
+    };
+  });
+
+  // Re-render entry screen to update averages and display
+  renderPlayerEntry(activeCourts);
+  saveStateToCloud();
+}
+
+function setupMagicAutoFill() {
+  const autofillBtn = document.getElementById('magic-autofill-btn');
+  const aiModal = document.getElementById('ai-upload-modal');
+  const closeBtn = document.getElementById('ai-modal-close-btn');
+  const fileInput = document.getElementById('ai-image-upload');
+  const uploadZone = document.getElementById('ai-upload-zone');
+  const processingState = document.getElementById('ai-processing-state');
+  
+  if (!autofillBtn || !aiModal) return;
+
+  autofillBtn.addEventListener('click', () => {
+    aiModal.classList.remove('view-hidden');
+    setTimeout(() => {
+      document.body.classList.add('modal-open');
+    }, 10);
+    fileInput.value = '';
+    uploadZone.style.display = 'flex';
+    processingState.style.display = 'none';
+  });
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      document.body.classList.remove('modal-open');
+      setTimeout(() => {
+        aiModal.classList.add('view-hidden');
+      }, 300);
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', async (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+
+      // Show processing state
+      uploadZone.style.display = 'none';
+      processingState.style.display = 'flex';
+
+      try {
+        const base64Promises = Array.from(files).map(file => convertFileToBase64(file));
+        const base64Images = await Promise.all(base64Promises);
+        
+        const extractedPlayers = await extractPlayersAndDUPRFromImages(base64Images);
+        
+        if (extractedPlayers && extractedPlayers.length > 0) {
+          assignBalancedPlayersToCourts(extractedPlayers);
+          showPremiumToast(`Successfully extracted and snake-drafted ${extractedPlayers.length} players!`);
+          document.body.classList.remove('modal-open');
+          setTimeout(() => {
+            aiModal.classList.add('view-hidden');
+          }, 300);
+        } else {
+          alert("No players could be extracted from the uploaded images. Please try again with clearer screenshots.");
+          uploadZone.style.display = 'flex';
+          processingState.style.display = 'none';
+        }
+      } catch (error) {
+        console.error("AI Auto-Fill error:", error);
+        alert(`Error during AI extraction: ${error.message}`);
+        uploadZone.style.display = 'flex';
+        processingState.style.display = 'none';
+      }
+    });
+  }
 }

@@ -74,7 +74,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="index.css?v=2.1">
+  <link rel="stylesheet" href="index.css?v=2.4">
 </head>
 <body>
 
@@ -198,14 +198,20 @@
 
   <!-- SCREEN 2: PLAYER ENTRY -->
   <main id="view-player-entry" class="screen-view view-hidden">
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-      <button class="icon-btn" id="inline-back-entry" style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
-        <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
-      </button>
-      <div>
-        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Add Players</h2>
-        <p class="subtitle-md" style="margin: 4px 0 0 0;">Enter player names to generate matches.</p>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; width: 100%; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button class="icon-btn" id="inline-back-entry" style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+          <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
+        </button>
+        <div>
+          <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Add Players</h2>
+          <p class="subtitle-md" style="margin: 4px 0 0 0;">Enter player names to generate matches.</p>
+        </div>
       </div>
+      <button class="btn-primary neon-glow" id="magic-autofill-btn" style="width: auto; height: 40px; padding: 0 18px; border-radius: 20px; gap: 6px; font-size: 13px; flex-shrink: 0;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">auto_awesome</span>
+        Auto-Fill
+      </button>
     </div>
 
     <!-- New Kanban-style Board Layout -->
@@ -228,52 +234,53 @@
   </main>
 
   <!-- SCREEN: ADMIN SUCCESS SCREEN -->
-  <main id="view-admin-success" class="screen-view view-hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 28px; box-sizing: border-box;">
+  <main id="view-admin-success" class="screen-view view-hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 28px; box-sizing: border-box; padding: 24px;">
     <!-- Large animated success icon -->
-    <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center;">
+    <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
       <!-- Dashed spin outer ring -->
-      <div style="position: absolute; width: 120px; height: 120px; border: 2px dashed var(--neon); border-radius: 50%; animation: spin 12s linear infinite;"></div>
-      <!-- Pulse inner glow -->
-      <div style="position: absolute; width: 88px; height: 88px; background: rgba(195, 244, 0, 0.1); border-radius: 50%; box-shadow: 0 0 30px var(--neon-glow);"></div>
-      <!-- Center checkmark / pickleball icon -->
-      <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); z-index: 2; animation: pulse 2s infinite ease-in-out;">check_circle</span>
+      <div style="position: absolute; width: 120px; height: 120px; border: 1.5px dashed var(--neon); border-radius: 50%; animation: spin 20s linear infinite; opacity: 0.6;"></div>
+      <!-- Center checkmark container -->
+      <div style="width: 76px; height: 76px; border-radius: 50%; background-color: rgba(195, 244, 0, 0.1); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(195, 244, 0, 0.25); z-index: 2;">
+        <span class="material-symbols-outlined" style="font-size: 36px; color: var(--neon); font-weight: bold;">check</span>
+      </div>
     </div>
 
     <div class="flex-col" style="gap: 8px;">
-      <p class="label-caps" style="color: var(--neon);">ADMINISTRATION</p>
-      <h2 class="title-lg" style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">Tournament Launched!</h2>
-      <p class="subtitle-md" style="max-width: 440px; margin: 0 auto; color: var(--text-secondary); line-height: 1.6;">
+      <p class="label-caps" style="color: var(--neon); letter-spacing: 1.5px; font-size: 11px;">ADMINISTRATION</p>
+      <h2 class="title-lg" style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin: 0;">Tournament Launched!</h2>
+      <p class="subtitle-md" style="max-width: 440px; margin: 8px auto 0; color: var(--text-secondary); line-height: 1.6; font-size: 14px;">
         Court pairings and real-time scoreboards are now active. All player dashboards are synced and running!
       </p>
     </div>
 
     <!-- Live Status Card -->
-    <div class="card neon-glow" style="border-color: var(--neon); background-color: rgba(195, 244, 0, 0.03); max-width: 420px; padding: 20px; display: flex; flex-direction: column; gap: 14px; text-align: left; width: 100%;">
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <span class="pulse-dot"></span>
-        <span class="label-caps" style="font-size: 11px; font-weight: 800;">LIVE SYNCING DATA</span>
+    <div class="card neon-glow" style="border: 1px solid rgba(195, 244, 0, 0.3); background-color: rgba(32, 31, 31, 0.4); max-width: 420px; padding: 24px; display: flex; flex-direction: column; gap: 16px; text-align: left; width: 100%; border-radius: 20px; box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(195, 244, 0, 0.04);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="pulse-dot" style="width: 6px; height: 6px;"></span>
+        <span class="label-caps" style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px;">LIVE SYNCING DATA</span>
       </div>
-      <div style="font-size: 13px; color: var(--text-primary); line-height: 1.5; display: flex; flex-direction: column; gap: 6px;">
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary);">Role view:</span>
-          <span style="font-weight: 700; color: var(--neon);">ADMINISTRATOR</span>
+      <div style="height: 1px; background-color: rgba(255, 255, 255, 0.05);"></div>
+      <div style="font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-secondary); font-weight: 500;">Role view:</span>
+          <span style="font-weight: 700; color: var(--neon); letter-spacing: 0.5px; text-transform: uppercase; font-size: 13px;">ADMINISTRATOR</span>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-secondary);">Active Courts:</span>
-          <span style="font-weight: 700;" id="success-active-courts-count">0 Courts</span>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--text-secondary); font-weight: 500;">Active Courts:</span>
+          <span style="font-weight: 700; color: var(--text-primary);" id="success-active-courts-count">0 Courts</span>
         </div>
       </div>
     </div>
 
     <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px;">
       <!-- Quick link to Live dashboard -->
-      <button class="btn-primary neon-glow neon-glow-active" id="btn-success-view-live" style="width: 100%; border-radius: 16px; height: 52px; font-size: 14px; font-weight: 700;">
+      <button class="btn-primary neon-glow neon-glow-active" id="btn-success-view-live" style="width: 100%; border-radius: 30px; height: 54px; font-size: 14px; font-weight: 700; background-color: var(--neon); color: var(--text-black); display: flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; transition: all 0.2s ease;">
         <span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
         View Live Dashboard
       </button>
 
       <!-- Clear and start new setup -->
-      <button class="add-players-btn" id="btn-success-reset" style="width: 100%; border-color: var(--red); color: var(--red); border-radius: 16px; height: 50px; font-size: 13px;">
+      <button class="add-players-btn" id="btn-success-reset" style="width: 100%; border: 1px solid rgba(248, 113, 113, 0.4); background: transparent; color: var(--red); border-radius: 30px; height: 52px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
         <span class="material-symbols-outlined" style="font-size: 18px;">restart_alt</span>
         Reset & Create New Game
       </button>
@@ -375,15 +382,16 @@
       -->
     </div>
 
-    <!-- On Deck Banner (Byes list) -->
-    <div class="on-deck-banner" id="dashboard-on-deck-banner">
-      <span class="material-symbols-outlined">schedule</span>
-      <div class="on-deck-content">
-        <span class="on-deck-label">ON DECK (SITTING OUT):</span>
-        <span class="on-deck-names" id="dashboard-on-deck-names">Sarah & Emma</span>
+    <!-- On Deck Banner (Next Round list) -->
+    <div class="next-round-banner neon-glow" id="dashboard-on-deck-banner">
+      <div class="next-round-header">
+        <span class="material-symbols-outlined">schedule</span>
+        <span class="next-round-label">NEXT ROUND</span>
+      </div>
+      <div class="next-round-matchup" id="dashboard-on-deck-names">
+        <!-- Injected via JS -->
       </div>
     </div>
-
     <!-- Live Leaderboard Section -->
     <div class="leaderboard-title-row">
       <span class="material-symbols-outlined">leaderboard</span>
@@ -438,8 +446,7 @@
       </div>
 
       <!-- Court Badge -->
-      <div class="modal-match-details-badge" id="modal-court-round-badge">Court 1 • Round 1</div>
-      <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 24px;">First to 15, win by 2</p>
+      <div class="modal-match-details-badge" id="modal-court-round-badge" style="margin-bottom: 24px;">Court 1 • Round 1</div>
 
       <!-- Steppers Card -->
       <div class="modal-steppers-card">
@@ -453,7 +460,30 @@
             <button class="stepper-btn" id="stepper-minus-1">
               <span class="material-symbols-outlined">remove</span>
             </button>
-            <span class="stepper-value" id="stepper-val-1">15</span>
+            <select class="stepper-value" id="stepper-val-1">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option value="13">13</option>
+              <option value="14">14</option>
+              <option value="15">15</option>
+              <option value="16">16</option>
+              <option value="17">17</option>
+              <option value="18">18</option>
+              <option value="19">19</option>
+              <option value="20">20</option>
+              <option value="21">21</option>
+            </select>
             <button class="stepper-btn" id="stepper-plus-1">
               <span class="material-symbols-outlined">add</span>
             </button>
@@ -477,7 +507,30 @@
             <button class="stepper-btn" id="stepper-minus-2">
               <span class="material-symbols-outlined">remove</span>
             </button>
-            <span class="stepper-value" id="stepper-val-2">10</span>
+            <select class="stepper-value" id="stepper-val-2">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+              <option value="11">11</option>
+              <option value="12">12</option>
+              <option value="13">13</option>
+              <option value="14">14</option>
+              <option value="15">15</option>
+              <option value="16">16</option>
+              <option value="17">17</option>
+              <option value="18">18</option>
+              <option value="19">19</option>
+              <option value="20">20</option>
+              <option value="21">21</option>
+            </select>
             <button class="stepper-btn" id="stepper-plus-2">
               <span class="material-symbols-outlined">add</span>
             </button>
@@ -513,13 +566,64 @@
     </div>
   </div>
 
+  <!-- AI UPLOAD MODAL -->
+  <div class="modal-overlay view-hidden" id="ai-upload-modal">
+    <div class="modal-content" style="max-width: 480px; padding: 32px 24px; border-radius: 28px;">
+      <!-- Modal Header -->
+      <div class="modal-header" style="margin-bottom: 20px;">
+        <button class="icon-btn" id="ai-modal-close-btn" aria-label="Close modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <div class="modal-title-area">
+          <span class="label-caps" style="color: var(--neon); font-size: 8px;">AUTO-ASSIGNMENT</span>
+          <h2>AI Magic Auto-Fill</h2>
+        </div>
+        <div style="width: 44px;"></div>
+      </div>
+      
+      <!-- Upload Zone -->
+      <div id="ai-upload-zone" style="display: flex; flex-direction: column; width: 100%; gap: 16px;">
+        <p style="color: var(--text-secondary); font-size: 13px; text-align: center; line-height: 1.5; margin-bottom: 8px;">
+          Upload one or more screenshots of player profiles containing DUPR ratings. The AI will extract their names and ratings, then execute a mathematically balanced snake draft across all active courts.
+        </p>
+        
+        <label for="ai-image-upload" style="border: 2px dashed rgba(195, 244, 0, 0.3); border-radius: 20px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: rgba(195, 244, 0, 0.02); transition: all 0.2s ease;" class="neon-glow-active">
+          <span class="material-symbols-outlined" style="font-size: 44px; color: var(--neon); margin-bottom: 12px;">cloud_upload</span>
+          <span style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Tap to Upload Images</span>
+          <span style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">Select one or multiple screenshots (PNG, JPG)</span>
+          <input type="file" id="ai-image-upload" accept="image/png, image/jpeg" style="display: none;" multiple>
+        </label>
+      </div>
+
+      <!-- Processing State -->
+      <div id="ai-processing-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0; width: 100%;">
+        <div style="position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; width: 72px; height: 72px; border: 2px dashed var(--neon); border-radius: 50%; animation: spin 4s linear infinite;"></div>
+          <span class="material-symbols-outlined" style="font-size: 32px; color: var(--neon); animation: pulse 1.2s infinite ease-in-out;">auto_awesome</span>
+        </div>
+        <p style="margin-top: 20px; font-size: 15px; font-weight: 700; color: var(--neon); text-align: center;" id="ai-processing-title">Extracting Players & DUPR...</p>
+      </div>
+    </div>
+  </div>
+
+
   <!-- SCREEN 5: GLOBAL LEADERBOARD SCREEN -->
   <main id="view-global-leaderboard" class="screen-view view-hidden">
     <div class="flex-col">
       <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">GLOBAL STANDINGS</p>
       <h2 class="title-lg">Global Leaderboard</h2>
-      <p class="subtitle-md">All players sorted by total score.</p>
+      <p class="subtitle-md" id="leaderboard-subtitle">All players sorted by total score.</p>
     </div>
+
+    <!-- Segmented Tab Switcher for Stage 2 Standings Toggling -->
+    <div id="leaderboard-stage-toggle-container" style="display: none; margin-top: 16px; margin-bottom: 8px;">
+      <div style="display: flex; background-color: var(--surface); border: 1px solid var(--surface-high); padding: 4px; border-radius: 12px; width: 100%; gap: 4px;">
+        <button id="btn-leaderboard-cumulative" class="leaderboard-toggle-btn active" style="flex: 1; border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Overall (Stage 1+2)</button>
+        <button id="btn-leaderboard-stage2" class="leaderboard-toggle-btn" style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Championship</button>
+        <button id="btn-leaderboard-stage1" class="leaderboard-toggle-btn" style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Group Stage</button>
+      </div>
+    </div>
+
     <div id="global-leaderboard-container" class="card" style="margin-top: 16px;">
       <!-- Leaderboard items will be injected here -->
     </div>
@@ -546,6 +650,6 @@
   </nav>
 
   <!-- Application Script -->
-  <script type="module" src="app.js?v=2.6"></script>
+  <script type="module" src="app.js?v=2.32"></script>
 </body>
 </html>
