@@ -1881,12 +1881,8 @@ async function resetMixer() {
   }));
 
   for (let i = 1; i <= 6; i++) {
-    let initialNames = ['', '', '', ''];
-    if (i === 1) {
-      initialNames = ['Sarah Jenkins', 'Mike Rossi', 'Emma Watson', 'David Chen'];
-    }
     appState.entryState[i] = {
-      names: initialNames,
+      names: ['', '', '', ''],
       count: 4
     };
   }
