@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Credentials and scratch files
+.env
+*.orig
+*.patch
+git_diff.json
+recover_files.py
+recover_robust.py
+test_target.py
+index
+zbpack.json

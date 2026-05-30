@@ -3,10 +3,10 @@ import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstat
 
 // Helper to determine if we are in admin mode
 function checkAdminMode() {
-  return window.location.pathname.includes('/admin') || 
-         window.location.pathname.endsWith('admin.html') || 
-         window.location.search.includes('admin=true') || 
-         window.location.hash.includes('admin');
+  return window.location.pathname.includes('/admin') ||
+    window.location.pathname.endsWith('admin.html') ||
+    window.location.search.includes('admin=true') ||
+    window.location.hash.includes('admin');
 }
 
 // Firebase Configuration (freedomrent-proo)
@@ -33,7 +33,7 @@ const appState = {
   stage2ViewingQualifying: false,
   stage2PreviewTiers: [],
   leaderboardViewMode: 'cumulative', // 'cumulative' | 'stage2' | 'stage1'
-  
+
   // List of 6 Courts
   courts: Array.from({ length: 6 }, (_, i) => ({
     courtNumber: i + 1,
@@ -42,16 +42,16 @@ const appState = {
     matches: [], // Array of Match objects
     activeRound: 1
   })),
-  
+
   // Selection States
   selectedCourtNumber: 1, // Currently selected court in Entry & Dashboard
   viewingRound: 1, // Currently viewed round in Dashboard
-  
+
   // Temporary Entry state to preserve progress during court tab switching
   entryState: {
     // courtNumber -> { names: ['...', '...'], count: 4|5|6 }
   },
-  
+
   // Modal Scoring State
   modal: {
     open: false,
@@ -67,17 +67,17 @@ let confirmCallback = null;
 function showCustomConfirm(title, message, icon, onConfirm) {
   const modal = document.getElementById('confirm-modal');
   if (!modal) return;
-  
+
   const titleEl = document.getElementById('confirm-modal-title');
   const messageEl = document.getElementById('confirm-modal-message');
   const iconEl = document.getElementById('confirm-modal-icon');
-  
+
   if (titleEl) titleEl.textContent = title;
   if (messageEl) messageEl.textContent = message;
   if (iconEl) iconEl.textContent = icon || 'warning';
-  
+
   confirmCallback = onConfirm;
-  
+
   modal.classList.remove('view-hidden');
   setTimeout(() => {
     document.body.classList.add('modal-open');
@@ -118,30 +118,30 @@ class Player {
 
 function recalculateScoresForCourt(court) {
   if (!court || !court.players) return;
-  
+
   // 1. Reset all players scores to 0
   court.players.forEach(p => {
     p.totalScore = 0;
     p.pointsPlayed = 0;
   });
-  
+
   // 2. Iterate through all completed matches and add the point differentials to players
   if (court.matches) {
     court.matches.forEach(match => {
       if (match.isCompleted && match.team1Score !== null && match.team2Score !== null) {
         const diff1 = match.team1Score - match.team2Score;
         const diff2 = match.team2Score - match.team1Score;
-        
+
         // Safely find player in court.players and increment
         const p1 = court.players.find(p => p.name === match.team1Player1.name);
         if (p1) { p1.totalScore += diff1; p1.pointsPlayed += match.team1Score; }
-        
+
         const p2 = court.players.find(p => p.name === match.team1Player2.name);
         if (p2) { p2.totalScore += diff1; p2.pointsPlayed += match.team1Score; }
-        
+
         const p3 = court.players.find(p => p.name === match.team2Player1.name);
         if (p3) { p3.totalScore += diff2; p3.pointsPlayed += match.team2Score; }
-        
+
         const p4 = court.players.find(p => p.name === match.team2Player2.name);
         if (p4) { p4.totalScore += diff2; p4.pointsPlayed += match.team2Score; }
       }
@@ -154,10 +154,10 @@ function generatePairingsForCourt(court) {
   // Reset all players scores to 0 for a fresh start
   court.players.forEach(p => p.totalScore = 0);
   court.activeRound = 1;
-  
+
   const n = court.players.length;
   const p = court.players;
-  
+
   if (n === 4) {
     // 3 rounds - everyone partners with everyone else exactly once
     court.matches.push(new Match(p[0], p[1], p[2], p[3]));
@@ -196,9 +196,9 @@ function generatePairingsForCourt(court) {
 // ----------------------------------------------------
 function findOptimalPartition(playerCount, maxCourts = 6) {
   if (playerCount < 4 || playerCount > 42) return null; // Supported up to 6 courts * 7 players = 42
-  
+
   const results = [];
-  
+
   function backtrack(remaining, currentPartition) {
     if (remaining === 0) {
       if (currentPartition.length <= maxCourts) {
@@ -207,7 +207,7 @@ function findOptimalPartition(playerCount, maxCourts = 6) {
       return;
     }
     if (currentPartition.length >= maxCourts) return;
-    
+
     // Try sizes 7, 6, 5, 4 (prefer larger group sizes first as possibilities)
     for (let size of [7, 6, 5, 4]) {
       if (remaining >= size) {
@@ -217,11 +217,11 @@ function findOptimalPartition(playerCount, maxCourts = 6) {
       }
     }
   }
-  
+
   backtrack(playerCount, []);
-  
+
   if (results.length === 0) return null;
-  
+
   // Sort partitions:
   // 1. Maximize number of groups/courts (parts length descending) to minimize byes
   // 2. Minimize spread difference (max - min ascending) to keep cohorts balanced
@@ -230,18 +230,18 @@ function findOptimalPartition(playerCount, maxCourts = 6) {
     if (b.length !== a.length) {
       return b.length - a.length;
     }
-    
+
     const diffA = Math.max(...a) - Math.min(...a);
     const diffB = Math.max(...b) - Math.min(...b);
     if (diffA !== diffB) {
       return diffA - diffB;
     }
-    
+
     const minA = Math.min(...a);
     const minB = Math.min(...b);
     return minB - minA;
   });
-  
+
   return results[0];
 }
 
@@ -258,7 +258,7 @@ async function startApp() {
       count: 4
     };
   }
-  
+
   // Initialize Reserves Bench Staging Zone as empty
   appState.entryState.bench = {
     names: [],
@@ -273,30 +273,30 @@ async function startApp() {
 
   // Show correct initial screen immediately before network load
   navigateTo(appState.currentView);
-  
+
   // Set up Event Listeners
   setupEventListeners();
-  
+
   // Load & Sync from Firebase in Real-Time
   updateSyncStatus('connecting');
-  
+
   onSnapshot(mixerDocRef, (docSnap) => {
     if (docSnap.exists()) {
       const data = docSnap.data();
       console.log("Real-time cloud update received!");
-      
+
       appState.currentStage = data.currentStage || 1;
       appState.stage1Courts = data.stage1Courts || null;
       appState.stage2ViewingQualifying = data.stage2ViewingQualifying || false;
       appState.stage2PreviewTiers = data.stage2PreviewTiers || [];
-      
+
       if (data.courts) {
         appState.courts = data.courts;
       }
       if (data.entryState) {
         appState.entryState = data.entryState;
       }
-      
+
       // SELF-HEALING AUTOMATIC RE-SEED IN CHAMPIONSHIP STAGE
       if (appState.currentStage === 2) {
         const activeStage1Courts = appState.stage1Courts ? appState.stage1Courts.filter(c => c.isActive) : [];
@@ -308,10 +308,10 @@ async function startApp() {
           return;
         }
       }
-      
+
       // Determine navigation dynamically based on role and mixer activity
       const hasActiveMixer = appState.courts && appState.courts.some(c => c.isActive && c.matches && c.matches.length > 0);
-      
+
       let targetView = 'user-landing';
       if (appState.isAdmin) {
         // Admins follow the saved view, but we prevent loading the dashboard view in admin mode
@@ -319,7 +319,7 @@ async function startApp() {
         if (targetView === 'dashboard') {
           targetView = 'court-setup';
         }
-        
+
         // Ensure selections are valid inside the active courts list
         const activeCourts = appState.courts.filter(c => c.isActive);
         if (activeCourts.length > 0 && !activeCourts.some(c => c.courtNumber === appState.selectedCourtNumber)) {
@@ -341,11 +341,11 @@ async function startApp() {
           targetView = 'user-landing';
         }
       }
-      
+
       if (appState.currentView !== targetView) {
         navigateTo(targetView);
       }
-      
+
       updateSyncStatus('saved');
     } else {
       console.log("No existing mixer in Cloud. Ready for new setup.");
@@ -355,13 +355,13 @@ async function startApp() {
         navigateTo(targetView);
       }
     }
-    
+
     // Trigger render
     render();
   }, (error) => {
     console.error("Firebase real-time sync failed:", error);
     updateSyncStatus('error');
-    
+
     // Graceful fallback to local render
     render();
   });
@@ -377,14 +377,14 @@ if (document.readyState === 'loading') {
 
 function navigateTo(viewName) {
   appState.currentView = viewName;
-  
+
   // Hide all screens
   const screens = ['view-user-landing', 'view-court-setup', 'view-player-entry', 'view-dashboard', 'view-stage2-review', 'view-admin-success', 'view-global-leaderboard'];
   screens.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('view-hidden');
   });
-  
+
   // Show active screen
   let activeId = '';
   if (viewName === 'user-landing') activeId = 'view-user-landing';
@@ -394,10 +394,10 @@ function navigateTo(viewName) {
   else if (viewName === 'stage2-review') activeId = 'view-stage2-review';
   else if (viewName === 'admin-success') activeId = 'view-admin-success';
   else if (viewName === 'global-leaderboard') activeId = 'view-global-leaderboard';
-  
+
   const activeEl = document.getElementById(activeId);
   if (activeEl) activeEl.classList.remove('view-hidden');
-  
+
   render();
 }
 
@@ -417,23 +417,23 @@ function render() {
   const sourceCourts = (appState.currentStage === 2 && appState.stage2ViewingQualifying)
     ? appState.stage1Courts
     : appState.courts;
-    
+
   const activeCourts = sourceCourts ? sourceCourts.filter(c => c.isActive) : [];
-  
+
   // 1. App Bar Updates
   const backBtn = document.getElementById('app-back-btn');
   const barTitle = document.getElementById('app-bar-title');
   const cloudSaveBtn = document.getElementById('btn-cloud-save');
   const syncStatusEl = document.getElementById('cloud-sync-status');
-  
+
   // Determine if back button and cloud save should be visible based on role and view
   if (!appState.isAdmin) {
     // User Mode (Player) has back button and save button always hidden
     if (backBtn) backBtn.style.visibility = 'hidden';
     if (cloudSaveBtn) cloudSaveBtn.style.display = 'none';
     if (syncStatusEl) syncStatusEl.style.display = 'inline-flex'; // Reassure sync is active
-    barTitle.textContent = appState.currentView === 'user-landing' 
-      ? 'Life Journey Pickleball' 
+    barTitle.textContent = appState.currentView === 'user-landing'
+      ? 'Life Journey Pickleball'
       : '';
   } else {
     // Admin Mode behavior
@@ -464,7 +464,7 @@ function render() {
       if (syncStatusEl) syncStatusEl.style.display = 'inline-flex';
     }
   }
-  
+
   // 2. Render Screen Specific views
   if (appState.currentView === 'user-landing') {
     // Nothing special to render dynamically for landing standby view
@@ -481,7 +481,7 @@ function render() {
   } else if (appState.currentView === 'global-leaderboard') {
     renderGlobalLeaderboard(sourceCourts);
   }
-  
+
   // 3. Render Modal if open
   renderScoreModal();
 
@@ -490,21 +490,21 @@ function render() {
   if (bottomNav) {
     const shouldShow = (appState.currentView === 'dashboard' || appState.currentView === 'global-leaderboard') && !appState.modal.open;
     bottomNav.style.display = shouldShow ? 'flex' : 'none';
-    
+
     if (shouldShow) {
       const btnRound1 = document.getElementById('nav-round1');
       const btnRound2 = document.getElementById('nav-round2');
       const btnLeaderboard = document.getElementById('nav-leaderboard');
       const btnSetup = document.getElementById('nav-setup');
-      
+
       const isLeaderboardActive = appState.currentView === 'global-leaderboard';
       const isRound1Active = !isLeaderboardActive && (appState.currentStage === 1 || (appState.currentStage === 2 && appState.stage2ViewingQualifying));
       const isRound2Active = !isLeaderboardActive && !isRound1Active;
-      
+
       if (btnRound1) btnRound1.classList.toggle('active', isRound1Active);
       if (btnRound2) btnRound2.classList.toggle('active', isRound2Active);
       if (btnLeaderboard) btnLeaderboard.classList.toggle('active', isLeaderboardActive);
-      
+
       if (btnSetup) {
         btnSetup.style.display = appState.isAdmin ? 'flex' : 'none';
         btnSetup.classList.remove('active');
@@ -517,14 +517,14 @@ function render() {
 function renderCourtSetup() {
   const container = document.getElementById('court-list-container');
   container.innerHTML = '';
-  
+
   appState.courts.forEach(court => {
     const isActive = court.isActive;
-    
+
     const card = document.createElement('div');
     card.className = `card court-card ${isActive ? 'active' : ''}`;
     card.setAttribute('data-court-number', court.courtNumber);
-    
+
     card.innerHTML = `
       <div class="court-card-header">
         <div class="court-title-area">
@@ -543,7 +543,7 @@ function renderCourtSetup() {
         </button>
       ` : ''}
     `;
-    
+
     // Switch Toggles listener
     const toggle = card.querySelector('.court-toggle');
     if (toggle) {
@@ -553,7 +553,7 @@ function renderCourtSetup() {
         render();
       });
     }
-    
+
     // Add players button listener
     if (isActive) {
       const btn = card.querySelector('.add-players-btn');
@@ -566,10 +566,10 @@ function renderCourtSetup() {
         });
       }
     }
-    
+
     container.appendChild(card);
   });
-  
+
   // Dynamic UI state based on active mixer
   const hasActiveMixer = (appState.courts && appState.courts.some(c => c.isActive && c.matches && c.matches.length > 0)) || appState.currentStage > 1;
   const title = document.getElementById('setup-title');
@@ -594,7 +594,7 @@ function renderCourtSetup() {
   const nextBtn = document.getElementById('setup-next-btn');
   if (nextBtn) {
     nextBtn.disabled = !hasActive;
-    nextBtn.innerHTML = hasActiveMixer 
+    nextBtn.innerHTML = hasActiveMixer
       ? `Edit Players & Regenerate <span class="material-symbols-outlined">refresh</span>`
       : `Next: Enter Players <span class="material-symbols-outlined">arrow_forward</span>`;
   }
@@ -643,8 +643,8 @@ function renderPlayerEntry(activeCourts) {
     }
 
     const avgDupr = getCourtAverageDUPR(entry.names);
-    const avgBadgeHtml = avgDupr > 0 
-      ? `<span class="avg-dupr-badge" style="font-size: 11px; font-weight: 800; font-family: 'Hanken Grotesk', sans-serif; color: var(--neon); background: rgba(195, 244, 0, 0.1); border: 1px solid rgba(195, 244, 0, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(195, 244, 0, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;">Avg: ${avgDupr.toFixed(2)}</span>`
+    const avgBadgeHtml = avgDupr > 0
+      ? `<span class="avg-dupr-badge" style="font-size: 11px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: var(--neon); background: rgba(255, 214, 10, 0.1); border: 1px solid rgba(255, 214, 10, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(255, 214, 10, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;">Avg: ${avgDupr.toFixed(2)}</span>`
       : '';
 
     const colHeader = document.createElement('div');
@@ -680,7 +680,7 @@ function renderPlayerEntry(activeCourts) {
       if (input) {
         input.addEventListener('input', (e) => {
           entry.names[idx] = e.target.value;
-          
+
           // Dynamically update count badge and bottom generate button state
           const updatedFilled = entry.names.filter(n => n && n.trim() !== '').length;
           const badge = col.querySelector('.capacity-badge');
@@ -705,7 +705,7 @@ function renderPlayerEntry(activeCourts) {
             if (!avgBadge && titleArea) {
               avgBadge = document.createElement('span');
               avgBadge.className = 'avg-dupr-badge';
-              avgBadge.style.cssText = "font-size: 11px; font-weight: 800; font-family: 'Hanken Grotesk', sans-serif; color: var(--neon); background: rgba(195, 244, 0, 0.1); border: 1px solid rgba(195, 244, 0, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(195, 244, 0, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;";
+              avgBadge.style.cssText = "font-size: 11px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: var(--neon); background: rgba(255, 214, 10, 0.1); border: 1px solid rgba(255, 214, 10, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(255, 214, 10, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;";
               titleArea.appendChild(avgBadge);
             }
             if (avgBadge) {
@@ -716,7 +716,7 @@ function renderPlayerEntry(activeCourts) {
               avgBadge.remove();
             }
           }
-          
+
           validateEntryGeneration(activeCourts);
         });
 
@@ -802,7 +802,7 @@ function validateEntryGeneration(activeCourts) {
 
 function initDragAndDrop(activeCourts) {
   const handles = document.querySelectorAll('.drag-handle');
-  
+
   handles.forEach(handle => {
     // Prevent default touch gestures so it doesn't scroll the screen while dragging
     handle.style.touchAction = 'none';
@@ -810,7 +810,7 @@ function initDragAndDrop(activeCourts) {
     handle.addEventListener('pointerdown', (e) => {
       // Only drag on left click
       if (e.button !== 0) return;
-      
+
       const item = handle.closest('.player-drag-item');
       if (!item) return;
 
@@ -826,7 +826,7 @@ function initDragAndDrop(activeCourts) {
 
       // Prevent focus or text selection issues while dragging
       e.preventDefault();
-      
+
       // Capture the pointer
       handle.setPointerCapture(e.pointerId);
 
@@ -872,11 +872,11 @@ function initDragAndDrop(activeCourts) {
         // Check which board column the pointer is currently hovering over
         let hoveredCol = null;
         const cols = document.querySelectorAll('.board-column');
-        
+
         cols.forEach(col => {
           const rect = col.getBoundingClientRect();
           if (moveEv.clientX >= rect.left && moveEv.clientX <= rect.right &&
-              moveEv.clientY >= rect.top && moveEv.clientY <= rect.bottom) {
+            moveEv.clientY >= rect.top && moveEv.clientY <= rect.bottom) {
             hoveredCol = col;
           }
         });
@@ -893,7 +893,7 @@ function initDragAndDrop(activeCourts) {
           const targetCapacity = 7;
           const targetNames = appState.entryState[targetListId].names;
           const currentCount = targetNames.length;
-          
+
           // Check if dragging from another list would overflow target capacity
           if (sourceListId !== targetListId && currentCount >= targetCapacity) {
             // Court is full, block dropping!
@@ -906,7 +906,7 @@ function initDragAndDrop(activeCourts) {
 
           // Find the insertion point (which sibling index inside list)
           const siblingItems = [...currentTargetList.querySelectorAll('.player-drag-item:not(.is-dragging)')];
-          
+
           let nextSibling = siblingItems.find(sibling => {
             const siblingRect = sibling.getBoundingClientRect();
             return moveEv.clientY < siblingRect.top + siblingRect.height / 2;
@@ -930,7 +930,7 @@ function initDragAndDrop(activeCourts) {
         handle.releasePointerCapture(upEv.pointerId);
         handle.removeEventListener('pointermove', onPointerMove);
         handle.removeEventListener('pointerup', onPointerUp);
-        
+
         item.classList.remove('is-dragging');
         ghost.remove();
 
@@ -941,21 +941,21 @@ function initDragAndDrop(activeCourts) {
         // If dropped successfully inside a valid list insert slot
         if (currentTargetList && dropIndicator.parentNode) {
           const targetListId = currentTargetList.getAttribute('data-list-id');
-          
+
           // Calculate drop placement index inside DOM children list
           const children = Array.from(currentTargetList.children);
           let finalIndex = children.indexOf(dropIndicator);
-          
+
           dropIndicator.remove();
 
           // Mutate the app state (with defensive checks)
           if (!appState.entryState) appState.entryState = {};
-          
+
           const sourceEntry = appState.entryState[sourceListId];
           if (!sourceEntry) return;
           if (!sourceEntry.names) sourceEntry.names = [];
           const sourceArray = sourceEntry.names;
-          
+
           const targetEntry = appState.entryState[targetListId];
           if (!targetEntry) return;
           if (!targetEntry.names) targetEntry.names = [];
@@ -963,7 +963,7 @@ function initDragAndDrop(activeCourts) {
 
           // Remove from source array
           const [movedName] = sourceArray.splice(sourceIndex, 1);
-          
+
           // If inserting into target array (compensating for the deletion index if in same array)
           let adjustedIndex = finalIndex;
           if (sourceListId === targetListId && finalIndex > sourceIndex) {
@@ -1004,27 +1004,27 @@ function renderDashboard(activeCourts) {
   if (activeCourts.length > 0 && !activeCourts.some(c => c.courtNumber === appState.selectedCourtNumber)) {
     appState.selectedCourtNumber = activeCourts[0].courtNumber;
   }
-  
+
   const court = activeCourts.find(c => c.courtNumber === appState.selectedCourtNumber) || activeCourts[0];
   const totalRounds = court ? court.matches.length : 0;
-  
+
   const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
-  
+
   // Update Stage 2 UI layout and text
   const stageBadge = document.getElementById('dashboard-stage-badge');
   const advanceCard = document.getElementById('dashboard-advance-card');
   const backLinkContainer = document.getElementById('stage2-back-link-container');
   const dashboardTitle = document.getElementById('dashboard-title');
   const leaderboardTitleText = document.getElementById('leaderboard-title-text');
-  
+
   if (appState.currentStage === 2) {
     if (stageBadge) stageBadge.style.display = appState.stage2ViewingQualifying ? 'none' : 'block';
-    
+
     // Check if there is an active court mismatch (seeding exceeded available courts)
     const activeStage1Courts = appState.stage1Courts ? appState.stage1Courts.filter(c => c.isActive) : [];
     const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
     const currentActiveCourtsCount = appState.courts.filter(c => c.isActive).length;
-    
+
     if (currentActiveCourtsCount > maxCourts && appState.isAdmin) {
       if (advanceCard) {
         advanceCard.style.display = 'flex';
@@ -1032,7 +1032,7 @@ function renderDashboard(activeCourts) {
         const advanceTitle = document.getElementById('dashboard-advance-title');
         const advanceDesc = document.getElementById('dashboard-advance-desc');
         const advanceBtnText = document.getElementById('btn-dashboard-advance-text');
-        
+
         if (advanceIcon) advanceIcon.textContent = 'build';
         if (advanceTitle) advanceTitle.textContent = 'Seeding Mismatch Detected';
         if (advanceDesc) advanceDesc.textContent = `Championship Stage is running on ${currentActiveCourtsCount} courts, but you set up only ${maxCourts} courts in Group Stage. Click below to instantly re-seed into exactly ${maxCourts} tiers.`;
@@ -1041,13 +1041,13 @@ function renderDashboard(activeCourts) {
     } else {
       if (advanceCard) advanceCard.style.display = 'none';
     }
-    
+
     if (backLinkContainer) backLinkContainer.style.display = 'flex';
-    
+
     const toggleText = appState.stage2ViewingQualifying ? 'Back to Championship Stage Standings' : 'View Group Stage Standings';
     const btnToggleText = document.getElementById('btn-toggle-stage-text');
     if (btnToggleText) btnToggleText.textContent = toggleText;
-    
+
     if (dashboardTitle) {
       dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Group Stage Dashboard' : 'Championship Stage Dashboard';
     }
@@ -1059,7 +1059,7 @@ function renderDashboard(activeCourts) {
     if (backLinkContainer) backLinkContainer.style.display = 'none';
     if (dashboardTitle) dashboardTitle.textContent = 'Group Stage Dashboard';
     if (leaderboardTitleText) leaderboardTitleText.textContent = 'Live Leaderboard (Group Stage)';
-    
+
     // Always show advancement options during Group Stage (Stage 1) for Admins
     if (appState.currentStage === 1 && appState.isAdmin) {
       if (advanceCard) {
@@ -1068,7 +1068,7 @@ function renderDashboard(activeCourts) {
         const advanceTitle = document.getElementById('dashboard-advance-title');
         const advanceDesc = document.getElementById('dashboard-advance-desc');
         const advanceBtnText = document.getElementById('btn-dashboard-advance-text');
-        
+
         if (checkStage1Completion()) {
           if (advanceIcon) advanceIcon.textContent = 'celebration';
           if (advanceTitle) advanceTitle.textContent = 'Group Stage Completed!';
@@ -1085,24 +1085,24 @@ function renderDashboard(activeCourts) {
       if (advanceCard) advanceCard.style.display = 'none';
     }
   }
-  
+
   // 1. Render Court Select Tabs
   const courtTabs = document.getElementById('dashboard-court-tabs');
   courtTabs.innerHTML = '';
   activeCourts.forEach(c => {
     const isSelected = c.courtNumber === appState.selectedCourtNumber;
-    
+
     const completedCount = c.matches ? c.matches.filter(m => m.isCompleted).length : 0;
     const totalCount = c.matches ? c.matches.length : 0;
     const courtCompleted = totalCount > 0 && completedCount === totalCount;
-    
+
     const tab = document.createElement('div');
     tab.className = `tab-chip ${isSelected ? 'active' : ''} ${courtCompleted ? 'completed' : ''}`;
-    
+
     const tabName = (appState.currentStage === 2 && !appState.stage2ViewingQualifying)
       ? `${TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`} (Court ${c.courtNumber})`
       : `Court ${c.courtNumber}`;
-      
+
     if (courtCompleted) {
       tab.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>${tabName}`;
     } else if (completedCount > 0) {
@@ -1110,7 +1110,7 @@ function renderDashboard(activeCourts) {
     } else {
       tab.textContent = tabName;
     }
-    
+
     tab.addEventListener('click', () => {
       appState.selectedCourtNumber = c.courtNumber;
       appState.viewingRound = c.activeRound;
@@ -1118,37 +1118,37 @@ function renderDashboard(activeCourts) {
     });
     courtTabs.appendChild(tab);
   });
-  
+
   // 2. Render Round Selector chips
   const roundChips = document.getElementById('dashboard-round-chips');
   roundChips.innerHTML = '';
-  
+
   for (let i = 1; i <= totalRounds; i++) {
     const isViewing = i === appState.viewingRound;
     const isActiveRound = i === court.activeRound;
     const isCompleted = court.matches[i - 1] && court.matches[i - 1].isCompleted;
-    
+
     const chip = document.createElement('div');
     chip.className = `round-chip ${isViewing ? 'viewing' : ''} ${isActiveRound ? 'active-round' : ''} ${isCompleted ? 'completed' : ''}`;
-    
+
     if (isCompleted) {
       chip.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>Round ${i}`;
     } else {
       chip.textContent = `Round ${i}`;
     }
-    
+
     chip.addEventListener('click', () => {
       appState.viewingRound = i;
       render();
     });
     roundChips.appendChild(chip);
   }
-  
+
   // 3. Render Match Card
   const matchCard = document.getElementById('dashboard-match-card');
   const matchIndex = appState.viewingRound - 1;
   const match = court.matches[matchIndex];
-  
+
   if (match) {
 
     // Render Card Contents
@@ -1191,7 +1191,7 @@ function renderDashboard(activeCourts) {
         ${match.isCompleted ? 'Edit Score' : 'Input Score'}
       </button>
     `;
-    
+
     // Action button opens Modal Stepper
     const actionBtn = matchCard.querySelector('.match-action-btn');
     if (actionBtn) {
@@ -1199,7 +1199,7 @@ function renderDashboard(activeCourts) {
         appState.modal.open = true;
         appState.modal.courtNumber = court.courtNumber;
         appState.modal.matchIndex = matchIndex;
-        
+
         if (match.isCompleted) {
           appState.modal.score1 = match.team1Score;
           appState.modal.score2 = match.team2Score;
@@ -1207,11 +1207,11 @@ function renderDashboard(activeCourts) {
           appState.modal.score1 = 0;
           appState.modal.score2 = 0;
         }
-        
+
         render();
       });
     }
-    
+
     // 4. Render Next Round info
     const deckNames = document.getElementById('dashboard-on-deck-names');
     if (matchIndex + 1 < court.matches.length) {
@@ -1237,11 +1237,11 @@ function renderDashboard(activeCourts) {
     matchCard.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No matches generated for this round.</p>';
     document.getElementById('dashboard-on-deck-banner').style.display = 'none';
   }
-  
+
   // 5. Render Leaderboard Items sorted descending
   const leaderboardContainer = document.getElementById('leaderboard-items-container');
   leaderboardContainer.innerHTML = '';
-  
+
   const sortedPlayers = [...court.players];
   sortedPlayers.sort((a, b) => {
     if (b.totalScore !== a.totalScore) {
@@ -1249,15 +1249,15 @@ function renderDashboard(activeCourts) {
     }
     return a.initialIndex - b.initialIndex;
   });
-  
+
   sortedPlayers.forEach((player, idx) => {
     const rank = idx + 1;
     const isFirst = rank === 1;
-    
+
     const score = player.totalScore;
     const isPositive = score > 0;
     const isNegative = score < 0;
-    
+
     let scoreClass = 'score-neutral';
     let prefix = '';
     if (isPositive) {
@@ -1268,7 +1268,7 @@ function renderDashboard(activeCourts) {
     } else {
       prefix = '+';
     }
-    
+
     const item = document.createElement('div');
     item.className = `leaderboard-item ${isFirst ? 'first-place' : ''}`;
     item.innerHTML = `
@@ -1283,33 +1283,33 @@ function renderDashboard(activeCourts) {
 // --- DIALOG MODAL SCORE STEPPER RENDER ---
 function renderScoreModal() {
   const modal = document.getElementById('score-modal');
-  
+
   if (!appState.modal.open) {
     modal.classList.add('view-hidden');
     document.body.classList.remove('modal-open');
     return;
   }
-  
+
   modal.classList.remove('view-hidden');
   // Delayed class append to trigger smooth CSS transition slide-up
   setTimeout(() => {
     document.body.classList.add('modal-open');
   }, 10);
-  
+
   const court = appState.courts.find(c => c.courtNumber === appState.modal.courtNumber);
   const match = court.matches[appState.modal.matchIndex];
-  
+
   // Set players names in modal
   document.getElementById('modal-court-round-badge').textContent = `Court ${court.courtNumber} • Round ${appState.modal.matchIndex + 1}`;
   document.getElementById('modal-team1-names').textContent = `${formatPlayerName(match.team1Player1.name)} & ${formatPlayerName(match.team1Player2.name)}`;
   document.getElementById('modal-team2-names').textContent = `${formatPlayerName(match.team2Player1.name)} & ${formatPlayerName(match.team2Player2.name)}`;
-  
+
   // Steppers Score Text
   const val1 = document.getElementById('stepper-val-1');
   const val2 = document.getElementById('stepper-val-2');
   if (val1) val1.value = appState.modal.score1;
   if (val2) val2.value = appState.modal.score2;
-  
+
   // Color highlights on winning stepper
   if (appState.modal.score1 > appState.modal.score2) {
     val1.className = 'stepper-value winning';
@@ -1321,7 +1321,7 @@ function renderScoreModal() {
     val1.className = 'stepper-value';
     val2.className = 'stepper-value';
   }
-  
+
 
 }
 
@@ -1334,7 +1334,7 @@ function submitScore(courtNumber, matchIndex, score1, score2) {
   if (!court) return;
   const match = court.matches[matchIndex];
   if (!match) return;
-  
+
   // Helper to safely find and update player totalScore by name in court.players
   const updatePlayerScore = (name, amount) => {
     const playerObj = court.players.find(p => p.name === name);
@@ -1342,45 +1342,45 @@ function submitScore(courtNumber, matchIndex, score1, score2) {
       playerObj.totalScore += amount;
     }
   };
-  
+
   // 1. Revert previous score changes if the match was already completed
   if (match.isCompleted && match.team1Score !== null && match.team2Score !== null) {
     const oldDiff1 = match.team1Score - match.team2Score;
     const oldDiff2 = match.team2Score - match.team1Score;
-    
+
     // Revert on match object player copies
     match.team1Player1.totalScore -= oldDiff1;
     match.team1Player2.totalScore -= oldDiff1;
     match.team2Player1.totalScore -= oldDiff2;
     match.team2Player2.totalScore -= oldDiff2;
-    
+
     // Revert on actual court players
     updatePlayerScore(match.team1Player1.name, -oldDiff1);
     updatePlayerScore(match.team1Player2.name, -oldDiff1);
     updatePlayerScore(match.team2Player1.name, -oldDiff2);
     updatePlayerScore(match.team2Player2.name, -oldDiff2);
   }
-  
+
   // 2. Set new score details
   match.team1Score = score1;
   match.team2Score = score2;
   match.isCompleted = true;
-  
+
   const diff1 = score1 - score2;
   const diff2 = score2 - score1;
-  
+
   // Update on match object player copies
   match.team1Player1.totalScore += diff1;
   match.team1Player2.totalScore += diff1;
   match.team2Player1.totalScore += diff2;
   match.team2Player2.totalScore += diff2;
-  
+
   // Update on actual court players
   updatePlayerScore(match.team1Player1.name, diff1);
   updatePlayerScore(match.team1Player2.name, diff1);
   updatePlayerScore(match.team2Player1.name, diff2);
   updatePlayerScore(match.team2Player2.name, diff2);
-  
+
   // If the score was input on the court's current active round, auto advance the active round if appropriate
   if (matchIndex + 1 === court.activeRound && court.activeRound < court.matches.length) {
     court.activeRound++;
@@ -1405,7 +1405,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   // Inline Back Buttons
   const inlineBackEntry = document.getElementById('inline-back-entry');
   if (inlineBackEntry) {
@@ -1422,7 +1422,7 @@ function setupEventListeners() {
       navigateTo('dashboard');
     });
   }
-  
+
   // Screen 1 Setup: Next button click
   const setupNextBtn = document.getElementById('setup-next-btn');
   if (setupNextBtn) {
@@ -1436,26 +1436,26 @@ function setupEventListeners() {
   if (entryGenerateBtn) {
     entryGenerateBtn.addEventListener('click', () => {
       const activeCourts = appState.courts.filter(c => c.isActive);
-      
+
       // Commit Names & Run Matchmaking Engine for all active courts
       activeCourts.forEach(court => {
         const entry = appState.entryState[court.courtNumber];
         court.players = entry.names
           .filter(n => n.trim() !== '')
           .map((n, idx) => new Player(n.trim(), idx));
-          
+
         generatePairingsForCourt(court);
       });
-      
+
       // Default viewing select states for Dashboard
       appState.selectedCourtNumber = activeCourts[0].courtNumber;
       appState.viewingRound = activeCourts[0].activeRound;
-      
+
       navigateTo('admin-success');
       saveStateToCloud(); // Save automatically to Firestore
     });
   }
-  
+
   // Modal Stepper Controllers
   const stepperPlus1 = document.getElementById('stepper-plus-1');
   if (stepperPlus1) {
@@ -1466,7 +1466,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   const stepperMinus1 = document.getElementById('stepper-minus-1');
   if (stepperMinus1) {
     stepperMinus1.addEventListener('click', () => {
@@ -1476,7 +1476,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   const stepperPlus2 = document.getElementById('stepper-plus-2');
   if (stepperPlus2) {
     stepperPlus2.addEventListener('click', () => {
@@ -1486,7 +1486,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   const stepperMinus2 = document.getElementById('stepper-minus-2');
   if (stepperMinus2) {
     stepperMinus2.addEventListener('click', () => {
@@ -1504,7 +1504,7 @@ function setupEventListeners() {
       render();
     });
   }
-  
+
   const val2Select = document.getElementById('stepper-val-2');
   if (val2Select) {
     val2Select.addEventListener('change', (e) => {
@@ -1512,7 +1512,7 @@ function setupEventListeners() {
       render();
     });
   }
-  
+
   // Modal Actions
   const modalCloseBtn = document.getElementById('modal-close-btn');
   if (modalCloseBtn) {
@@ -1521,7 +1521,7 @@ function setupEventListeners() {
       render();
     });
   }
-  
+
   const modalConfirmBtn = document.getElementById('modal-confirm-btn');
   if (modalConfirmBtn) {
     modalConfirmBtn.addEventListener('click', () => {
@@ -1532,7 +1532,7 @@ function setupEventListeners() {
         appState.modal.score2
       );
       appState.modal.open = false;
-      
+
       // Auto-advancement hook during Group Stage (Stage 1) for both Admins and Players
       if (appState.currentStage === 1 && checkStage1Completion()) {
         launchChampionshipStageAutomatically();
@@ -1547,7 +1547,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   // Cloud Saving Actions
   const cloudSaveBtn = document.getElementById('btn-cloud-save');
   if (cloudSaveBtn) {
@@ -1555,7 +1555,7 @@ function setupEventListeners() {
       saveStateToCloud();
     });
   }
-  
+
   const resetMixerBtn = document.getElementById('btn-reset-mixer');
   if (resetMixerBtn) {
     resetMixerBtn.addEventListener('click', () => {
@@ -1586,7 +1586,7 @@ function setupEventListeners() {
       redirectToPlayerDashboard();
     });
   }
-  
+
   // Stage 2 Navigation & Promotion Bindings
   const dashboardAdvanceBtn = document.getElementById('btn-dashboard-advance');
   if (dashboardAdvanceBtn) {
@@ -1598,9 +1598,9 @@ function setupEventListeners() {
         }
         return;
       }
-      
+
       const hasCompleted = checkStage1Completion();
-      const msg = hasCompleted 
+      const msg = hasCompleted
         ? "All Group Stage matches are completed! Do you want to automatically launch the Championship Stage?"
         : "Group Stage matches are not all completed. Do you want to force-launch the Championship Stage based on current scores?";
       if (confirm(msg)) {
@@ -1621,7 +1621,7 @@ function setupEventListeners() {
   if (toggleStageViewBtn) {
     toggleStageViewBtn.addEventListener('click', () => {
       appState.stage2ViewingQualifying = !appState.stage2ViewingQualifying;
-      
+
       // Switch active court selections to match viewing stage
       const sourceCourts = appState.stage2ViewingQualifying ? appState.stage1Courts : appState.courts;
       const activeCourts = sourceCourts.filter(c => c.isActive);
@@ -1639,7 +1639,7 @@ function setupEventListeners() {
       redirectToPlayerDashboard();
     });
   }
-  
+
   const successResetBtn = document.getElementById('btn-success-reset');
   if (successResetBtn) {
     successResetBtn.addEventListener('click', () => {
@@ -1653,7 +1653,7 @@ function setupEventListeners() {
       );
     });
   }
-  
+
   // Premium Bottom Navigation items click events
   const navRound1 = document.getElementById('nav-round1');
   if (navRound1) {
@@ -1666,10 +1666,10 @@ function setupEventListeners() {
         navigateTo('dashboard');
         return;
       }
-      
+
       if (!appState.stage2ViewingQualifying) {
         appState.stage2ViewingQualifying = true;
-        
+
         // Switch active court selections to match Stage 1 courts
         const activeCourts = appState.stage1Courts ? appState.stage1Courts.filter(c => c.isActive) : [];
         if (activeCourts.length > 0) {
@@ -1680,7 +1680,7 @@ function setupEventListeners() {
       navigateTo('dashboard');
     });
   }
-  
+
   const navRound2 = document.getElementById('nav-round2');
   if (navRound2) {
     navRound2.addEventListener('click', () => {
@@ -1696,7 +1696,7 @@ function setupEventListeners() {
           }
           return;
         }
-        
+
         if (appState.isAdmin) {
           const msg = "Group Stage matches are not all completed. Do you want to force-launch the Championship Stage based on current scores?";
           if (confirm(msg)) {
@@ -1708,10 +1708,10 @@ function setupEventListeners() {
         }
         return;
       }
-      
+
       if (appState.stage2ViewingQualifying) {
         appState.stage2ViewingQualifying = false;
-        
+
         // Switch active court selections to match Stage 2 courts
         const activeCourts = appState.courts ? appState.courts.filter(c => c.isActive) : [];
         if (activeCourts.length > 0) {
@@ -1722,14 +1722,14 @@ function setupEventListeners() {
       navigateTo('dashboard');
     });
   }
-  
+
   const navLeaderboard = document.getElementById('nav-leaderboard');
   if (navLeaderboard) {
     navLeaderboard.addEventListener('click', () => {
       navigateTo('global-leaderboard');
     });
   }
-  
+
   const navSetup = document.getElementById('nav-setup');
   if (navSetup) {
     navSetup.addEventListener('click', () => {
@@ -1749,11 +1749,11 @@ function setupEventListeners() {
   // Setup Confirm Modal Handlers
   const confirmModalCancel = document.getElementById('confirm-modal-cancel');
   const confirmModalOk = document.getElementById('confirm-modal-ok');
-  
+
   if (confirmModalCancel) {
     confirmModalCancel.addEventListener('click', hideCustomConfirm);
   }
-  
+
   if (confirmModalOk) {
     confirmModalOk.addEventListener('click', () => {
       hideCustomConfirm();
@@ -1773,14 +1773,14 @@ function setupEventListeners() {
 function updateSyncStatus(status) {
   const syncStatusEl = document.getElementById('cloud-sync-status');
   if (!syncStatusEl) return;
-  
+
   const textEl = syncStatusEl.querySelector('.sync-text');
   const iconEl = syncStatusEl.querySelector('span');
-  
+
   if (appState.currentView !== 'court-setup') {
     syncStatusEl.style.display = 'inline-flex';
   }
-  
+
   if (status === 'syncing') {
     syncStatusEl.className = 'sync-status status-syncing';
     textEl.textContent = 'Syncing...';
@@ -1806,7 +1806,7 @@ function updateSyncStatus(status) {
 
 async function saveStateToCloud() {
   const cloudSaveBtn = document.getElementById('btn-cloud-save');
-  
+
   let originalHtml = '';
   if (cloudSaveBtn) {
     originalHtml = cloudSaveBtn.innerHTML;
@@ -1817,7 +1817,7 @@ async function saveStateToCloud() {
     `;
   }
   updateSyncStatus('syncing');
-  
+
   try {
     const serializedState = {
       currentView: appState.currentView,
@@ -1830,16 +1830,16 @@ async function saveStateToCloud() {
       viewingRound: appState.viewingRound,
       entryState: JSON.parse(JSON.stringify(appState.entryState))
     };
-    
+
     await setDoc(mixerDocRef, serializedState);
-    
+
     updateSyncStatus('saved');
     if (cloudSaveBtn) {
       cloudSaveBtn.innerHTML = `
         <span class="material-symbols-outlined" style="font-size: 16px; color: var(--green);">check_circle</span>
         Saved!
       `;
-      
+
       setTimeout(() => {
         cloudSaveBtn.disabled = false;
         cloudSaveBtn.innerHTML = originalHtml;
@@ -1863,7 +1863,7 @@ async function resetMixer() {
     <span class="material-symbols-outlined" style="font-size: 16px; animation: pulse 1s infinite ease-in-out;">sync</span>
     Clearing...
   `;
-  
+
   // Reset local state to default
   appState.currentView = 'court-setup';
   appState.currentStage = 1;
@@ -1879,7 +1879,7 @@ async function resetMixer() {
     matches: [],
     activeRound: 1
   }));
-  
+
   for (let i = 1; i <= 6; i++) {
     let initialNames = ['', '', '', ''];
     if (i === 1) {
@@ -1897,7 +1897,7 @@ async function resetMixer() {
     count: 0
   };
 
-  
+
   try {
     await setDoc(mixerDocRef, {
       currentView: 'court-setup',
@@ -1910,10 +1910,10 @@ async function resetMixer() {
       viewingRound: 1,
       entryState: JSON.parse(JSON.stringify(appState.entryState))
     });
-    
+
     resetBtn.disabled = false;
     resetBtn.innerHTML = originalHtml;
-    
+
     updateSyncStatus('new');
     navigateTo('court-setup');
   } catch (error) {
@@ -1933,7 +1933,7 @@ function checkStage1Completion() {
   if (appState.currentStage !== 1) return false;
   const activeCourts = appState.courts.filter(c => c.isActive);
   if (activeCourts.length === 0) return false;
-  
+
   // Every match on every active court must be completed
   return activeCourts.every(court => {
     return court.matches.length > 0 && court.matches.every(m => m.isCompleted);
@@ -1943,11 +1943,11 @@ function checkStage1Completion() {
 function launchChampionshipStageAutomatically() {
   const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
   const allPlayers = [];
-  
+
   const sourceCourtsForSeeding = (appState.currentStage === 2 && appState.stage1Courts)
     ? appState.stage1Courts
     : appState.courts;
-    
+
   // Gather and seed all players from Stage 1 active courts
   sourceCourtsForSeeding.filter(c => c.isActive).forEach(court => {
     // Sort this court stably to compute ranks
@@ -1957,7 +1957,7 @@ function launchChampionshipStageAutomatically() {
       }
       return a.initialIndex - b.initialIndex;
     });
-    
+
     sorted.forEach((p, idx) => {
       allPlayers.push({
         name: p.name,
@@ -1967,7 +1967,7 @@ function launchChampionshipStageAutomatically() {
       });
     });
   });
-  
+
   // Seeding sort order:
   // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
   // 2. Higher qualifying score differential breaks ties
@@ -1977,7 +1977,7 @@ function launchChampionshipStageAutomatically() {
     }
     return b.stage1Score - a.stage1Score;
   });
-  
+
   // Partition into optimal tier sizes for Stage 2
   const activeStage1Courts = sourceCourtsForSeeding.filter(c => c.isActive);
   const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
@@ -1986,7 +1986,7 @@ function launchChampionshipStageAutomatically() {
     alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, or 6.");
     return;
   }
-  
+
   let playerIdx = 0;
   const tiers = partition.map((size, tierIdx) => {
     const tierPlayers = [];
@@ -2001,10 +2001,10 @@ function launchChampionshipStageAutomatically() {
       players: tierPlayers
     };
   });
-  
+
   // Archive Stage 1 courts and scores
   appState.stage1Courts = JSON.parse(JSON.stringify(appState.courts));
-  
+
   // Deactivate all courts first
   appState.courts.forEach(c => {
     c.isActive = false;
@@ -2012,31 +2012,31 @@ function launchChampionshipStageAutomatically() {
     c.matches = [];
     c.activeRound = 1;
   });
-  
+
   // Setup Stage 2 tiered courts
   tiers.forEach((tier, tierIdx) => {
     const courtNum = tierIdx + 1;
     const court = appState.courts[tierIdx];
     court.isActive = true;
-    
+
     // Initialize new Player structures starting at 0, stable indices
     court.players = tier.players.map((p, pIdx) => new Player(p.name, pIdx));
-    
+
     // Set entryState caches just in case they switch screens
     appState.entryState[courtNum] = {
       names: tier.players.map(p => p.name),
       count: tier.players.length
     };
-    
+
     // Build Stage 2 Double Round-Robin pairings for this tier
     generatePairingsForCourt(court);
   });
-  
+
   appState.currentStage = 2;
   appState.stage2ViewingQualifying = false;
   appState.selectedCourtNumber = 1;
   appState.viewingRound = 1;
-  
+
   // Save new Championship stage to Cloud!
   saveStateToCloud();
 }
@@ -2044,7 +2044,7 @@ function launchChampionshipStageAutomatically() {
 function advanceToStage2() {
   const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
   const allPlayers = [];
-  
+
   // Gather and seed all players from Stage 1 active courts
   appState.courts.filter(c => c.isActive).forEach(court => {
     // Sort this court stably to compute ranks
@@ -2054,7 +2054,7 @@ function advanceToStage2() {
       }
       return a.initialIndex - b.initialIndex;
     });
-    
+
     sorted.forEach((p, idx) => {
       allPlayers.push({
         name: p.name,
@@ -2064,7 +2064,7 @@ function advanceToStage2() {
       });
     });
   });
-  
+
   // Seeding sort order:
   // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
   // 2. Higher qualifying score differential breaks ties
@@ -2074,7 +2074,7 @@ function advanceToStage2() {
     }
     return b.stage1Score - a.stage1Score;
   });
-  
+
   // Partition into optimal tier sizes for Stage 2
   const activeStage1Courts = appState.courts ? appState.courts.filter(c => c.isActive) : [];
   const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
@@ -2083,7 +2083,7 @@ function advanceToStage2() {
     alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, or 6.");
     return;
   }
-  
+
   let playerIdx = 0;
   appState.stage2PreviewTiers = partition.map((size, tierIdx) => {
     const tierPlayers = [];
@@ -2098,7 +2098,7 @@ function advanceToStage2() {
       players: tierPlayers
     };
   });
-  
+
   // Show preview review Screen 4
   navigateTo('stage2-review');
 }
@@ -2106,14 +2106,14 @@ function advanceToStage2() {
 function renderStage2Review() {
   const container = document.getElementById('seeding-tiers-container');
   container.innerHTML = '';
-  
+
   const iconNames = ["emoji_events", "shield", "workspace_premium", "sports_score", "stars", "military_tech"];
   const themeClasses = ["tier-card-gold", "tier-card-silver", "tier-card-bronze", "tier-card-bronze", "tier-card-bronze", "tier-card-bronze"];
-  
+
   appState.stage2PreviewTiers.forEach((tier, tierIdx) => {
     const card = document.createElement('div');
     card.className = `card ${themeClasses[tierIdx] || 'tier-card-bronze'}`;
-    
+
     let playersListHtml = '';
     tier.players.forEach(p => {
       const scorePrefix = p.stage1Score > 0 ? '+' : '';
@@ -2126,7 +2126,7 @@ function renderStage2Review() {
         </div>
       `;
     });
-    
+
     card.innerHTML = `
       <h3 class="tier-header-title">
         <span class="material-symbols-outlined">${iconNames[tierIdx] || 'emoji_events'}</span>
@@ -2136,7 +2136,7 @@ function renderStage2Review() {
         ${playersListHtml}
       </div>
     `;
-    
+
     container.appendChild(card);
   });
 }
@@ -2144,7 +2144,7 @@ function renderStage2Review() {
 function confirmStage2() {
   // Archive Stage 1 courts and scores
   appState.stage1Courts = JSON.parse(JSON.stringify(appState.courts));
-  
+
   // Deactivate all courts first
   appState.courts.forEach(c => {
     c.isActive = false;
@@ -2152,34 +2152,34 @@ function confirmStage2() {
     c.matches = [];
     c.activeRound = 1;
   });
-  
+
   // Setup Stage 2 tiered courts
   appState.stage2PreviewTiers.forEach((tier, tierIdx) => {
     const courtNum = tierIdx + 1;
     const court = appState.courts[tierIdx];
     court.isActive = true;
-    
+
     // Initialize new Player structures starting at 0, stable indices
     court.players = tier.players.map((p, pIdx) => new Player(p.name, pIdx));
-    
+
     // Set entryState caches just in case they switch screens
     appState.entryState[courtNum] = {
       names: tier.players.map(p => p.name),
       count: tier.players.length
     };
-    
+
     // Build Stage 2 Double Round-Robin pairings for this tier
     generatePairingsForCourt(court);
   });
-  
+
   appState.currentStage = 2;
   appState.stage2ViewingQualifying = false;
   appState.selectedCourtNumber = 1;
   appState.viewingRound = 1;
-  
+
   // Save new Championship stage to Cloud!
   saveStateToCloud();
-  
+
   // Navigate to Success Screen
   navigateTo('admin-success');
 }
@@ -2187,10 +2187,10 @@ function confirmStage2() {
 // --- ADMIN SUCCESS RENDER ---
 function renderAdminSuccess() {
   const activeCourts = appState.courts.filter(c => c.isActive);
-  
+
   const activeCourtsEl = document.getElementById('success-active-courts-count');
   if (activeCourtsEl) activeCourtsEl.textContent = `${activeCourts.length} Court${activeCourts.length === 1 ? '' : 's'}`;
-  
+
   // Dynamic header based on stage
   const headerContainer = document.querySelector('#view-admin-success h2');
   const subtitleContainer = document.querySelector('#view-admin-success p.subtitle-md');
@@ -2209,21 +2209,21 @@ function renderAdminSuccess() {
 function renderGlobalLeaderboard(sourceCourts) {
   const container = document.getElementById('global-leaderboard-container');
   if (!container) return;
-  
+
   const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
-  
+
   // Handle Stage 2 segmented toggle switcher
   const toggleContainer = document.getElementById('leaderboard-stage-toggle-container');
   const btnCumulative = document.getElementById('btn-leaderboard-cumulative');
   const btnStage2 = document.getElementById('btn-leaderboard-stage2');
   const btnStage1 = document.getElementById('btn-leaderboard-stage1');
   const subtitle = document.getElementById('leaderboard-subtitle');
-  
+
   if (appState.currentStage === 2) {
     if (toggleContainer) toggleContainer.style.display = 'flex';
-    
+
     const mode = appState.leaderboardViewMode;
-    
+
     if (btnCumulative) {
       btnCumulative.classList.toggle('active', mode === 'cumulative');
       btnCumulative.style.color = mode === 'cumulative' ? 'var(--neon)' : 'var(--text-secondary)';
@@ -2236,7 +2236,7 @@ function renderGlobalLeaderboard(sourceCourts) {
       btnStage1.classList.toggle('active', mode === 'stage1');
       btnStage1.style.color = mode === 'stage1' ? 'var(--neon)' : 'var(--text-secondary)';
     }
-    
+
     if (subtitle) {
       if (mode === 'cumulative') {
         subtitle.textContent = "All players sorted by cumulative total score (Stage 1 + Stage 2).";
@@ -2246,7 +2246,7 @@ function renderGlobalLeaderboard(sourceCourts) {
         subtitle.textContent = "All players sorted by Group Stage total score.";
       }
     }
-    
+
     // Bind listeners
     if (btnCumulative && !btnCumulative.onclick) {
       btnCumulative.onclick = () => {
@@ -2270,9 +2270,9 @@ function renderGlobalLeaderboard(sourceCourts) {
     if (toggleContainer) toggleContainer.style.display = 'none';
     if (subtitle) subtitle.textContent = "All players sorted by total score.";
   }
-  
+
   let allPlayers = [];
-  
+
   // Aggregate players based on active mode
   if (appState.currentStage === 2 && appState.leaderboardViewMode === 'cumulative') {
     // 1. Gather all players from Stage 1 archived courts
@@ -2291,7 +2291,7 @@ function renderGlobalLeaderboard(sourceCourts) {
         }
       });
     }
-    
+
     // 2. Gather players from Stage 2 tiered courts and merge them
     if (appState.courts) {
       appState.courts.forEach(court => {
@@ -2315,7 +2315,7 @@ function renderGlobalLeaderboard(sourceCourts) {
     const targetCourts = (appState.currentStage === 2 && appState.leaderboardViewMode === 'stage1')
       ? appState.stage1Courts
       : appState.courts;
-      
+
     if (targetCourts && Array.isArray(targetCourts)) {
       targetCourts.forEach(court => {
         if (court.isActive && court.players && Array.isArray(court.players)) {
@@ -2334,26 +2334,26 @@ function renderGlobalLeaderboard(sourceCourts) {
       });
     }
   }
-  
+
   // Sort descending by total score, then by points played (tiebreaker)
   allPlayers.sort((a, b) => {
     if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
     return b.pointsPlayed - a.pointsPlayed;
   });
-  
+
   if (allPlayers.length === 0) {
     container.innerHTML = `<div class="empty-state" style="padding: 40px; text-align: center; color: var(--text-secondary); font-size: 14px;">No players found in the system yet.</div>`;
     return;
   }
-  
+
   container.innerHTML = allPlayers.map((p, index) => {
     let rankColor = 'var(--text-secondary)';
     let trophyIcon = '';
-    
+
     if (index === 0) { rankColor = 'gold'; trophyIcon = '<span class="material-symbols-outlined" style="color: gold; font-size: 16px;">emoji_events</span>'; }
     else if (index === 1) { rankColor = 'silver'; trophyIcon = '<span class="material-symbols-outlined" style="color: silver; font-size: 16px;">emoji_events</span>'; }
     else if (index === 2) { rankColor = '#cd7f32'; trophyIcon = '<span class="material-symbols-outlined" style="color: #cd7f32; font-size: 16px;">emoji_events</span>'; }
-    
+
     let subtitleHtml = '';
     if (p.isCumulative) {
       subtitleHtml = `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} • Group Court ${p.qualifyingCourt || 'N/A'}`;
@@ -2362,7 +2362,7 @@ function renderGlobalLeaderboard(sourceCourts) {
         ? `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} (Court ${p.courtNumber})`
         : `Qualifying Court ${p.courtNumber}`;
     }
-      
+
     return `
       <div class="leaderboard-item" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div style="display: flex; align-items: center; gap: 14px;">
@@ -2414,18 +2414,18 @@ function showPremiumToast(message) {
     toast.style.pointerEvents = 'none';
     document.body.appendChild(toast);
   }
-  
+
   toast.innerHTML = `
     <span class="material-symbols-outlined" style="color: var(--neon); font-size: 18px;">info</span>
     <span>${message}</span>
   `;
-  
+
   // Trigger transition
   setTimeout(() => {
     toast.style.transform = 'translateX(-50%) translateY(0)';
     toast.style.opacity = '1';
   }, 10);
-  
+
   // Hide after delay
   setTimeout(() => {
     toast.style.transform = 'translateX(-50%) translateY(-20px)';
@@ -2459,14 +2459,43 @@ function getCourtAverageDUPR(namesArray) {
 function convertFileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1500;
+
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress as JPEG
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        resolve(dataUrl.split(',')[1]);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
     reader.onerror = (error) => reject(error);
     reader.readAsDataURL(file);
   });
 }
 
 async function extractPlayersAndDUPRFromImages(base64Images) {
-  const apiKey = "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";
+  const savedKey = localStorage.getItem('ai_api_key') || '';
+  const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
+
   const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names and DUPR ratings from the provided screenshot(s) of player profiles.
 
 GRID FORMAT & ALIGNMENT EXPLANATION:
@@ -2532,15 +2561,15 @@ Respond ONLY with a JSON object in this format:
     }))
   ];
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("/api/extract", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
+      "X-API-Key": savedKey,
+      "X-AI-Provider": savedProvider
     },
     body: JSON.stringify({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
+      model: savedProvider === 'openai' ? 'gpt-4o' : 'gemini-2.5-flash',
       messages: [
         {
           role: "user",
@@ -2553,7 +2582,7 @@ Respond ONLY with a JSON object in this format:
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    throw new Error(`API error: ${response.statusCode || response.status} - ${errorText}`);
   }
 
   const resultData = await response.json();
@@ -2619,7 +2648,7 @@ function assignBalancedPlayersToCourts(extractedPlayers) {
     if (names.length > 7) {
       names.length = 7;
     }
-    
+
     appState.entryState[court.courtNumber] = {
       names: names,
       count: names.length
@@ -2638,8 +2667,26 @@ function setupMagicAutoFill() {
   const fileInput = document.getElementById('ai-image-upload');
   const uploadZone = document.getElementById('ai-upload-zone');
   const processingState = document.getElementById('ai-processing-state');
+
+  // AI settings DOM elements
+  const settingsToggleBtn = document.getElementById('ai-settings-toggle-btn');
+  const settingsGearIcon = document.getElementById('ai-settings-gear-icon');
+  const settingsZone = document.getElementById('ai-settings-zone');
+  const providerSelect = document.getElementById('ai-settings-provider');
+  const keyInput = document.getElementById('ai-settings-key');
+  const keyVisibilityBtn = document.getElementById('ai-settings-key-visibility-btn');
+  const visibilityIcon = document.getElementById('ai-visibility-icon');
+  const saveSettingsBtn = document.getElementById('ai-settings-save-btn');
   
   if (!autofillBtn || !aiModal) return;
+
+  // Load and refresh input values from localStorage
+  const loadSettings = () => {
+    const savedKey = localStorage.getItem('ai_api_key') || '';
+    const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
+    if (providerSelect) providerSelect.value = savedProvider;
+    if (keyInput) keyInput.value = savedKey;
+  };
 
   autofillBtn.addEventListener('click', () => {
     aiModal.classList.remove('view-hidden');
@@ -2647,8 +2694,15 @@ function setupMagicAutoFill() {
       document.body.classList.add('modal-open');
     }, 10);
     fileInput.value = '';
-    uploadZone.style.display = 'flex';
-    processingState.style.display = 'none';
+    
+    // Default show upload zone, hide settings and loading
+    if (uploadZone) uploadZone.style.display = 'flex';
+    if (processingState) processingState.style.display = 'none';
+    if (settingsZone) settingsZone.style.display = 'none';
+    if (settingsGearIcon) settingsGearIcon.classList.remove('gear-spin-active');
+    isSettingsOpen = false;
+    
+    loadSettings();
   });
 
   if (closeBtn) {
@@ -2660,14 +2714,67 @@ function setupMagicAutoFill() {
     });
   }
 
+  // Toggle API Key text visibility
+  if (keyVisibilityBtn && keyInput && visibilityIcon) {
+    keyVisibilityBtn.addEventListener('click', () => {
+      const isPassword = keyInput.type === 'password';
+      keyInput.type = isPassword ? 'text' : 'password';
+      visibilityIcon.textContent = isPassword ? 'visibility_off' : 'visibility';
+    });
+  }
+
+  // Toggle Settings Zone display
+  let isSettingsOpen = false;
+  if (settingsToggleBtn && settingsGearIcon && settingsZone && uploadZone && processingState) {
+    settingsToggleBtn.addEventListener('click', () => {
+      isSettingsOpen = !isSettingsOpen;
+      if (isSettingsOpen) {
+        settingsGearIcon.classList.add('gear-spin-active');
+        uploadZone.style.display = 'none';
+        processingState.style.display = 'none';
+        settingsZone.style.display = 'flex';
+        loadSettings();
+      } else {
+        settingsGearIcon.classList.remove('gear-spin-active');
+        settingsZone.style.display = 'none';
+        processingState.style.display = 'none';
+        uploadZone.style.display = 'flex';
+      }
+    });
+  }
+
+  // Save Settings logic
+  if (saveSettingsBtn && keyInput && providerSelect && settingsGearIcon && settingsZone && uploadZone) {
+    saveSettingsBtn.addEventListener('click', () => {
+      const keyVal = keyInput.value.trim();
+      const providerVal = providerSelect.value;
+
+      if (!keyVal) {
+        alert("Please enter a valid API key before saving.");
+        return;
+      }
+
+      localStorage.setItem('ai_api_key', keyVal);
+      localStorage.setItem('ai_provider', providerVal);
+
+      showPremiumToast(`API credentials saved successfully!`);
+      
+      // Auto transition back to upload view
+      isSettingsOpen = false;
+      settingsGearIcon.classList.remove('gear-spin-active');
+      settingsZone.style.display = 'none';
+      uploadZone.style.display = 'flex';
+    });
+  }
+
   if (fileInput) {
     fileInput.addEventListener('change', async (e) => {
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
       // Show processing state
-      uploadZone.style.display = 'none';
-      processingState.style.display = 'flex';
+      if (uploadZone) uploadZone.style.display = 'none';
+      if (processingState) processingState.style.display = 'flex';
 
       try {
         const base64Promises = Array.from(files).map(file => convertFileToBase64(file));
@@ -2684,14 +2791,14 @@ function setupMagicAutoFill() {
           }, 300);
         } else {
           alert("No players could be extracted from the uploaded images. Please try again with clearer screenshots.");
-          uploadZone.style.display = 'flex';
-          processingState.style.display = 'none';
+          if (uploadZone) uploadZone.style.display = 'flex';
+          if (processingState) processingState.style.display = 'none';
         }
       } catch (error) {
         console.error("AI Auto-Fill error:", error);
         alert(`Error during AI extraction: ${error.message}`);
-        uploadZone.style.display = 'flex';
-        processingState.style.display = 'none';
+        if (uploadZone) uploadZone.style.display = 'flex';
+        if (processingState) processingState.style.display = 'none';
       }
     });
   }

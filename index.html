@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <script>
     // Global Unhandled Error Diagnostic Boundary
-    (function() {
+    (function () {
       var errors = [];
       function renderDiagnosticPanel() {
         var container = document.getElementById('debug-diagnostic-panel');
@@ -28,17 +29,17 @@
           document.body.appendChild(container);
         }
         var html = '<div style="display:flex;align-items:center;gap:8px;color:#f87171;font-weight:bold;margin-bottom:8px;">' +
-                   '<span style="font-size:16px;">⚠️</span> RUNTIME DIAGNOSTIC DETECTED</div>' +
-                   '<p style="color:#c4c9ac;margin-bottom:12px;font-size:11px;">The app encountered the following startup error(s). Please verify dependencies or check connection:</p>';
-        errors.forEach(function(err) {
+          '<span style="font-size:16px;">⚠️</span> RUNTIME DIAGNOSTIC DETECTED</div>' +
+          '<p style="color:#c4c9ac;margin-bottom:12px;font-size:11px;">The app encountered the following startup error(s). Please verify dependencies or check connection:</p>';
+        errors.forEach(function (err) {
           html += '<div style="background-color:rgba(248,113,113,0.08);border-left:4px solid #f87171;padding:8px;margin-bottom:8px;white-space:pre-wrap;word-break:break-all;">' +
-                  '<strong>Error:</strong> ' + err.message + '\n' +
-                  '<strong>File:</strong> ' + err.source + ' (Line ' + err.lineno + ':' + err.colno + ')' +
-                  '</div>';
+            '<strong>Error:</strong> ' + err.message + '\n' +
+            '<strong>File:</strong> ' + err.source + ' (Line ' + err.lineno + ':' + err.colno + ')' +
+            '</div>';
         });
         container.innerHTML = html;
       }
-      window.addEventListener('error', function(e) {
+      window.addEventListener('error', function (e) {
         errors.push({
           message: e.message || (e.error ? e.error.message : 'Module loading failed'),
           source: e.filename || 'module script / cdn import',
@@ -48,7 +49,7 @@
         if (document.body) renderDiagnosticPanel();
         else window.addEventListener('DOMContentLoaded', renderDiagnosticPanel);
       });
-      window.addEventListener('unhandledrejection', function(e) {
+      window.addEventListener('unhandledrejection', function (e) {
         errors.push({
           message: 'Unhandled Promise Rejection: ' + (e.reason ? (e.reason.message || e.reason) : 'No reason provided'),
           source: 'async database sync',
@@ -61,21 +62,26 @@
     })();
   </script>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Life Journey Pickleball - PickleMix</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  
+
   <!-- Material Symbols Outlined -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet">
+
   <!-- Google Fonts (Plus Jakarta Sans & Hanken Grotesk) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+    rel="stylesheet">
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="index.css?v=2.4">
 </head>
+
 <body>
 
   <!-- Top Navigation App Bar -->
@@ -88,39 +94,67 @@
   </header>
 
   <!-- SCREEN 0: USER STANDBY LANDING -->
-  <main id="view-user-landing" class="screen-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 24px; box-sizing: border-box;">
+  <main id="view-user-landing" class="screen-view"
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 24px; box-sizing: border-box;">
     <div style="position: relative; display: flex; align-items: center; justify-content: center;">
       <!-- Glowing Animated Pulsating Pickleball Icon Container -->
-      <div class="neon-glow" style="width: 96px; height: 96px; border-radius: 50%; background-color: var(--surface-high); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; position: relative;">
-        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); animation: pulse 2s infinite ease-in-out;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;"><g transform="rotate(45 12 12)"><rect x="7" y="2" width="10" height="13" rx="4"></rect><rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect><path d="M12 15v6" stroke-width="3"></path><path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path><path d="M10.5 21h3" stroke-width="2"></path></g><circle cx="18" cy="18" r="4" stroke-width="1.5"></circle><path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path></svg></span>
+      <div class="neon-glow"
+        style="width: 96px; height: 96px; border-radius: 50%; background-color: var(--surface-high); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; position: relative;">
+        <span class="material-symbols-outlined"
+          style="font-size: 48px; color: var(--neon); animation: pulse 2s infinite ease-in-out;"><svg
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" style="width: 1em; height: 1em;">
+            <g transform="rotate(45 12 12)">
+              <rect x="7" y="2" width="10" height="13" rx="4"></rect>
+              <rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect>
+              <path d="M12 15v6" stroke-width="3"></path>
+              <path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path>
+              <path d="M10.5 21h3" stroke-width="2"></path>
+            </g>
+            <circle cx="18" cy="18" r="4" stroke-width="1.5"></circle>
+            <path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path>
+          </svg></span>
       </div>
-      <div style="position: absolute; width: 114px; height: 114px; border-radius: 50%; border: 1px dashed var(--neon); opacity: 0.3; animation: spin 15s linear infinite;"></div>
+      <div
+        style="position: absolute; width: 114px; height: 114px; border-radius: 50%; border: 1px dashed var(--neon); opacity: 0.3; animation: spin 15s linear infinite;">
+      </div>
     </div>
 
     <div>
       <p class="label-caps" style="color: var(--neon); font-size: 11px; margin-bottom: 8px;">Life Journey Pickleball</p>
       <h2 class="title-lg" style="font-size: 32px; letter-spacing: -0.5px;">Mixer Standby</h2>
       <p class="subtitle-md" style="font-size: 15px; max-width: 420px; margin: 8px auto 0; line-height: 1.5;">
-        The tournament administrator has not started a mixer yet. Hang tight! Once the matches are generated, this screen will instantly sync and open the live scoreboard.
+        The tournament administrator has not started a mixer yet. Hang tight! Once the matches are generated, this
+        screen will instantly sync and open the live scoreboard.
       </p>
     </div>
 
     <!-- Standby status card -->
-    <div class="card neon-glow" style="width: 100%; max-width: 440px; padding: 24px; border-color: rgba(195, 244, 0, 0.15); background-color: rgba(195, 244, 0, 0.01); display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-secondary); font-size: 14px;">
+    <div class="card neon-glow"
+      style="width: 100%; max-width: 440px; padding: 24px; border-color: rgba(255, 214, 10, 0.15); background-color: rgba(255, 214, 10, 0.01); display: flex; flex-direction: column; gap: 16px;">
+      <div
+        style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-secondary); font-size: 14px;">
         <span class="pulse-dot"></span>
-        <span style="font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Hanken Grotesk', sans-serif;">Awaiting Tournament Start</span>
+        <span
+          style="font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;">Awaiting
+          Tournament Start</span>
       </div>
       <div style="height: 1px; background-color: var(--surface-high);"></div>
-      <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif;">
-        When the administrator launches the mixer, courts and player lineups will be visible here. You will be able to check standings, watch matches, and update scores in real-time as you play!
+      <p
+        style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;">
+        When the administrator launches the mixer, courts and player lineups will be visible here. You will be able to
+        check standings, watch matches, and update scores in real-time as you play!
       </p>
     </div>
 
     <!-- Active syncing status indicator -->
-    <div style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; background-color: var(--surface-high); padding: 8px 18px; border-radius: 20px; border: 1px solid var(--surface-highest); margin-top: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-      <span class="material-symbols-outlined" style="font-size: 16px; color: var(--neon); animation: pulse 1s infinite ease-in-out;">cloud_sync</span>
-      <span style="color: var(--text-secondary); font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif;">Real-Time Syncing Active</span>
+    <div
+      style="display: inline-flex; align-items: center; gap: 8px; font-size: 12px; background-color: var(--surface-high); padding: 8px 18px; border-radius: 20px; border: 1px solid var(--surface-highest); margin-top: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+      <span class="material-symbols-outlined"
+        style="font-size: 16px; color: var(--neon); animation: pulse 1s infinite ease-in-out;">cloud_sync</span>
+      <span
+        style="color: var(--text-secondary); font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;">Real-Time
+        Syncing Active</span>
     </div>
   </main>
 
@@ -129,25 +163,31 @@
     <!-- Dynamic Header Area -->
     <div id="setup-header-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 16px;">
-        <h2 class="title-lg" id="setup-title" style="margin: 0; line-height: 1.2; word-break: break-word;">New Mixer Setup</h2>
-        
+        <h2 class="title-lg" id="setup-title" style="margin: 0; line-height: 1.2; word-break: break-word;">New Mixer
+          Setup</h2>
+
         <!-- Resume Dashboard Button -->
-        <button id="btn-resume-dashboard" style="display: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--neon); color: var(--neon); background-color: rgba(195, 244, 0, 0.1); cursor: pointer; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 0.2s ease; flex-shrink: 0; height: fit-content; min-height: 36px; box-sizing: border-box;">
+        <button id="btn-resume-dashboard"
+          style="display: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--neon); color: var(--neon); background-color: rgba(255, 214, 10, 0.1); cursor: pointer; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 0.2s ease; flex-shrink: 0; height: fit-content; min-height: 36px; box-sizing: border-box;">
           <span class="material-symbols-outlined" style="font-size: 18px;">dashboard</span>
           Resume
         </button>
       </div>
-      <p class="subtitle-md" id="setup-subtitle" style="margin: 0;">Select the courts available for this tournament block. Add designated players if required.</p>
+      <p class="subtitle-md" id="setup-subtitle" style="margin: 0;">Select the courts available for this tournament
+        block. Add designated players if required.</p>
     </div>
 
     <!-- Active Mixer Warning Banner -->
-    <div class="card neon-glow" id="setup-active-warning" style="display: none; margin-bottom: 24px; border-color: var(--neon); background-color: rgba(195, 244, 0, 0.05); padding: 12px 16px; flex-direction: row; align-items: flex-start; gap: 12px;">
-      <span class="material-symbols-outlined" style="color: var(--neon); animation: pulse 1s infinite; margin-top: 2px;">warning</span>
+    <div class="card neon-glow" id="setup-active-warning"
+      style="display: none; margin-bottom: 24px; border-color: var(--neon); background-color: rgba(255, 214, 10, 0.05); padding: 12px 16px; flex-direction: row; align-items: flex-start; gap: 12px;">
+      <span class="material-symbols-outlined"
+        style="color: var(--neon); animation: pulse 1s infinite; margin-top: 2px;">warning</span>
       <p style="margin: 0; font-size: 13px; color: var(--text-primary); line-height: 1.5;">
-        <strong style="color: var(--neon);">Live Tournament in Progress.</strong> Modifying courts will require regenerating matches.
+        <strong style="color: var(--neon);">Live Tournament in Progress.</strong> Modifying courts will require
+        regenerating matches.
       </p>
     </div>
-    
+
     <!-- Courts List -->
     <div class="court-card-wrapper" id="court-list-container">
       <!-- Generated Dynamically by JS, matching spec mockups below: -->
@@ -169,15 +209,20 @@
     </div>
 
 
-    
+
     <!-- Tournament Control Utilities -->
-    <div class="card" id="setup-danger-zone" style="margin-top: 32px; padding: 20px; border: 1px solid rgba(248, 113, 113, 0.5); background-color: rgba(248, 113, 113, 0.05); border-radius: 16px;">
+    <div class="card" id="setup-danger-zone"
+      style="margin-top: 32px; padding: 20px; border: 1px solid rgba(248, 113, 113, 0.5); background-color: rgba(248, 113, 113, 0.05); border-radius: 16px;">
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
         <span class="material-symbols-outlined" style="color: var(--red); font-size: 20px;">warning</span>
-        <h3 class="label-caps" style="color: var(--red); margin: 0; font-size: 14px; letter-spacing: 1px;">Danger Zone</h3>
+        <h3 class="label-caps" style="color: var(--red); margin: 0; font-size: 14px; letter-spacing: 1px;">Danger Zone
+        </h3>
       </div>
-      <p class="subtitle-md" style="margin-bottom: 16px; color: rgba(255, 255, 255, 0.7); font-size: 13px; line-height: 1.5;">Reset the current mixer state to start a completely new tournament. This action cannot be undone.</p>
-      <button class="add-players-btn" id="btn-reset-mixer" style="background-color: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); color: var(--red); border-radius: 12px; width: 100%; height: 48px; font-size: 14px; font-weight: 700; transition: all 0.2s ease;">
+      <p class="subtitle-md"
+        style="margin-bottom: 16px; color: rgba(255, 255, 255, 0.7); font-size: 13px; line-height: 1.5;">Reset the
+        current mixer state to start a completely new tournament. This action cannot be undone.</p>
+      <button class="add-players-btn" id="btn-reset-mixer"
+        style="background-color: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); color: var(--red); border-radius: 12px; width: 100%; height: 48px; font-size: 14px; font-weight: 700; transition: all 0.2s ease;">
         <span class="material-symbols-outlined" style="font-size: 20px;">delete_forever</span>
         Reset Mixer & Clear Cloud
       </button>
@@ -198,9 +243,11 @@
 
   <!-- SCREEN 2: PLAYER ENTRY -->
   <main id="view-player-entry" class="screen-view view-hidden">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; width: 100%; gap: 16px;">
+    <div
+      style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; width: 100%; gap: 16px;">
       <div style="display: flex; align-items: center; gap: 12px;">
-        <button class="icon-btn" id="inline-back-entry" style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+        <button class="icon-btn" id="inline-back-entry"
+          style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
           <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
         </button>
         <div>
@@ -208,7 +255,8 @@
           <p class="subtitle-md" style="margin: 4px 0 0 0;">Enter player names to generate matches.</p>
         </div>
       </div>
-      <button class="btn-primary neon-glow" id="magic-autofill-btn" style="width: auto; height: 40px; padding: 0 18px; border-radius: 20px; gap: 6px; font-size: 13px; flex-shrink: 0;">
+      <button class="btn-primary neon-glow" id="magic-autofill-btn"
+        style="width: auto; height: 40px; padding: 0 18px; border-radius: 20px; gap: 6px; font-size: 13px; flex-shrink: 0;">
         <span class="material-symbols-outlined" style="font-size: 18px;">auto_awesome</span>
         Auto-Fill
       </button>
@@ -227,43 +275,67 @@
       <div class="sticky-bottom-bar-content">
         <button class="btn-primary neon-glow neon-glow-active" id="entry-generate-btn" disabled>
           Generate Pairings & Start Tournament
-          <span class="material-symbols-outlined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;"><g transform="rotate(45 12 12)"><rect x="7" y="2" width="10" height="13" rx="4"></rect><rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect><path d="M12 15v6" stroke-width="3"></path><path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path><path d="M10.5 21h3" stroke-width="2"></path></g><circle cx="18" cy="18" r="4" stroke-width="1.5"></circle><path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path></svg></span>
+          <span class="material-symbols-outlined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;">
+              <g transform="rotate(45 12 12)">
+                <rect x="7" y="2" width="10" height="13" rx="4"></rect>
+                <rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect>
+                <path d="M12 15v6" stroke-width="3"></path>
+                <path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path>
+                <path d="M10.5 21h3" stroke-width="2"></path>
+              </g>
+              <circle cx="18" cy="18" r="4" stroke-width="1.5"></circle>
+              <path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path>
+            </svg></span>
         </button>
       </div>
     </div>
   </main>
 
   <!-- SCREEN: ADMIN SUCCESS SCREEN -->
-  <main id="view-admin-success" class="screen-view view-hidden" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 28px; box-sizing: border-box; padding: 24px;">
+  <main id="view-admin-success" class="screen-view view-hidden"
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 28px; box-sizing: border-box; padding: 24px;">
     <!-- Large animated success icon -->
-    <div style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+    <div
+      style="position: relative; width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
       <!-- Dashed spin outer ring -->
-      <div style="position: absolute; width: 120px; height: 120px; border: 1.5px dashed var(--neon); border-radius: 50%; animation: spin 20s linear infinite; opacity: 0.6;"></div>
+      <div
+        style="position: absolute; width: 120px; height: 120px; border: 1.5px dashed var(--neon); border-radius: 50%; animation: spin 20s linear infinite; opacity: 0.6;">
+      </div>
       <!-- Center checkmark container -->
-      <div style="width: 76px; height: 76px; border-radius: 50%; background-color: rgba(195, 244, 0, 0.1); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(195, 244, 0, 0.25); z-index: 2;">
-        <span class="material-symbols-outlined" style="font-size: 36px; color: var(--neon); font-weight: bold;">check</span>
+      <div
+        style="width: 76px; height: 76px; border-radius: 50%; background-color: rgba(255, 214, 10, 0.1); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(255, 214, 10, 0.25); z-index: 2;">
+        <span class="material-symbols-outlined"
+          style="font-size: 36px; color: var(--neon); font-weight: bold;">check</span>
       </div>
     </div>
 
     <div class="flex-col" style="gap: 8px;">
       <p class="label-caps" style="color: var(--neon); letter-spacing: 1.5px; font-size: 11px;">ADMINISTRATION</p>
-      <h2 class="title-lg" style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin: 0;">Tournament Launched!</h2>
-      <p class="subtitle-md" style="max-width: 440px; margin: 8px auto 0; color: var(--text-secondary); line-height: 1.6; font-size: 14px;">
+      <h2 class="title-lg" style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin: 0;">Tournament
+        Launched!</h2>
+      <p class="subtitle-md"
+        style="max-width: 440px; margin: 8px auto 0; color: var(--text-secondary); line-height: 1.6; font-size: 14px;">
         Court pairings and real-time scoreboards are now active. All player dashboards are synced and running!
       </p>
     </div>
 
     <!-- Live Status Card -->
-    <div class="card neon-glow" style="border: 1px solid rgba(195, 244, 0, 0.3); background-color: rgba(32, 31, 31, 0.4); max-width: 420px; padding: 24px; display: flex; flex-direction: column; gap: 16px; text-align: left; width: 100%; border-radius: 20px; box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(195, 244, 0, 0.04);">
+    <div class="card neon-glow"
+      style="border: 1px solid rgba(255, 214, 10, 0.3); background-color: rgba(28, 28, 30, 0.4); max-width: 420px; padding: 24px; display: flex; flex-direction: column; gap: 16px; text-align: left; width: 100%; border-radius: 20px; box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.4), 0 0 24px rgba(255, 214, 10, 0.04);">
       <div style="display: flex; align-items: center; gap: 10px;">
         <span class="pulse-dot" style="width: 6px; height: 6px;"></span>
-        <span class="label-caps" style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px;">LIVE SYNCING DATA</span>
+        <span class="label-caps"
+          style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 1px;">LIVE SYNCING
+          DATA</span>
       </div>
       <div style="height: 1px; background-color: rgba(255, 255, 255, 0.05);"></div>
-      <div style="font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; flex-direction: column; gap: 10px;">
+      <div
+        style="font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; display: flex; flex-direction: column; gap: 10px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="color: var(--text-secondary); font-weight: 500;">Role view:</span>
-          <span style="font-weight: 700; color: var(--neon); letter-spacing: 0.5px; text-transform: uppercase; font-size: 13px;">ADMINISTRATOR</span>
+          <span
+            style="font-weight: 700; color: var(--neon); letter-spacing: 0.5px; text-transform: uppercase; font-size: 13px;">ADMINISTRATOR</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="color: var(--text-secondary); font-weight: 500;">Active Courts:</span>
@@ -274,13 +346,15 @@
 
     <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px;">
       <!-- Quick link to Live dashboard -->
-      <button class="btn-primary neon-glow neon-glow-active" id="btn-success-view-live" style="width: 100%; border-radius: 30px; height: 54px; font-size: 14px; font-weight: 700; background-color: var(--neon); color: var(--text-black); display: flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; transition: all 0.2s ease;">
+      <button class="btn-primary neon-glow neon-glow-active" id="btn-success-view-live"
+        style="width: 100%; border-radius: 30px; height: 54px; font-size: 14px; font-weight: 700; background-color: var(--neon); color: var(--text-black); display: flex; align-items: center; justify-content: center; gap: 8px; border: none; cursor: pointer; transition: all 0.2s ease;">
         <span class="material-symbols-outlined" style="font-size: 20px;">visibility</span>
         View Live Dashboard
       </button>
 
       <!-- Clear and start new setup -->
-      <button class="add-players-btn" id="btn-success-reset" style="width: 100%; border: 1px solid rgba(248, 113, 113, 0.4); background: transparent; color: var(--red); border-radius: 30px; height: 52px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
+      <button class="add-players-btn" id="btn-success-reset"
+        style="width: 100%; border: 1px solid rgba(248, 113, 113, 0.4); background: transparent; color: var(--red); border-radius: 30px; height: 52px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
         <span class="material-symbols-outlined" style="font-size: 18px;">restart_alt</span>
         Reset & Create New Game
       </button>
@@ -290,18 +364,21 @@
   <!-- SCREEN 4: STAGE 2 REVIEW SCREEN -->
   <main id="view-stage2-review" class="screen-view view-hidden">
     <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px;">
-      <button class="icon-btn" id="inline-back-stage2" style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 4px;">
+      <button class="icon-btn" id="inline-back-stage2"
+        style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 4px;">
         <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
       </button>
       <div class="flex-col">
         <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
         <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Championship Stage Seeding</h2>
-        <p class="subtitle-md" style="margin: 4px 0 0 0;">Review how players have been seeded based on Group Stage court rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
+        <p class="subtitle-md" style="margin: 4px 0 0 0;">Review how players have been seeded based on Group Stage court
+          rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
       </div>
     </div>
 
     <!-- Seeding Tiers Container -->
-    <div class="court-card-wrapper" id="seeding-tiers-container" style="margin-top: 24px; display: flex; flex-direction: column; gap: 20px;">
+    <div class="court-card-wrapper" id="seeding-tiers-container"
+      style="margin-top: 24px; display: flex; flex-direction: column; gap: 20px;">
       <!-- Generated Dynamically by JS -->
     </div>
 
@@ -324,18 +401,25 @@
 
       <h2 class="title-lg" id="dashboard-title">Group Stage Dashboard</h2>
       <div id="dashboard-stage-badge" style="display: none; margin-top: 8px;">
-        <span class="label-caps" style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">CHAMPIONSHIP STAGE</span>
+        <span class="label-caps"
+          style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">CHAMPIONSHIP
+          STAGE</span>
       </div>
     </div>
 
     <!-- Stage 2 Advance Banner Card -->
-    <div class="card neon-glow" id="dashboard-advance-card" style="margin-top: 20px; display: none; border-color: var(--neon); background-color: rgba(195, 244, 0, 0.05); padding: 16px; flex-direction: column; gap: 12px;">
+    <div class="card neon-glow" id="dashboard-advance-card"
+      style="margin-top: 20px; display: none; border-color: var(--neon); background-color: rgba(255, 214, 10, 0.05); padding: 16px; flex-direction: column; gap: 12px;">
       <div style="display: flex; align-items: center; gap: 12px;">
-        <span class="material-symbols-outlined" id="dashboard-advance-icon" style="color: var(--neon); animation: pulse 1s infinite;">celebration</span>
-        <h4 id="dashboard-advance-title" style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Group Stage Completed!</h4>
+        <span class="material-symbols-outlined" id="dashboard-advance-icon"
+          style="color: var(--neon); animation: pulse 1s infinite;">celebration</span>
+        <h4 id="dashboard-advance-title" style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Group
+          Stage Completed!</h4>
       </div>
-      <p class="subtitle-md" id="dashboard-advance-desc" style="margin: 0;">All qualifying matches across all courts have been completed. Seeding tiers are ready!</p>
-      <button class="add-players-btn neon-glow-active" id="btn-dashboard-advance" style="border-radius: 12px; width: 100%;">
+      <p class="subtitle-md" id="dashboard-advance-desc" style="margin: 0;">All qualifying matches across all courts
+        have been completed. Seeding tiers are ready!</p>
+      <button class="add-players-btn neon-glow-active" id="btn-dashboard-advance"
+        style="border-radius: 12px; width: 100%;">
         <span class="material-symbols-outlined">double_arrow</span>
         <span id="btn-dashboard-advance-text">Advance to Championship Stage</span>
       </button>
@@ -419,7 +503,8 @@
 
     <!-- Stage 2 Navigation Back Link -->
     <div id="stage2-back-link-container" style="display: none; margin-top: 16px; justify-content: center; gap: 8px;">
-      <button class="add-players-btn" id="btn-toggle-stage-view" style="border: none; background: transparent; font-size: 13px; color: var(--text-secondary); text-decoration: underline; height: auto; padding: 0; display: inline-flex; width: auto; gap: 6px; cursor: pointer;">
+      <button class="add-players-btn" id="btn-toggle-stage-view"
+        style="border: none; background: transparent; font-size: 13px; color: var(--text-secondary); text-decoration: underline; height: auto; padding: 0; display: inline-flex; width: auto; gap: 6px; cursor: pointer;">
         <span class="material-symbols-outlined" style="font-size: 16px;">visibility</span>
         <span id="btn-toggle-stage-text">View Stage 1 Standings</span>
       </button>
@@ -432,7 +517,7 @@
   <div class="modal-overlay view-hidden" id="score-modal">
     <div class="modal-content">
       <div class="modal-drag-bar"></div>
-      
+
       <!-- Modal Header -->
       <div class="modal-header">
         <button class="icon-btn" id="modal-close-btn" aria-label="Close modal">
@@ -446,7 +531,8 @@
       </div>
 
       <!-- Court Badge -->
-      <div class="modal-match-details-badge" id="modal-court-round-badge" style="margin-bottom: 24px;">Court 1 • Round 1</div>
+      <div class="modal-match-details-badge" id="modal-court-round-badge" style="margin-bottom: 24px;">Court 1 • Round 1
+      </div>
 
       <!-- Steppers Card -->
       <div class="modal-steppers-card">
@@ -541,27 +627,32 @@
 
 
       <!-- Confirm Button sticky style -->
-      <button class="btn-primary neon-glow neon-glow-active" id="modal-confirm-btn" style="margin-top: 24px; height: 64px; border-radius: 16px;">
+      <button class="btn-primary neon-glow neon-glow-active" id="modal-confirm-btn"
+        style="margin-top: 24px; height: 64px; border-radius: 16px;">
         <span class="material-symbols-outlined">check_circle</span>
         Confirm Score
       </button>
     </div>
-    </div>
+  </div>
   </div>
 
   <!-- GENERIC CONFIRMATION MODAL -->
   <div class="modal-overlay view-hidden" id="confirm-modal">
     <div class="modal-content" style="max-height: 400px; justify-content: center; padding: 32px 24px;">
-      
+
       <div class="flex-col" style="align-items: center; text-align: center; margin-bottom: 32px;">
-        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); margin-bottom: 16px;" id="confirm-modal-icon">settings</span>
+        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); margin-bottom: 16px;"
+          id="confirm-modal-icon">settings</span>
         <h2 class="title-lg" id="confirm-modal-title" style="margin-bottom: 8px;">Go to Setup?</h2>
-        <p class="subtitle-md" id="confirm-modal-message">Are you sure you want to go back to the setup page? You will leave the active dashboard.</p>
+        <p class="subtitle-md" id="confirm-modal-message">Are you sure you want to go back to the setup page? You will
+          leave the active dashboard.</p>
       </div>
 
       <div style="display: flex; gap: 12px; width: 100%;">
-        <button class="add-players-btn" id="confirm-modal-cancel" style="flex: 1; border-color: rgba(255,255,255,0.2); color: var(--text-primary); font-size: 14px; height: 52px; background: transparent;">Cancel</button>
-        <button class="btn-primary neon-glow" id="confirm-modal-ok" style="flex: 1; font-size: 14px; height: 52px; border-radius: 12px; justify-content: center;">Yes, Go</button>
+        <button class="add-players-btn" id="confirm-modal-cancel"
+          style="flex: 1; border-color: rgba(255,255,255,0.2); color: var(--text-primary); font-size: 14px; height: 52px; background: transparent;">Cancel</button>
+        <button class="btn-primary neon-glow" id="confirm-modal-ok"
+          style="flex: 1; font-size: 14px; height: 52px; border-radius: 12px; justify-content: center;">Yes, Go</button>
       </div>
     </div>
   </div>
@@ -580,28 +671,40 @@
         </div>
         <div style="width: 44px;"></div>
       </div>
-      
+
       <!-- Upload Zone -->
       <div id="ai-upload-zone" style="display: flex; flex-direction: column; width: 100%; gap: 16px;">
-        <p style="color: var(--text-secondary); font-size: 13px; text-align: center; line-height: 1.5; margin-bottom: 8px;">
-          Upload one or more screenshots of player profiles containing DUPR ratings. The AI will extract their names and ratings, then execute a mathematically balanced snake draft across all active courts.
+        <p
+          style="color: var(--text-secondary); font-size: 13px; text-align: center; line-height: 1.5; margin-bottom: 8px;">
+          Upload one or more screenshots of player profiles containing DUPR ratings. The AI will extract their names and
+          ratings, then execute a mathematically balanced snake draft across all active courts.
         </p>
-        
-        <label for="ai-image-upload" style="border: 2px dashed rgba(195, 244, 0, 0.3); border-radius: 20px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: rgba(195, 244, 0, 0.02); transition: all 0.2s ease;" class="neon-glow-active">
-          <span class="material-symbols-outlined" style="font-size: 44px; color: var(--neon); margin-bottom: 12px;">cloud_upload</span>
+
+        <label for="ai-image-upload"
+          style="border: 2px dashed rgba(255, 214, 10, 0.3); border-radius: 20px; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: rgba(255, 214, 10, 0.02); transition: all 0.2s ease;"
+          class="neon-glow-active">
+          <span class="material-symbols-outlined"
+            style="font-size: 44px; color: var(--neon); margin-bottom: 12px;">cloud_upload</span>
           <span style="font-size: 15px; font-weight: 700; color: var(--text-primary);">Tap to Upload Images</span>
-          <span style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">Select one or multiple screenshots (PNG, JPG)</span>
+          <span style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">Select one or multiple
+            screenshots (PNG, JPG)</span>
           <input type="file" id="ai-image-upload" accept="image/png, image/jpeg" style="display: none;" multiple>
         </label>
       </div>
 
       <!-- Processing State -->
-      <div id="ai-processing-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0; width: 100%;">
-        <div style="position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
-          <div style="position: absolute; width: 72px; height: 72px; border: 2px dashed var(--neon); border-radius: 50%; animation: spin 4s linear infinite;"></div>
-          <span class="material-symbols-outlined" style="font-size: 32px; color: var(--neon); animation: pulse 1.2s infinite ease-in-out;">auto_awesome</span>
+      <div id="ai-processing-state"
+        style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0; width: 100%;">
+        <div
+          style="position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
+          <div
+            style="position: absolute; width: 72px; height: 72px; border: 2px dashed var(--neon); border-radius: 50%; animation: spin 4s linear infinite;">
+          </div>
+          <span class="material-symbols-outlined"
+            style="font-size: 32px; color: var(--neon); animation: pulse 1.2s infinite ease-in-out;">auto_awesome</span>
         </div>
-        <p style="margin-top: 20px; font-size: 15px; font-weight: 700; color: var(--neon); text-align: center;" id="ai-processing-title">Extracting Players & DUPR...</p>
+        <p style="margin-top: 20px; font-size: 15px; font-weight: 700; color: var(--neon); text-align: center;"
+          id="ai-processing-title">Extracting Players & DUPR...</p>
       </div>
     </div>
   </div>
@@ -617,10 +720,16 @@
 
     <!-- Segmented Tab Switcher for Stage 2 Standings Toggling -->
     <div id="leaderboard-stage-toggle-container" style="display: none; margin-top: 16px; margin-bottom: 8px;">
-      <div style="display: flex; background-color: var(--surface); border: 1px solid var(--surface-high); padding: 4px; border-radius: 12px; width: 100%; gap: 4px;">
-        <button id="btn-leaderboard-cumulative" class="leaderboard-toggle-btn active" style="flex: 1; border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Overall (Stage 1+2)</button>
-        <button id="btn-leaderboard-stage2" class="leaderboard-toggle-btn" style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Championship</button>
-        <button id="btn-leaderboard-stage1" class="leaderboard-toggle-btn" style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Group Stage</button>
+      <div
+        style="display: flex; background-color: var(--surface); border: 1px solid var(--surface-high); padding: 4px; border-radius: 12px; width: 100%; gap: 4px;">
+        <button id="btn-leaderboard-cumulative" class="leaderboard-toggle-btn active"
+          style="flex: 1; border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Overall
+          (Stage 1+2)</button>
+        <button id="btn-leaderboard-stage2" class="leaderboard-toggle-btn"
+          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Championship</button>
+        <button id="btn-leaderboard-stage1" class="leaderboard-toggle-btn"
+          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Group
+          Stage</button>
       </div>
     </div>
 
@@ -632,7 +741,18 @@
   <!-- Premium Bottom Navigation Bar (User View Only) -->
   <nav class="bottom-nav" id="bottom-nav" style="display: none;">
     <button class="nav-item active" id="nav-round1">
-      <span class="material-symbols-outlined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;"><g transform="rotate(45 12 12)"><rect x="7" y="2" width="10" height="13" rx="4"></rect><rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect><path d="M12 15v6" stroke-width="3"></path><path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path><path d="M10.5 21h3" stroke-width="2"></path></g><circle cx="18" cy="18" r="4" stroke-width="1.5"></circle><path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path></svg></span>
+      <span class="material-symbols-outlined"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 1em; height: 1em;">
+          <g transform="rotate(45 12 12)">
+            <rect x="7" y="2" width="10" height="13" rx="4"></rect>
+            <rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect>
+            <path d="M12 15v6" stroke-width="3"></path>
+            <path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path>
+            <path d="M10.5 21h3" stroke-width="2"></path>
+          </g>
+          <circle cx="18" cy="18" r="4" stroke-width="1.5"></circle>
+          <path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path>
+        </svg></span>
       <span class="nav-text">Group Stage</span>
     </button>
     <button class="nav-item" id="nav-round2">
@@ -652,4 +772,5 @@
   <!-- Application Script -->
   <script type="module" src="app.js?v=2.33"></script>
 </body>
+
 </html>
