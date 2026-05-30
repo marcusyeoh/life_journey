@@ -84,6 +84,11 @@
 
 <body>
 
+  <!-- Theme Toggle Button -->
+  <button id="theme-toggle" class="icon-btn theme-toggle-btn neon-glow" aria-label="Toggle theme" style="position: fixed; top: 16px; right: 16px; z-index: 9999; background: var(--surface); border: 1px solid var(--border-gloss); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%); transition: all 0.3s ease; box-shadow: var(--shadow-glass);">
+    <span class="material-symbols-outlined" id="theme-icon" style="color: var(--text-primary); font-size: 22px; transition: transform 0.4s ease;">light_mode</span>
+  </button>
+
   <!-- Top Navigation App Bar -->
   <header class="app-bar">
     <button class="icon-btn" id="app-back-btn" aria-label="Go back">
@@ -212,17 +217,17 @@
 
     <!-- Tournament Control Utilities -->
     <div class="card" id="setup-danger-zone"
-      style="margin-top: 32px; padding: 20px; border: 1px solid rgba(248, 113, 113, 0.5); background-color: rgba(248, 113, 113, 0.05); border-radius: 16px;">
+      style="margin-top: 32px; padding: 20px; border: 1px solid rgba(255, 69, 58, 0.3); background-color: var(--red-bg); border-radius: 16px;">
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
         <span class="material-symbols-outlined" style="color: var(--red); font-size: 20px;">warning</span>
         <h3 class="label-caps" style="color: var(--red); margin: 0; font-size: 14px; letter-spacing: 1px;">Danger Zone
         </h3>
       </div>
       <p class="subtitle-md"
-        style="margin-bottom: 16px; color: rgba(255, 255, 255, 0.7); font-size: 13px; line-height: 1.5;">Reset the
+        style="margin-bottom: 16px; color: var(--text-secondary); font-size: 13px; line-height: 1.5;">Reset the
         current mixer state to start a completely new tournament. This action cannot be undone.</p>
       <button class="add-players-btn" id="btn-reset-mixer"
-        style="background-color: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); color: var(--red); border-radius: 12px; width: 100%; height: 48px; font-size: 14px; font-weight: 700; transition: all 0.2s ease;">
+        style="background-color: var(--red-bg); border: 1px solid rgba(255, 69, 58, 0.3); color: var(--red); border-radius: 12px; width: 100%; height: 48px; font-size: 14px; font-weight: 700; transition: all 0.2s ease;">
         <span class="material-symbols-outlined" style="font-size: 20px;">delete_forever</span>
         Reset Mixer & Clear Cloud
       </button>
@@ -487,7 +492,7 @@
       <div class="leaderboard-header">
         <span class="leaderboard-header-rank">RANK</span>
         <span class="leaderboard-header-name">PLAYER NAME</span>
-        <span class="leaderboard-header-tot">TOT SCORE</span>
+        <span class="leaderboard-header-tot">POINT DIFF</span>
       </div>
       <div id="leaderboard-items-container">
         <!-- Generated dynamically, sorted by score descending: -->

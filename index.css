@@ -1,62 +1,64 @@
 /* Design Tokens & Theme Variables */
 :root {
-  --bg: #0b0c10;
-  --bg-gradient: radial-gradient(circle at 0% 0%, rgba(255, 214, 10, 0.04) 0%, transparent 45%),
-                 radial-gradient(circle at 100% 100%, rgba(88, 86, 214, 0.05) 0%, transparent 45%);
-  --surface: rgba(28, 28, 30, 0.45);
-  --surface-high: rgba(44, 44, 46, 0.65);
-  --surface-highest: rgba(58, 58, 60, 0.8);
-  --input-bg: rgba(255, 255, 255, 0.04);
+  --bg: #000000;
+  --bg-gradient: radial-gradient(circle at 10% 20%, rgba(255, 214, 10, 0.08) 0%, transparent 50%),
+                 radial-gradient(circle at 90% 80%, rgba(88, 86, 214, 0.1) 0%, transparent 50%);
+  --surface: rgba(30, 30, 30, 0.4);
+  --surface-high: rgba(45, 45, 45, 0.6);
+  --surface-highest: rgba(60, 60, 60, 0.8);
+  --input-bg: rgba(255, 255, 255, 0.05);
 
   --text-primary: #F2F2F7;
   --text-secondary: rgba(235, 235, 245, 0.6);
   --text-black: #000000;
 
   --neon: #FFD60A;
-  --neon-glow: rgba(255, 214, 10, 0.15);
-  --neon-glow-high: rgba(255, 214, 10, 0.25);
+  --neon-glow: rgba(255, 214, 10, 0.2);
+  --neon-glow-high: rgba(255, 214, 10, 0.4);
 
   --green: #32D74B;
   --green-bg: rgba(50, 215, 75, 0.12);
   --red: #FF453A;
   --red-bg: rgba(255, 69, 58, 0.12);
 
-  --border-gloss: rgba(255, 255, 255, 0.12);
-  --border-gloss-hover: rgba(255, 255, 255, 0.25);
-  --shadow-glass: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 
-                   0 12px 40px rgba(0, 0, 0, 0.4);
-  --shadow-glass-hover: inset 0 1px 0 0 rgba(255, 255, 255, 0.3), 
-                         0 20px 48px rgba(0, 0, 0, 0.55);
+  --border-gloss: rgba(255, 255, 255, 0.15);
+  --border-gloss-hover: rgba(255, 255, 255, 0.3);
+  --shadow-glass: inset 0 1px 1px rgba(255, 255, 255, 0.15), 
+                   inset 0 -1px 1px rgba(0, 0, 0, 0.2),
+                   0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glass-hover: inset 0 1px 2px rgba(255, 255, 255, 0.25), 
+                         0 12px 48px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="light"] {
-  --bg: #f5f5f7;
-  --bg-gradient: radial-gradient(circle at 0% 0%, rgba(255, 204, 0, 0.04) 0%, transparent 45%),
-                 radial-gradient(circle at 100% 100%, rgba(88, 86, 214, 0.04) 0%, transparent 45%);
-  --surface: rgba(255, 255, 255, 0.6);
-  --surface-high: rgba(235, 235, 237, 0.7);
-  --surface-highest: rgba(220, 220, 225, 0.85);
-  --input-bg: rgba(0, 0, 0, 0.03);
+  --bg: #f2f2f7;
+  --bg-gradient: radial-gradient(circle at 10% 20%, rgba(255, 149, 0, 0.15) 0%, transparent 50%),
+                 radial-gradient(circle at 90% 80%, rgba(88, 86, 214, 0.1) 0%, transparent 50%);
+  --surface: rgba(255, 255, 255, 0.5);
+  --surface-high: rgba(255, 255, 255, 0.7);
+  --surface-highest: rgba(255, 255, 255, 0.9);
+  --input-bg: rgba(255, 255, 255, 0.6);
 
   --text-primary: #1c1c1e;
-  --text-secondary: rgba(60, 60, 67, 0.6);
+  --text-secondary: rgba(60, 60, 67, 0.65);
   --text-black: #000000;
 
-  --neon: #FFCC00;
-  --neon-glow: rgba(255, 204, 0, 0.12);
-  --neon-glow-high: rgba(255, 204, 0, 0.2);
+  --neon: #FF9500;
+  --neon-glow: rgba(255, 149, 0, 0.2);
+  --neon-glow-high: rgba(255, 149, 0, 0.4);
 
   --green: #34C759;
-  --green-bg: rgba(52, 199, 89, 0.1);
+  --green-bg: rgba(52, 199, 89, 0.15);
   --red: #FF3B30;
-  --red-bg: rgba(255, 59, 48, 0.1);
+  --red-bg: rgba(255, 59, 48, 0.15);
 
-  --border-gloss: rgba(0, 0, 0, 0.08);
-  --border-gloss-hover: rgba(0, 0, 0, 0.16);
-  --shadow-glass: inset 0 1px 0 0 rgba(255, 255, 255, 0.65), 
-                   0 12px 40px rgba(0, 0, 0, 0.08);
-  --shadow-glass-hover: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 
-                         0 20px 48px rgba(0, 0, 0, 0.14);
+  --border-gloss: rgba(255, 255, 255, 0.6);
+  --border-gloss-hover: rgba(255, 255, 255, 0.9);
+  --shadow-glass: inset 0 1px 1px rgba(255, 255, 255, 0.8), 
+                   inset 0 -1px 1px rgba(0, 0, 0, 0.05),
+                   0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-glass-hover: inset 0 1px 2px rgba(255, 255, 255, 1), 
+                         0 12px 48px rgba(0, 0, 0, 0.12);
 }
 
 /* Global Reset & Base Styles */
@@ -95,7 +97,19 @@ body::before, body::after {
   opacity: 0.15;
   z-index: -1;
   pointer-events: none;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+[data-theme="light"] body::before, [data-theme="light"] body::after {
+  opacity: 0.15;
+  filter: blur(140px);
+}
+
+@media (max-width: 768px) {
+  [data-theme="light"] body::before, [data-theme="light"] body::after {
+    opacity: 0.08;
+    filter: blur(120px);
+  }
 }
 
 body::before {
@@ -211,7 +225,7 @@ body::after {
 .screen-view {
   width: 100%;
   max-width: 600px;
-  padding: 16px 20px;
+  padding: 72px 20px 16px;
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -452,10 +466,10 @@ input:checked + .slider:before {
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: rgba(28, 28, 30, 0.75);
-  backdrop-filter: blur(30px) saturate(200%);
-  -webkit-backdrop-filter: blur(30px) saturate(200%);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--surface-highest);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-top: 1px solid var(--border-gloss);
   padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
   z-index: 90;
   display: flex;
@@ -482,15 +496,15 @@ input:checked + .slider:before {
   gap: 8px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px var(--neon-glow);
 }
 
 .btn-primary:disabled {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.3);
+  background-color: var(--surface-high);
+  color: var(--text-secondary);
   cursor: not-allowed;
   box-shadow: none !important;
-  opacity: 1;
+  opacity: 0.6;
 }
 
 /* Player Entry Screen 2 */
@@ -754,7 +768,7 @@ input:checked + .slider:before {
 }
 
 .match-team {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -868,12 +882,12 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(30, 30, 30, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--surface-high);
+  border: 1px solid var(--border-gloss);
   border-radius: 16px;
   padding: 16px 20px;
   gap: 12px;
-  box-shadow: inset 0px 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0px 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .next-team {
@@ -881,7 +895,7 @@ input:checked + .slider:before {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  flex: 1;
+  flex: 1 1 auto;
   text-align: center;
   position: relative;
 }
@@ -962,10 +976,10 @@ input:checked + .slider:before {
 
 .leaderboard-header {
   padding: 18px 24px;
-  background-color: rgba(30, 30, 30, 0.6);
+  background-color: var(--surface-highest);
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-gloss);
 }
 
 .leaderboard-header span {

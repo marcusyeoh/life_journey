@@ -1153,21 +1153,23 @@ function renderDashboard(activeCourts) {
 
     // Render Card Contents
     matchCard.innerHTML = `
-      <div class="match-card-status-row">
-        <div class="status-chip">
-          ${match.isCompleted ? `
-            <span class="material-symbols-outlined" style="color: var(--green); font-size: 14px;">check_circle</span>
-            <span>COMPLETED</span>
-          ` : `
-            <span class="pulse-dot"></span>
-            <span>IN PROGRESS</span>
-          `}
-        </div>
-        <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); background: var(--surface-highest); padding: 4px 10px; border-radius: 6px; margin-left: auto; margin-right: ${match.isCompleted ? '12px' : '0'};">
-          Court ${court.courtNumber}
+      <div class="match-card-status-row" style="flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div class="status-chip">
+            ${match.isCompleted ? `
+              <span class="material-symbols-outlined" style="color: var(--green); font-size: 14px;">check_circle</span>
+              <span>COMPLETED</span>
+            ` : `
+              <span class="pulse-dot"></span>
+              <span>IN PROGRESS</span>
+            `}
+          </div>
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); background: var(--surface-highest); padding: 4px 10px; border-radius: 6px;">
+            Court ${court.courtNumber}
+          </div>
         </div>
         ${match.isCompleted ? `
-          <div class="match-card-score-container">
+          <div class="match-card-score-container" style="margin-left: auto;">
             <div class="match-card-score">${match.team1Score} - ${match.team2Score}</div>
             <div class="match-card-score-diff">
               Diff: ${Math.abs(match.team1Score - match.team2Score)}
@@ -1393,6 +1395,31 @@ function submitScore(courtNumber, matchIndex, score1, score2) {
 // ----------------------------------------------------
 
 function setupEventListeners() {
+  // Theme Toggle Button Handler
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = document.getElementById('theme-icon');
+  if (themeToggle && themeIcon) {
+    // Check saved preference
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      themeIcon.textContent = 'dark_mode';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'dark');
+        themeIcon.textContent = 'light_mode';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+        themeIcon.textContent = 'dark_mode';
+      }
+    });
+  }
+
   // AppBar Back Button Handler (Hidden by CSS, kept for safety)
   const backBtn = document.getElementById('app-back-btn');
   if (backBtn) {
@@ -2395,15 +2422,16 @@ function showPremiumToast(message) {
     toast.style.transform = 'translateX(-50%) translateY(-20px)';
     toast.style.opacity = '0';
     toast.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-    toast.style.background = 'rgba(32, 31, 31, 0.95)';
-    toast.style.border = '1px solid var(--neon)';
+    toast.style.background = 'var(--surface-highest)';
+    toast.style.backdropFilter = 'blur(20px) saturate(200%)';
+    toast.style.border = '1px solid var(--border-gloss)';
     toast.style.borderRadius = '16px';
     toast.style.padding = '12px 20px';
     toast.style.color = 'var(--text-primary)';
     toast.style.fontSize = '13px';
     toast.style.fontWeight = '500';
     toast.style.zIndex = '999999';
-    toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3), 0 0 15px var(--neon-glow)';
+    toast.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.15), 0 0 15px var(--neon-glow)';
     toast.style.display = 'flex';
     toast.style.alignItems = 'center';
     toast.style.gap = '8px';
