@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, query, orderBy, limit, startAfter } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // Firebase Configuration (freedomrent-proo)
 const firebaseConfig = {
@@ -15,13 +15,34 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const historyContainer = document.getElementById('history-list-container');
+const loadMoreContainer = document.getElementById('load-more-container');
+const loadMoreBtn = document.getElementById('load-more-btn');
 
-async function loadHistory() {
+let lastVisible = null;
+let isLoadingMore = false;
+
+async function loadHistory(isLoadMore = false) {
+  if (isLoadMore && !lastVisible) return;
+  if (isLoadingMore) return;
+  
+  isLoadingMore = true;
+  if (isLoadMore) {
+    const originalText = loadMoreBtn.innerHTML;
+    loadMoreBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: pulse 1s infinite;">sync</span> Loading...';
+    loadMoreBtn.dataset.originalText = originalText;
+  }
+
   try {
-    const q = query(collection(db, "mixers_history"), orderBy("savedAt", "desc"));
+    let q;
+    if (isLoadMore) {
+      q = query(collection(db, "mixers_history"), orderBy("savedAt", "desc"), startAfter(lastVisible), limit(20));
+    } else {
+      q = query(collection(db, "mixers_history"), orderBy("savedAt", "desc"), limit(20));
+    }
+    
     const querySnapshot = await getDocs(q);
     
-    if (querySnapshot.empty) {
+    if (querySnapshot.empty && !isLoadMore) {
       historyContainer.innerHTML = `
         <div style="text-align: center; color: var(--text-secondary); padding: 60px 20px; background: var(--surface); border-radius: 20px; border: 1px dashed var(--surface-highest);">
           <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 16px; color: var(--surface-highest);">history</span>
@@ -29,10 +50,26 @@ async function loadHistory() {
           <p style="font-size: 13px; margin-top: 8px;">Save a game from the Admin Dashboard to see it here.</p>
         </div>
       `;
+      loadMoreContainer.style.display = 'none';
       return;
     }
 
-    historyContainer.innerHTML = '';
+    if (!isLoadMore) {
+      historyContainer.innerHTML = '';
+    }
+    
+    // Update cursor
+    if (!querySnapshot.empty) {
+      lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+    }
+    
+    // Handle load more button visibility
+    if (querySnapshot.docs.length < 20) {
+      loadMoreContainer.style.display = 'none';
+      lastVisible = null;
+    } else {
+      loadMoreContainer.style.display = 'block';
+    }
     
     querySnapshot.forEach((docSnap) => {
       const data = docSnap.data();
@@ -86,13 +123,26 @@ async function loadHistory() {
     
   } catch (err) {
     console.error("Error loading history:", err);
-    historyContainer.innerHTML = `
-      <div style="text-align: center; color: var(--red); padding: 40px; background: var(--red-bg); border-radius: 16px; border: 1px dashed rgba(248, 113, 113, 0.4);">
-        <p style="font-weight: 700;">Error loading history.</p>
-        <p style="font-size: 13px; margin-top: 8px;">Check your connection and try again.</p>
-      </div>
-    `;
+    if (!isLoadMore) {
+      historyContainer.innerHTML = `
+        <div style="text-align: center; color: var(--red); padding: 40px; background: var(--red-bg); border-radius: 16px; border: 1px dashed rgba(248, 113, 113, 0.4);">
+          <p style="font-weight: 700;">Error loading history.</p>
+          <p style="font-size: 13px; margin-top: 8px;">Check your connection and try again.</p>
+        </div>
+      `;
+    } else {
+      alert("Error loading more games. Please check your connection.");
+    }
+  } finally {
+    isLoadingMore = false;
+    if (isLoadMore && loadMoreBtn.dataset.originalText) {
+      loadMoreBtn.innerHTML = loadMoreBtn.dataset.originalText;
+    }
   }
+}
+
+if (loadMoreBtn) {
+  loadMoreBtn.addEventListener('click', () => loadHistory(true));
 }
 
 async function loadGame(id, data, btnElement) {
