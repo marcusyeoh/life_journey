@@ -591,17 +591,20 @@ function renderCourtSetup() {
   const subtitle = document.getElementById('setup-subtitle');
   const warningBanner = document.getElementById('setup-active-warning');
   const resumeBtn = document.getElementById('btn-resume-dashboard');
+  const historyZone = document.getElementById('setup-history-zone');
 
   if (hasActiveMixer) {
     if (title) title.textContent = 'Tournament Settings';
     if (subtitle) subtitle.textContent = 'Modify active courts or players. Warning: Editing active courts may require match regeneration.';
     if (warningBanner) warningBanner.style.display = 'flex';
     if (resumeBtn) resumeBtn.style.display = 'flex';
+    if (historyZone) historyZone.style.display = 'block';
   } else {
     if (title) title.textContent = 'New Mixer Setup';
     if (subtitle) subtitle.textContent = 'Select the courts available for this tournament block. Add designated players if required.';
     if (warningBanner) warningBanner.style.display = 'none';
     if (resumeBtn) resumeBtn.style.display = 'none';
+    if (historyZone) historyZone.style.display = 'none';
   }
 
   // Next button activation & label
@@ -1623,7 +1626,7 @@ function setupEventListeners() {
   const resumeDashboardBtn = document.getElementById('btn-resume-dashboard');
   if (resumeDashboardBtn) {
     resumeDashboardBtn.addEventListener('click', () => {
-      redirectToPlayerDashboard();
+      navigateTo('admin-success');
     });
   }
 
@@ -1684,6 +1687,13 @@ function setupEventListeners() {
   if (successSaveHistoryBtn) {
     successSaveHistoryBtn.addEventListener('click', () => {
       showSaveGameModal(successSaveHistoryBtn);
+    });
+  }
+
+  const setupSaveHistoryBtn = document.getElementById('btn-setup-save-history');
+  if (setupSaveHistoryBtn) {
+    setupSaveHistoryBtn.addEventListener('click', () => {
+      showSaveGameModal(setupSaveHistoryBtn);
     });
   }
 

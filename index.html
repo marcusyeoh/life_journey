@@ -174,8 +174,8 @@
         <!-- Resume Dashboard Button -->
         <button id="btn-resume-dashboard"
           style="display: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--neon); color: var(--neon); background-color: rgba(255, 214, 10, 0.1); cursor: pointer; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 0.2s ease; flex-shrink: 0; height: fit-content; min-height: 36px; box-sizing: border-box;">
-          <span class="material-symbols-outlined" style="font-size: 18px;">dashboard</span>
-          Resume
+          <span class="material-symbols-outlined" style="font-size: 18px;">admin_panel_settings</span>
+          Admin Hub
         </button>
       </div>
       <p class="subtitle-md" id="setup-subtitle" style="margin: 0;">Select the courts available for this tournament
@@ -216,6 +216,15 @@
 
 
     <!-- Tournament Control Utilities -->
+    <div class="card" id="setup-history-zone" style="display: none; margin-top: 24px; padding: 20px; background-color: var(--surface); border-radius: 16px;">
+      <h3 class="label-caps" style="color: var(--text-primary); margin: 0 0 8px 0; font-size: 14px; letter-spacing: 1px;">Tournament Snapshot</h3>
+      <p class="subtitle-md" style="margin-bottom: 16px; color: var(--text-secondary); font-size: 13px; line-height: 1.5;">Save the current state of the tournament, including all completed match scores, to the History archive.</p>
+      <button class="add-players-btn" id="btn-setup-save-history" style="width: 100%; justify-content: center; height: 48px; border-radius: 12px; font-weight: 700;">
+        <span class="material-symbols-outlined">save</span>
+        Save Game to History
+      </button>
+    </div>
+
     <div class="card" id="setup-danger-zone"
       style="margin-top: 32px; padding: 20px; border: 1px solid rgba(255, 69, 58, 0.3); background-color: var(--red-bg); border-radius: 16px;">
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
