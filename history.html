@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Game History - PickleMix</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="index.css?v=2.4">
+  
+  <style>
+    .history-card {
+      padding: 20px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-radius: 16px;
+      background: var(--surface-high);
+      border: 1px solid var(--surface-highest);
+    }
+    
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    
+    .history-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+    
+    .history-date {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .history-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      background: rgba(255, 214, 10, 0.05);
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 214, 10, 0.15);
+    }
+    
+    .history-stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .history-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Top Navigation App Bar -->
+  <header class="app-bar">
+    <button class="icon-btn" id="history-back-btn" aria-label="Go back" onclick="window.history.back()">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <h1 id="app-bar-title">Game History</h1>
+  </header>
+
+  <main class="screen-view" style="display: block; padding: 24px; max-width: 600px; margin: 0 auto; box-sizing: border-box;">
+    <div style="margin-bottom: 32px;">
+      <p class="label-caps" style="color: var(--neon); letter-spacing: 1.5px; font-size: 11px; margin-bottom: 8px;">ARCHIVE</p>
+      <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Saved Games</h2>
+      <p class="subtitle-md" style="margin: 8px 0 0 0; color: var(--text-secondary); font-size: 14px;">View, restore or modify previous tournaments.</p>
+    </div>
+
+    <div id="history-list-container">
+      <!-- Injected by history.js -->
+      <div style="text-align: center; color: var(--text-secondary); padding: 60px 20px; background: var(--surface); border-radius: 20px; border: 1px dashed var(--surface-highest);">
+        <span class="material-symbols-outlined" style="font-size: 32px; animation: pulse 1s infinite;">sync</span>
+        <p style="margin-top: 12px; font-weight: 600;">Loading history...</p>
+      </div>
+    </div>
+  </main>
+  
+  <script type="module" src="history.js?v=1.0"></script>
+</body>
+</html>

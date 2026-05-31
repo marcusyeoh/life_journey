@@ -357,6 +357,20 @@
         View Live Dashboard
       </button>
 
+      <!-- Save to History -->
+      <button class="add-players-btn neon-glow-active" id="btn-success-save-history"
+        style="width: 100%; border: 1px solid var(--neon); background: rgba(255, 214, 10, 0.1); color: var(--neon); border-radius: 30px; height: 52px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">save</span>
+        Save Game to History
+      </button>
+
+      <!-- View History -->
+      <button class="add-players-btn" id="btn-success-view-history"
+        style="width: 100%; border: 1px solid rgba(255, 255, 255, 0.2); background: transparent; color: var(--text-primary); border-radius: 30px; height: 52px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">history</span>
+        View Game History
+      </button>
+
       <!-- Clear and start new setup -->
       <button class="add-players-btn" id="btn-success-reset"
         style="width: 100%; border: 1px solid rgba(248, 113, 113, 0.4); background: transparent; color: var(--red); border-radius: 30px; height: 52px; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;">
@@ -437,7 +451,7 @@
 
     <!-- Round Selector -->
     <div class="flex-col" style="margin-top: 10px;">
-      <p class="label-caps" style="color: var(--text-secondary);">Mixer Rounds</p>
+      <p class="label-caps" style="color: var(--text-secondary);">Mixer Games</p>
       <div class="round-chip-row hide-scrollbar" id="dashboard-round-chips">
         <!-- Generated Dynamically -->
       </div>
@@ -475,7 +489,7 @@
     <div class="next-round-banner neon-glow" id="dashboard-on-deck-banner">
       <div class="next-round-header">
         <span class="material-symbols-outlined">schedule</span>
-        <span class="next-round-label">NEXT ROUND</span>
+        <span class="next-round-label">NEXT GAME</span>
       </div>
       <div class="next-round-matchup" id="dashboard-on-deck-names">
         <!-- Injected via JS -->
@@ -536,7 +550,7 @@
       </div>
 
       <!-- Court Badge -->
-      <div class="modal-match-details-badge" id="modal-court-round-badge" style="margin-bottom: 24px;">Court 1 • Round 1
+      <div class="modal-match-details-badge" id="modal-court-round-badge" style="margin-bottom: 24px;">Court 1 • Game 1
       </div>
 
       <!-- Steppers Card -->
@@ -544,7 +558,6 @@
         <!-- Team 1 score stepper -->
         <div class="modal-stepper-row">
           <div class="modal-stepper-team-info">
-            <span>TEAM ALPHA</span>
             <h3 id="modal-team1-names">Sarah & Mike</h3>
           </div>
           <div class="stepper-controls">
@@ -568,7 +581,6 @@
         <!-- Team 2 score stepper -->
         <div class="modal-stepper-row">
           <div class="modal-stepper-team-info">
-            <span>TEAM BRAVO</span>
             <h3 id="modal-team2-names">Emma & David</h3>
           </div>
           <div class="stepper-controls">

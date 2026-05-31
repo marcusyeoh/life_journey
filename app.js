@@ -1132,9 +1132,9 @@ function renderDashboard(activeCourts) {
     chip.className = `round-chip ${isViewing ? 'viewing' : ''} ${isActiveRound ? 'active-round' : ''} ${isCompleted ? 'completed' : ''}`;
 
     if (isCompleted) {
-      chip.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>Round ${i}`;
+      chip.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>Game ${i}`;
     } else {
-      chip.textContent = `Round ${i}`;
+      chip.textContent = `Game ${i}`;
     }
 
     chip.addEventListener('click', () => {
@@ -1179,13 +1179,11 @@ function renderDashboard(activeCourts) {
       </div>
       <div class="match-teams-row">
         <div class="match-team">
-          <h4>Team Alpha</h4>
-          <p>${formatPlayerName(match.team1Player1.name)}<br>${formatPlayerName(match.team1Player2.name)}</p>
+          <h4 style="margin: 0; line-height: 1.4;">${formatPlayerName(match.team1Player1.name)}<br>${formatPlayerName(match.team1Player2.name)}</h4>
         </div>
         <div class="vs-badge">VS</div>
         <div class="match-team team-2">
-          <h4>Team Bravo</h4>
-          <p>${formatPlayerName(match.team2Player1.name)}<br>${formatPlayerName(match.team2Player2.name)}</p>
+          <h4 style="margin: 0; line-height: 1.4;">${formatPlayerName(match.team2Player1.name)}<br>${formatPlayerName(match.team2Player2.name)}</h4>
         </div>
       </div>
       <button class="match-action-btn neon-glow-active">
@@ -1236,7 +1234,7 @@ function renderDashboard(activeCourts) {
       document.getElementById('dashboard-on-deck-banner').style.display = 'none';
     }
   } else {
-    matchCard.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No matches generated for this round.</p>';
+    matchCard.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No matches generated for this game.</p>';
     document.getElementById('dashboard-on-deck-banner').style.display = 'none';
   }
 
@@ -1302,7 +1300,7 @@ function renderScoreModal() {
   const match = court.matches[appState.modal.matchIndex];
 
   // Set players names in modal
-  document.getElementById('modal-court-round-badge').textContent = `Court ${court.courtNumber} • Round ${appState.modal.matchIndex + 1}`;
+  document.getElementById('modal-court-round-badge').textContent = `Court ${court.courtNumber} • Game ${appState.modal.matchIndex + 1}`;
   document.getElementById('modal-team1-names').textContent = `${formatPlayerName(match.team1Player1.name)} & ${formatPlayerName(match.team1Player2.name)}`;
   document.getElementById('modal-team2-names').textContent = `${formatPlayerName(match.team2Player1.name)} & ${formatPlayerName(match.team2Player2.name)}`;
 
@@ -1667,6 +1665,20 @@ function setupEventListeners() {
     });
   }
 
+  const successSaveHistoryBtn = document.getElementById('btn-success-save-history');
+  if (successSaveHistoryBtn) {
+    successSaveHistoryBtn.addEventListener('click', () => {
+      saveGameToHistory(successSaveHistoryBtn);
+    });
+  }
+
+  const successViewHistoryBtn = document.getElementById('btn-success-view-history');
+  if (successViewHistoryBtn) {
+    successViewHistoryBtn.addEventListener('click', () => {
+      window.open('/history', '_blank');
+    });
+  }
+
   const successResetBtn = document.getElementById('btn-success-reset');
   if (successResetBtn) {
     successResetBtn.addEventListener('click', () => {
@@ -1879,6 +1891,56 @@ async function saveStateToCloud() {
       cloudSaveBtn.disabled = false;
       cloudSaveBtn.innerHTML = originalHtml;
     }
+  }
+}
+
+async function saveGameToHistory(btnElement) {
+  let originalHtml = '';
+  if (btnElement) {
+    originalHtml = btnElement.innerHTML;
+    btnElement.disabled = true;
+    btnElement.innerHTML = `
+      <span class="material-symbols-outlined" style="font-size: 16px; animation: pulse 1s infinite ease-in-out;">sync</span>
+      Saving...
+    `;
+  }
+
+  try {
+    const timestamp = Date.now();
+    const historyId = timestamp.toString();
+    const serializedState = {
+      savedAt: timestamp,
+      currentView: appState.currentView,
+      currentStage: appState.currentStage,
+      stage1Courts: appState.stage1Courts,
+      stage2ViewingQualifying: appState.stage2ViewingQualifying,
+      stage2PreviewTiers: appState.stage2PreviewTiers,
+      courts: JSON.parse(JSON.stringify(appState.courts)),
+      selectedCourtNumber: appState.selectedCourtNumber,
+      viewingRound: appState.viewingRound,
+      entryState: JSON.parse(JSON.stringify(appState.entryState))
+    };
+
+    const historyDocRef = doc(db, "mixers_history", historyId);
+    await setDoc(historyDocRef, serializedState);
+
+    if (btnElement) {
+      btnElement.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 16px; color: var(--green);">check_circle</span>
+        Saved to History!
+      `;
+      setTimeout(() => {
+        btnElement.disabled = false;
+        btnElement.innerHTML = originalHtml;
+      }, 2000);
+    }
+  } catch (error) {
+    console.error("Firestore history save error:", error);
+    if (btnElement) {
+      btnElement.disabled = false;
+      btnElement.innerHTML = originalHtml;
+    }
+    alert("Error saving game to history. Please check console.");
   }
 }
 
