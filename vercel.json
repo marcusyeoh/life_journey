@@ -1,0 +1,8 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/history", "destination": "/history.html" },
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/:id(\\d+)", "destination": "/index.html" }
+  ]
+}
