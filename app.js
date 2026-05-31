@@ -323,13 +323,17 @@ async function startApp() {
       // Determine navigation dynamically based on role and mixer activity
       const hasActiveMixer = appState.courts && appState.courts.some(c => c.isActive && c.matches && c.matches.length > 0);
 
-      let targetView = 'user-landing';
+      let targetView = appState.currentView || 'user-landing';
       if (appState.isAdmin) {
-        // Admins follow the saved view, but we prevent loading the dashboard view in admin mode
-        targetView = data.currentView || 'court-setup';
-        if (targetView === 'dashboard') {
+        // Only force admin navigation if they are just loading, or if tournament was reset
+        if (!appState.currentView || appState.currentView === 'user-landing') {
           targetView = 'court-setup';
+        } else if (!hasActiveMixer && appState.currentView !== 'court-setup') {
+          targetView = 'court-setup';
+        } else if (appState.currentView === 'dashboard') {
+          targetView = 'court-setup'; // Admins use the player link to view dashboard
         }
+        // Otherwise, keep the admin on their current screen (e.g. admin-success, player-entry)
 
         // Ensure selections are valid inside the active courts list
         const activeCourts = appState.courts.filter(c => c.isActive);
