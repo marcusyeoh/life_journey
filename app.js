@@ -1526,7 +1526,7 @@ function setupEventListeners() {
 
   const val1Select = document.getElementById('stepper-val-1');
   if (val1Select) {
-    val1Select.addEventListener('change', (e) => {
+    val1Select.addEventListener('input', (e) => {
       appState.modal.score1 = parseInt(e.target.value, 10) || 0;
       render();
     });
@@ -1534,7 +1534,7 @@ function setupEventListeners() {
 
   const val2Select = document.getElementById('stepper-val-2');
   if (val2Select) {
-    val2Select.addEventListener('change', (e) => {
+    val2Select.addEventListener('input', (e) => {
       appState.modal.score2 = parseInt(e.target.value, 10) || 0;
       render();
     });
