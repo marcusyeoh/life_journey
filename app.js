@@ -24,7 +24,8 @@ const db = getFirestore(app);
 
 // Check if we are loading a specific history game from the URL path (e.g. /1717233959)
 const pathIdMatch = window.location.pathname.match(/^\/(\d+)\/?$/);
-const activeGameId = pathIdMatch ? pathIdMatch[1] : null;
+const urlParams = new URLSearchParams(window.location.search);
+const activeGameId = (pathIdMatch ? pathIdMatch[1] : null) || urlParams.get('game_id');
 
 // Initialize the document reference based on URL
 let mixerDocRef;

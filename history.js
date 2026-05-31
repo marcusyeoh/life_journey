@@ -149,8 +149,8 @@ async function loadGame(id, data, btnElement) {
   const originalHtml = btnElement.innerHTML;
   btnElement.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Opened!`;
   
-  // Open the game in a new tab
-  window.open(`/${id}`, '_blank');
+  // Open the game in a new tab using standard query parameter to avoid Vercel rewrite issues
+  window.open(`/?game_id=${id}`, '_blank');
   
   setTimeout(() => {
     btnElement.innerHTML = originalHtml;
