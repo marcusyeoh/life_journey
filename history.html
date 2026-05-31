@@ -76,6 +76,10 @@
 </head>
 
 <body>
+  <!-- Theme Toggle Button -->
+  <button id="theme-toggle" class="icon-btn theme-toggle-btn neon-glow" aria-label="Toggle theme" style="position: fixed; top: 24px; right: 24px; z-index: 9999; background: var(--surface); border: 1px solid var(--border-gloss); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%); transition: all 0.3s ease; box-shadow: var(--shadow-glass); cursor: pointer;">
+    <span class="material-symbols-outlined" id="theme-icon" style="color: var(--text-primary); font-size: 22px; transition: transform 0.4s ease;">light_mode</span>
+  </button>
   <!-- Top Navigation App Bar -->
   <header class="app-bar">
     <button class="icon-btn" id="history-back-btn" aria-label="Go back" onclick="window.history.back()">

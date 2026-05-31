@@ -19,10 +19,20 @@ const firebaseConfig = {
   appId: "1:48447167796:web:4947bd5b46a15f11225961"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const mixerDocRef = doc(db, "mixers", "current_mixer");
+
+// Check if we are loading a specific history game from the URL path (e.g. /1717233959)
+const pathIdMatch = window.location.pathname.match(/^\/(\d+)\/?$/);
+const activeGameId = pathIdMatch ? pathIdMatch[1] : null;
+
+// Initialize the document reference based on URL
+let mixerDocRef;
+if (activeGameId) {
+  mixerDocRef = doc(db, "mixers_history", activeGameId);
+} else {
+  mixerDocRef = doc(db, "mixers", "current_mixer");
+}
 
 // Application State
 const appState = {
@@ -1668,7 +1678,7 @@ function setupEventListeners() {
   const successSaveHistoryBtn = document.getElementById('btn-success-save-history');
   if (successSaveHistoryBtn) {
     successSaveHistoryBtn.addEventListener('click', () => {
-      saveGameToHistory(successSaveHistoryBtn);
+      showSaveGameModal(successSaveHistoryBtn);
     });
   }
 
@@ -1894,7 +1904,46 @@ async function saveStateToCloud() {
   }
 }
 
-async function saveGameToHistory(btnElement) {
+// Modal Logic for Save Game
+function showSaveGameModal(btnElement) {
+  const modal = document.getElementById('save-game-modal');
+  const input = document.getElementById('save-game-name-input');
+  const cancelBtn = document.getElementById('save-game-cancel');
+  const confirmBtn = document.getElementById('save-game-confirm');
+  
+  if (!modal) return;
+  
+  input.value = ''; // Reset input
+  modal.classList.remove('view-hidden');
+  document.body.classList.add('modal-open');
+  
+  // Need a small timeout for focus to work after display block
+  setTimeout(() => input.focus(), 50);
+  
+  const closeHandler = () => {
+    modal.classList.add('view-hidden');
+    document.body.classList.remove('modal-open');
+    cleanup();
+  };
+  
+  const confirmHandler = () => {
+    const gameName = input.value.trim();
+    modal.classList.add('view-hidden');
+    document.body.classList.remove('modal-open');
+    saveGameToHistory(btnElement, gameName);
+    cleanup();
+  };
+  
+  const cleanup = () => {
+    cancelBtn.removeEventListener('click', closeHandler);
+    confirmBtn.removeEventListener('click', confirmHandler);
+  };
+  
+  cancelBtn.addEventListener('click', closeHandler);
+  confirmBtn.addEventListener('click', confirmHandler);
+}
+
+async function saveGameToHistory(btnElement, gameName) {
   let originalHtml = '';
   if (btnElement) {
     originalHtml = btnElement.innerHTML;
@@ -1918,7 +1967,8 @@ async function saveGameToHistory(btnElement) {
       courts: JSON.parse(JSON.stringify(appState.courts)),
       selectedCourtNumber: appState.selectedCourtNumber,
       viewingRound: appState.viewingRound,
-      entryState: JSON.parse(JSON.stringify(appState.entryState))
+      entryState: JSON.parse(JSON.stringify(appState.entryState)),
+      gameName: gameName || "Tournament Snapshot"
     };
 
     const historyDocRef = doc(db, "mixers_history", historyId);

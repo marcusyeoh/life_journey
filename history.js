@@ -43,13 +43,14 @@ async function loadHistory() {
       
       const activeCourts = data.courts ? data.courts.filter(c => c.isActive).length : 0;
       const stage = data.currentStage === 2 ? 'Championship Stage' : 'Group Stage';
+      const title = data.gameName || 'Tournament Snapshot';
       
       const card = document.createElement('div');
       card.className = 'history-card neon-glow';
       
       card.innerHTML = `
         <div class="history-header">
-          <div class="history-title">Tournament Snapshot</div>
+          <div class="history-title">${title}</div>
           <div class="history-date">${dateString}</div>
         </div>
         <div class="history-stats">
@@ -63,11 +64,11 @@ async function loadHistory() {
           </div>
         </div>
         <div class="history-actions">
-          <button class="btn-primary neon-glow-active load-btn" data-id="${id}" style="flex: 1; height: 44px; border-radius: 12px; font-size: 14px; font-weight: 700; gap: 8px;">
-            <span class="material-symbols-outlined" style="font-size: 18px;">restore</span>
-            Load Game
+          <button class="btn-primary neon-glow-active load-btn" data-id="${id}" style="flex: 1; display: flex; align-items: center; justify-content: center; white-space: nowrap; height: 44px; border-radius: 12px; font-size: 14px; font-weight: 700; gap: 8px;">
+            <span class="material-symbols-outlined" style="font-size: 18px;">open_in_new</span>
+            Open Game
           </button>
-          <button class="add-players-btn delete-btn" data-id="${id}" style="height: 44px; padding: 0 16px; border-radius: 12px; border-color: rgba(248, 113, 113, 0.4); color: var(--red); background: transparent;">
+          <button class="add-players-btn delete-btn" data-id="${id}" style="display: flex; align-items: center; justify-content: center; height: 44px; width: 64px; padding: 0; border-radius: 12px; border: 1px solid rgba(248, 113, 113, 0.4); color: var(--red); background: transparent; cursor: pointer; transition: all 0.2s ease;">
             <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
           </button>
         </div>
@@ -96,31 +97,14 @@ async function loadHistory() {
 
 async function loadGame(id, data, btnElement) {
   const originalHtml = btnElement.innerHTML;
-  btnElement.innerHTML = `<span class="material-symbols-outlined" style="animation: pulse 1s infinite;">sync</span> Loading...`;
-  btnElement.disabled = true;
+  btnElement.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Opened!`;
   
-  try {
-    const mixerDocRef = doc(db, "mixers", "current_mixer");
-    
-    // We remove the savedAt key before writing to current_mixer just to keep it clean, though it doesn't hurt.
-    const stateToRestore = { ...data };
-    delete stateToRestore.savedAt;
-    
-    await setDoc(mixerDocRef, stateToRestore);
-    
-    btnElement.innerHTML = `<span class="material-symbols-outlined">check_circle</span> Loaded!`;
-    
-    setTimeout(() => {
-      // Redirect to admin index
-      window.location.href = '/index.html?admin=true';
-    }, 800);
-    
-  } catch (err) {
-    console.error("Error restoring game:", err);
-    alert("Failed to load game. Check console.");
+  // Open the game in a new tab
+  window.open(`/${id}`, '_blank');
+  
+  setTimeout(() => {
     btnElement.innerHTML = originalHtml;
-    btnElement.disabled = false;
-  }
+  }, 2000);
 }
 
 async function deleteGame(id, cardElement) {
@@ -149,7 +133,41 @@ async function deleteGame(id, cardElement) {
   }
 }
 
+// Theme Initialization
+const themeToggleBtn = document.getElementById('theme-toggle');
+const themeIcon = document.getElementById('theme-icon');
+
+function initTheme() {
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+  if (currentTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    if (themeIcon) themeIcon.textContent = 'dark_mode';
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'dark');
+        if (themeIcon) {
+          themeIcon.textContent = 'light_mode';
+          themeIcon.style.transform = 'rotate(0deg)';
+        }
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+        if (themeIcon) {
+          themeIcon.textContent = 'dark_mode';
+          themeIcon.style.transform = 'rotate(180deg)';
+        }
+      }
+    });
+  }
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   loadHistory();
 });

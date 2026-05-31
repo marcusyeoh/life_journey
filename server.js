@@ -81,6 +81,8 @@ function handleStaticFiles(pathname, res) {
     filePath = '/admin/index.html';
   } else if (filePath === '/history' || filePath === '/history/') {
     filePath = '/history.html';
+  } else if (/^\/\d+\/?$/.test(filePath)) {
+    filePath = '/index.html';
   }
 
   const absolutePath = path.join(__dirname, filePath);

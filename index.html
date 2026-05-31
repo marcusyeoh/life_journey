@@ -607,6 +607,52 @@
   </div>
   </div>
 
+  <!-- SAVE GAME MODAL -->
+  <div class="modal-overlay view-hidden" id="save-game-modal">
+    <div class="modal-content" style="max-height: 420px; justify-content: center; padding: 32px 24px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <span class="material-symbols-outlined neon-glow-text" style="font-size: 48px; color: var(--neon); margin-bottom: 16px;">save</span>
+        <h2 class="title-lg" style="margin-bottom: 8px;">Save Tournament Snapshot</h2>
+        <p class="subtitle-md">Enter a name to easily identify this game later, or skip to use the default.</p>
+      </div>
+      <style>
+        #save-game-name-input {
+          width: 100%;
+          box-sizing: border-box;
+          text-align: left;
+          padding: 16px 20px;
+          border-radius: 14px;
+          border: 2px solid var(--surface-highest);
+          background: var(--surface-high);
+          color: var(--text-primary);
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 16px;
+          font-weight: 600;
+          outline: none;
+          transition: all 0.3s ease;
+          box-shadow: inset 0px 2px 4px rgba(0,0,0,0.05);
+        }
+        #save-game-name-input::placeholder {
+          color: var(--text-secondary);
+          opacity: 0.7;
+          font-weight: 500;
+        }
+        #save-game-name-input:focus {
+          border-color: var(--neon);
+          background: var(--surface-highest);
+          box-shadow: 0px 0px 0px 4px rgba(255, 214, 10, 0.15), inset 0px 2px 4px rgba(0,0,0,0.02);
+        }
+      </style>
+      <div class="input-group" style="margin-bottom: 24px; width: 100%;">
+        <input type="text" id="save-game-name-input" placeholder="e.g. Finals Round 1, Lunch Break...">
+      </div>
+      <div style="display: flex; gap: 12px; width: 100%;">
+        <button class="btn-primary" id="save-game-cancel" style="flex: 1; background: var(--surface-highest); color: var(--text-primary);">Cancel</button>
+        <button class="btn-primary neon-glow" id="save-game-confirm" style="flex: 1;">Save Game</button>
+      </div>
+    </div>
+  </div>
+
   <!-- GENERIC CONFIRMATION MODAL -->
   <div class="modal-overlay view-hidden" id="confirm-modal">
     <div class="modal-content" style="max-height: 400px; justify-content: center; padding: 32px 24px;">
