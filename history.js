@@ -157,30 +157,71 @@ async function loadGame(id, data, btnElement) {
   }, 2000);
 }
 
-async function deleteGame(id, cardElement) {
-  if (!confirm("Are you sure you want to permanently delete this saved game? This cannot be undone.")) return;
-  
-  try {
-    await deleteDoc(doc(db, "mixers_history", id));
-    cardElement.style.opacity = '0.5';
-    cardElement.style.pointerEvents = 'none';
+// Delete Confirmation Modal Logic
+let gameToDeleteId = null;
+let gameToDeleteCard = null;
+
+const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+function showDeleteModal(id, cardElement) {
+  gameToDeleteId = id;
+  gameToDeleteCard = cardElement;
+  deleteConfirmModal.classList.remove('view-hidden');
+  // Need to force a reflow before adding modal-open for transition to work properly
+  void deleteConfirmModal.offsetWidth;
+  document.body.classList.add('modal-open');
+}
+
+function hideDeleteModal() {
+  document.body.classList.remove('modal-open');
+  // Wait for animation to finish before hiding display
+  setTimeout(() => {
+    deleteConfirmModal.classList.add('view-hidden');
+    gameToDeleteId = null;
+    gameToDeleteCard = null;
+  }, 400); // matches the 0.4s transition in css
+}
+
+if (cancelDeleteBtn) {
+  cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+}
+
+if (confirmDeleteBtn) {
+  confirmDeleteBtn.addEventListener('click', async () => {
+    if (!gameToDeleteId || !gameToDeleteCard) return;
     
-    setTimeout(() => {
-      cardElement.remove();
-      if (historyContainer.children.length === 0) {
-        historyContainer.innerHTML = `
-          <div style="text-align: center; color: var(--text-secondary); padding: 60px 20px; background: var(--surface); border-radius: 20px; border: 1px dashed var(--surface-highest);">
-            <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 16px; color: var(--surface-highest);">history</span>
-            <p style="font-weight: 600;">No saved games found.</p>
-            <p style="font-size: 13px; margin-top: 8px;">Save a game from the Admin Dashboard to see it here.</p>
-          </div>
-        `;
-      }
-    }, 300);
-  } catch (err) {
-    console.error("Error deleting game:", err);
-    alert("Failed to delete game.");
-  }
+    const id = gameToDeleteId;
+    const cardElement = gameToDeleteCard;
+    hideDeleteModal();
+    
+    try {
+      await deleteDoc(doc(db, "mixers_history", id));
+      cardElement.style.opacity = '0.5';
+      cardElement.style.pointerEvents = 'none';
+      
+      setTimeout(() => {
+        cardElement.remove();
+        if (historyContainer.children.length === 0) {
+          historyContainer.innerHTML = `
+            <div style="text-align: center; color: var(--text-secondary); padding: 60px 20px; background: var(--surface); border-radius: 20px; border: 1px dashed var(--surface-highest);">
+              <span class="material-symbols-outlined" style="font-size: 48px; margin-bottom: 16px; color: var(--surface-highest);">history</span>
+              <p style="font-weight: 600;">No saved games found.</p>
+              <p style="font-size: 13px; margin-top: 8px;">Save a game from the Admin Dashboard to see it here.</p>
+            </div>
+          `;
+        }
+      }, 300);
+    } catch (err) {
+      console.error("Error deleting game:", err);
+      alert("Failed to delete game.");
+    }
+  });
+}
+
+async function deleteGame(id, cardElement) {
+  showDeleteModal(id, cardElement);
 }
 
 // Theme Initialization

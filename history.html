@@ -111,6 +111,21 @@
     </div>
   </main>
   
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay view-hidden" id="delete-confirm-modal">
+    <div class="modal-content neon-glow" style="max-width: 320px; text-align: center; padding: 24px;">
+      <div style="width: 48px; height: 48px; border-radius: 24px; background: rgba(248, 113, 113, 0.1); color: var(--red); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+        <span class="material-symbols-outlined" style="font-size: 24px;">warning</span>
+      </div>
+      <h3 style="margin: 0 0 8px 0; font-size: 18px; font-weight: 800; color: var(--text-primary);">Delete Game?</h3>
+      <p style="margin: 0 0 24px 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5;">Are you sure you want to permanently delete this saved game? This action cannot be undone.</p>
+      <div style="display: flex; gap: 12px;">
+        <button id="cancel-delete-btn" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--surface-highest); background: var(--surface); color: var(--text-primary); font-weight: 700; cursor: pointer; transition: all 0.2s ease;">Cancel</button>
+        <button id="confirm-delete-btn" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: var(--red); color: white; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(248, 113, 113, 0.3);">Delete</button>
+      </div>
+    </div>
+  </div>
+  
   <script type="module" src="history.js?v=1.0"></script>
 </body>
 </html>
