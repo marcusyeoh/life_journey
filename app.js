@@ -1683,6 +1683,13 @@ function setupEventListeners() {
     });
   }
 
+  const successToSetupBtn = document.getElementById('btn-success-to-setup');
+  if (successToSetupBtn) {
+    successToSetupBtn.addEventListener('click', () => {
+      navigateTo('court-setup');
+    });
+  }
+
   const successSaveHistoryBtn = document.getElementById('btn-success-save-history');
   if (successSaveHistoryBtn) {
     successSaveHistoryBtn.addEventListener('click', () => {
