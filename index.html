@@ -170,19 +170,18 @@
   </main>
 
   <!-- SCREEN 1: COURT SETUP -->
-  <main id="view-court-setup" class="screen-view view-hidden">
+  <main id="view-court-setup" class="screen-view view-hidden" style="position: relative;">
+    <!-- Resume Dashboard Button -->
+    <button id="btn-resume-dashboard" class="admin-top-btn"
+      style="display: none; position: absolute; top: 72px; right: 20px; z-index: 10;">
+      <span class="material-symbols-outlined">admin_panel_settings</span>
+      <span class="btn-label-text">Admin Hub</span>
+    </button>
+
     <!-- Dynamic Header Area -->
     <div id="setup-header-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
       <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 16px;">
-        <h2 class="title-lg" id="setup-title" style="margin: 0; line-height: 1.2; word-break: break-word;">New Mixer
-          Setup</h2>
-
-        <!-- Resume Dashboard Button -->
-        <button id="btn-resume-dashboard"
-          style="display: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--neon); color: var(--neon); background-color: rgba(255, 214, 10, 0.1); cursor: pointer; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 0.2s ease; flex-shrink: 0; height: fit-content; min-height: 36px; box-sizing: border-box;">
-          <span class="material-symbols-outlined" style="font-size: 18px;">admin_panel_settings</span>
-          Admin Hub
-        </button>
+        <h2 class="title-lg" id="setup-title" style="margin: 0; line-height: 1.2; word-break: break-word; padding-right: 50px;">New Mixer Setup</h2>
       </div>
       <p class="subtitle-md" id="setup-subtitle" style="margin: 0;">Select the courts available for this tournament
         block. Add designated players if required.</p>

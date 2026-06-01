@@ -1801,3 +1801,45 @@ input:checked + .slider:before {
   transform: rotate(90deg);
   color: var(--neon) !important;
 }
+
+/* --- RESPONSIVE ADMIN TOP HEADER BUTTONS --- */
+.admin-top-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--neon);
+  color: var(--neon);
+  background-color: rgba(255, 214, 10, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  height: fit-content;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+.admin-top-btn:hover {
+  background-color: rgba(255, 214, 10, 0.2);
+}
+
+@media (max-width: 480px) {
+  .admin-top-btn {
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50% !important;
+  }
+  .admin-top-btn .btn-label-text {
+    display: none !important;
+  }
+  .admin-top-btn .material-symbols-outlined {
+    font-size: 20px !important;
+    margin: 0 !important;
+  }
+}
