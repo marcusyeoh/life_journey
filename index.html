@@ -314,15 +314,14 @@
 
   <!-- SCREEN: ADMIN SUCCESS SCREEN -->
   <main id="view-admin-success" class="screen-view view-hidden"
-    style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 28px; box-sizing: border-box; padding: 24px;">
-    <!-- Top-Right Actions Row -->
-    <div style="display: flex; justify-content: flex-end; width: 100%; max-width: 420px; margin-bottom: -16px; box-sizing: border-box;">
-      <button id="btn-success-to-setup"
-        style="padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--neon); color: var(--neon); background-color: rgba(255, 214, 10, 0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 0.2s ease; height: fit-content; min-height: 36px; box-sizing: border-box;">
-        <span class="material-symbols-outlined" style="font-size: 18px;">tune</span>
-        Tournament Settings
-      </button>
-    </div>
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 28px; box-sizing: border-box; padding: 24px; position: relative;">
+    
+    <!-- Tournament Settings Button -->
+    <button id="btn-success-to-setup"
+      style="position: absolute; top: 72px; right: 20px; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; border: 1px solid var(--neon); color: var(--neon); background-color: rgba(255, 214, 10, 0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; transition: background-color 0.2s ease; z-index: 10; height: fit-content; min-height: 36px; box-sizing: border-box;">
+      <span class="material-symbols-outlined" style="font-size: 18px;">tune</span>
+      Tournament Settings
+    </button>
 
     <!-- Large animated success icon -->
     <div
