@@ -161,6 +161,12 @@
         style="color: var(--text-secondary); font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;">Real-Time
         Syncing Active</span>
     </div>
+
+    <!-- Help Button on Standby Page -->
+    <button class="add-players-btn neon-glow-active" id="btn-standby-help" style="width: auto; padding: 0 24px; border-radius: 20px; height: 44px; font-size: 13px; border: 1px solid var(--neon); background: rgba(255, 214, 10, 0.05); color: var(--neon); font-weight: 700; box-shadow: var(--shadow-glass); margin-top: 12px;">
+      <span class="material-symbols-outlined" style="font-size: 18px;">help</span>
+      How the Mixer Works
+    </button>
   </main>
 
   <!-- SCREEN 1: COURT SETUP -->
@@ -398,7 +404,7 @@
       </button>
       <div class="flex-col">
         <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
-        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Championship Stage Seeding</h2>
+        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Final Stage Seeding</h2>
         <p class="subtitle-md" style="margin: 4px 0 0 0;">Review how players have been seeded based on Group Stage court
           rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
       </div>
@@ -416,7 +422,7 @@
     <div class="sticky-bottom-bar">
       <div class="sticky-bottom-bar-content">
         <button class="btn-primary neon-glow neon-glow-active" id="btn-confirm-stage2" style="border-radius: 32px;">
-          Confirm & Start Championship Stage
+          Confirm & Start Final Stage
           <span class="material-symbols-outlined">military_tech</span>
         </button>
       </div>
@@ -425,14 +431,18 @@
 
   <!-- SCREEN 3: TOURNAMENT DASHBOARD -->
   <main id="view-dashboard" class="screen-view view-hidden">
-    <div>
-
-      <h2 class="title-lg" id="dashboard-title">Group Stage Dashboard</h2>
-      <div id="dashboard-stage-badge" style="display: none; margin-top: 8px;">
-        <span class="label-caps"
-          style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">CHAMPIONSHIP
-          STAGE</span>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 16px;">
+      <div>
+        <h2 class="title-lg" id="dashboard-title">Group Stage Dashboard</h2>
+        <div id="dashboard-stage-badge" style="display: none; margin-top: 8px;">
+          <span class="label-caps"
+            style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">FINAL
+            STAGE</span>
+        </div>
       </div>
+      <button class="icon-btn theme-toggle-btn neon-glow" id="btn-player-help" aria-label="How it works" style="background: var(--surface); border: 1px solid var(--border-gloss); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px) saturate(200%); -webkit-backdrop-filter: blur(20px) saturate(200%); transition: all 0.3s ease; box-shadow: var(--shadow-glass); flex-shrink: 0; margin-top: -4px;">
+        <span class="material-symbols-outlined" style="color: var(--text-primary); font-size: 22px;">help</span>
+      </button>
     </div>
 
     <!-- Stage 2 Advance Banner Card -->
@@ -449,7 +459,7 @@
       <button class="add-players-btn neon-glow-active" id="btn-dashboard-advance"
         style="border-radius: 12px; width: 100%;">
         <span class="material-symbols-outlined">double_arrow</span>
-        <span id="btn-dashboard-advance-text">Advance to Championship Stage</span>
+        <span id="btn-dashboard-advance-text">Advance to Final Stage</span>
       </button>
     </div>
 
@@ -735,6 +745,99 @@
     </div>
   </div>
 
+  <!-- HOW IT WORKS HELP MODAL -->
+  <div class="modal-overlay view-hidden" id="help-modal" style="z-index: 10000;">
+    <div class="modal-content" style="max-width: 500px; padding: 24px; border-radius: 28px; max-height: 85vh; display: flex; flex-direction: column;">
+      <!-- Modal Header -->
+      <div class="modal-header" style="margin-bottom: 16px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;">
+        <button class="icon-btn" id="help-modal-close-btn" aria-label="Close modal">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <div class="modal-title-area" style="text-align: center;">
+          <span class="label-caps" style="color: var(--neon); font-size: 8px;">PLAYER GUIDE</span>
+          <h2 style="margin: 4px 0 0 0;">How It Works</h2>
+        </div>
+        <div style="width: 44px;"></div>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div style="overflow-y: auto; padding-right: 4px; flex-grow: 1; display: flex; flex-direction: column; gap: 20px;" class="hide-scrollbar">
+        
+        <!-- Section 1: Intro -->
+        <div class="card" style="padding: 16px; background: rgba(255, 214, 10, 0.02); border-color: rgba(255, 214, 10, 0.15);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--neon); font-size: 20px;">sports_tennis</span>
+            <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary);">Pickleball Social Mixer</h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            Welcome to the tournament! This app runs a dynamically generated doubles mixer. Instead of playing with the same partner all day, you will play multiple short games, rotating partners and opponents on your designated court.
+          </p>
+        </div>
+
+        <!-- Section 2: Court Rotations -->
+        <div class="card" style="padding: 16px; background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.08);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--neon); font-size: 20px;">sync_alt</span>
+            <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary);">Fair Play Rotations</h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; margin-bottom: 8px;">
+            Depending on how many players are assigned to your court, the scheduler runs a mathematically perfect rotation:
+          </p>
+          <ul style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0; padding-left: 20px; list-style-type: disc;">
+            <li><strong>4 Players:</strong> 3 games. Everyone partners with everyone else exactly once. No sitting out.</li>
+            <li><strong>5 Players:</strong> 5 games. Everyone partners with everyone exactly once, with exactly 1 bye (rest round) per game.</li>
+            <li><strong>6 Players:</strong> 6 games. Every player plays exactly 4 rounds and rests 2. Perfect rotation with no duplicate pairings.</li>
+            <li><strong>7 Players:</strong> 7 games. Every player plays exactly 4 rounds and rests 3. Equal rest distribution.</li>
+          </ul>
+        </div>
+
+        <!-- Section 3: Scoring & Leaderboard -->
+        <div class="card" style="padding: 16px; background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.08);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--neon); font-size: 20px;">leaderboard</span>
+            <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary);">Individual Leaderboard</h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0; margin-bottom: 8px;">
+            Although you play doubles, rankings are tracked <strong>individually</strong> using cumulative <strong>Point Differential</strong>:
+          </p>
+          <ul style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0; padding-left: 20px; list-style-type: disc;">
+            <li>If your team wins <strong>15 - 10</strong>, you and your partner get <strong>+5 points</strong>, and your opponents get <strong>-5 points</strong>.</li>
+            <li>If your team loses <strong>8 - 15</strong>, you and your partner get <strong>-7 points</strong>, and your opponents get <strong>+7 points</strong>.</li>
+            <li>Point differential rewards every single point won or saved, making every rally critical!</li>
+          </ul>
+        </div>
+
+        <!-- Section 4: Live Score Input -->
+        <div class="card" style="padding: 16px; background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.08);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--neon); font-size: 20px;">edit_document</span>
+            <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary);">Enter Scores Yourself</h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            Any player on the court can enter the match scores directly from their phone! Simply tap <strong>Input Score</strong> on the match card, key in the scores, and tap <strong>Confirm Score</strong>. The standings will instantly sync and recalculate in real-time.
+          </p>
+        </div>
+
+        <!-- Section 5: Final Stage Seedings -->
+        <div class="card" style="padding: 16px; background: rgba(255, 214, 10, 0.02); border-color: rgba(255, 214, 10, 0.15);">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <span class="material-symbols-outlined" style="color: var(--neon); font-size: 20px;">military_tech</span>
+            <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary);">Final Stage Tier Seeding</h3>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+            Once all qualifying rounds in the Group Stage are finished, players are seeded into competitive tiers based on their individual ranks (Gold, Silver, Bronze). Tiers play a final stage block where players are matched against opponents of a similar skill level!
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Close Button -->
+      <button class="btn-primary neon-glow neon-glow-active" id="help-modal-confirm-btn" style="margin-top: 16px; height: 50px; border-radius: 12px; flex-shrink: 0; font-size: 14px;">
+        Got it, let's play!
+      </button>
+    </div>
+  </div>
+
 
   <!-- SCREEN 5: GLOBAL LEADERBOARD SCREEN -->
   <main id="view-global-leaderboard" class="screen-view view-hidden">
@@ -752,7 +855,7 @@
           style="flex: 1; border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Overall
           (Stage 1+2)</button>
         <button id="btn-leaderboard-stage2" class="leaderboard-toggle-btn"
-          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Championship</button>
+          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Final Stage</button>
         <button id="btn-leaderboard-stage1" class="leaderboard-toggle-btn"
           style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Group
           Stage</button>
@@ -783,7 +886,7 @@
     </button>
     <button class="nav-item" id="nav-round2">
       <span class="material-symbols-outlined">emoji_events</span>
-      <span class="nav-text">Championship Stage</span>
+      <span class="nav-text">Final Stage</span>
     </button>
     <button class="nav-item" id="nav-leaderboard">
       <span class="material-symbols-outlined">leaderboard</span>

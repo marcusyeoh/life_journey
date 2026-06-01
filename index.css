@@ -1374,7 +1374,7 @@ input:checked + .slider:before {
   }
 }
 
-/* --- STAGE 2 CHAMPIONSHIP DESIGN STYLES --- */
+/* --- STAGE 2 FINAL STAGE DESIGN STYLES --- */
 :root {
   --gold: #ffd700;
   --gold-glow: rgba(255, 215, 0, 0.15);

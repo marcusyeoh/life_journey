@@ -79,7 +79,7 @@ async function loadHistory(isLoadMore = false) {
       const dateString = date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
       
       const activeCourts = data.courts ? data.courts.filter(c => c.isActive).length : 0;
-      const stage = data.currentStage === 2 ? 'Championship Stage' : 'Group Stage';
+      const stage = data.currentStage === 2 ? 'Final Stage' : 'Group Stage';
       const title = data.gameName || 'Tournament Snapshot';
       
       const card = document.createElement('div');

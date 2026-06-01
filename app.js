@@ -39,7 +39,7 @@ if (activeGameId) {
 const appState = {
   isAdmin: checkAdminMode(),
   currentView: checkAdminMode() ? 'court-setup' : 'user-landing',
-  currentStage: 1, // 1: Qualifying, 2: Championship
+  currentStage: 1, // 1: Qualifying, 2: Final Stage
   stage1Courts: null,
   stage2ViewingQualifying: false,
   stage2PreviewTiers: [],
@@ -308,14 +308,14 @@ async function startApp() {
         appState.entryState = data.entryState;
       }
 
-      // SELF-HEALING AUTOMATIC RE-SEED IN CHAMPIONSHIP STAGE
+      // SELF-HEALING AUTOMATIC RE-SEED IN FINAL STAGE
       if (appState.currentStage === 2) {
         const activeStage1Courts = appState.stage1Courts ? appState.stage1Courts.filter(c => c.isActive) : [];
         const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
         const currentActiveCourtsCount = appState.courts.filter(c => c.isActive).length;
         if (currentActiveCourtsCount > maxCourts) {
           console.log("Self-healing: Seeding mismatch detected. Automatically re-seeding to exactly " + maxCourts + " courts...");
-          launchChampionshipStageAutomatically();
+          launchFinalStageAutomatically();
           return;
         }
       }
@@ -1053,8 +1053,8 @@ function renderDashboard(activeCourts) {
 
         if (advanceIcon) advanceIcon.textContent = 'build';
         if (advanceTitle) advanceTitle.textContent = 'Seeding Mismatch Detected';
-        if (advanceDesc) advanceDesc.textContent = `Championship Stage is running on ${currentActiveCourtsCount} courts, but you set up only ${maxCourts} courts in Group Stage. Click below to instantly re-seed into exactly ${maxCourts} tiers.`;
-        if (advanceBtnText) advanceBtnText.textContent = 'Re-Seed Championship Stage';
+        if (advanceDesc) advanceDesc.textContent = `Final Stage is running on ${currentActiveCourtsCount} courts, but you set up only ${maxCourts} courts in Group Stage. Click below to instantly re-seed into exactly ${maxCourts} tiers.`;
+        if (advanceBtnText) advanceBtnText.textContent = 'Re-Seed Final Stage';
       }
     } else {
       if (advanceCard) advanceCard.style.display = 'none';
@@ -1062,15 +1062,15 @@ function renderDashboard(activeCourts) {
 
     if (backLinkContainer) backLinkContainer.style.display = 'flex';
 
-    const toggleText = appState.stage2ViewingQualifying ? 'Back to Championship Stage Standings' : 'View Group Stage Standings';
+    const toggleText = appState.stage2ViewingQualifying ? 'Back to Final Stage Standings' : 'View Group Stage Standings';
     const btnToggleText = document.getElementById('btn-toggle-stage-text');
     if (btnToggleText) btnToggleText.textContent = toggleText;
 
     if (dashboardTitle) {
-      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Group Stage Dashboard' : 'Championship Stage Dashboard';
+      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Group Stage Dashboard' : 'Final Stage Dashboard';
     }
     if (leaderboardTitleText) {
-      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Group Stage)' : 'Live Leaderboard (Championship Stage)';
+      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Group Stage)' : 'Live Leaderboard (Final Stage)';
     }
   } else {
     if (stageBadge) stageBadge.style.display = 'none';
@@ -1091,12 +1091,12 @@ function renderDashboard(activeCourts) {
           if (advanceIcon) advanceIcon.textContent = 'celebration';
           if (advanceTitle) advanceTitle.textContent = 'Group Stage Completed!';
           if (advanceDesc) advanceDesc.textContent = 'All qualifying matches across all courts have been completed. Seeding tiers are ready!';
-          if (advanceBtnText) advanceBtnText.textContent = 'Advance to Championship Stage';
+          if (advanceBtnText) advanceBtnText.textContent = 'Advance to Final Stage';
         } else {
           if (advanceIcon) advanceIcon.textContent = 'warning';
-          if (advanceTitle) advanceTitle.textContent = 'Championship Stage Transition';
-          if (advanceDesc) advanceDesc.textContent = 'Group Stage qualifying matches are still in progress. You can manually force-advance to Championship Stage based on current scores.';
-          if (advanceBtnText) advanceBtnText.textContent = 'Force-Start Championship Stage';
+          if (advanceTitle) advanceTitle.textContent = 'Final Stage Transition';
+          if (advanceDesc) advanceDesc.textContent = 'Group Stage qualifying matches are still in progress. You can manually force-advance to Final Stage based on current scores.';
+          if (advanceBtnText) advanceBtnText.textContent = 'Force-Start Final Stage';
         }
       }
     } else {
@@ -1578,7 +1578,7 @@ function setupEventListeners() {
 
       // Auto-advancement hook during Group Stage (Stage 1) for both Admins and Players
       if (appState.currentStage === 1 && checkStage1Completion()) {
-        launchChampionshipStageAutomatically();
+        launchFinalStageAutomatically();
         if (appState.isAdmin) {
           navigateTo('admin-success');
         } else {
@@ -1635,8 +1635,8 @@ function setupEventListeners() {
   if (dashboardAdvanceBtn) {
     dashboardAdvanceBtn.addEventListener('click', () => {
       if (appState.currentStage === 2) {
-        if (confirm("Are you sure you want to re-seed the Championship Stage? This will overwrite current Championship matches and scores, but your Group Stage scores are 100% safe.")) {
-          launchChampionshipStageAutomatically();
+        if (confirm("Are you sure you want to re-seed the Final Stage? This will overwrite current Final Stage matches and scores, but your Group Stage scores are 100% safe.")) {
+          launchFinalStageAutomatically();
           render();
         }
         return;
@@ -1644,10 +1644,10 @@ function setupEventListeners() {
 
       const hasCompleted = checkStage1Completion();
       const msg = hasCompleted
-        ? "All Group Stage matches are completed! Do you want to automatically launch the Championship Stage?"
-        : "Group Stage matches are not all completed. Do you want to force-launch the Championship Stage based on current scores?";
+        ? "All Group Stage matches are completed! Do you want to automatically launch the Final Stage?"
+        : "Group Stage matches are not all completed. Do you want to force-launch the Final Stage based on current scores?";
       if (confirm(msg)) {
-        launchChampionshipStageAutomatically();
+        launchFinalStageAutomatically();
         navigateTo('admin-success');
       }
     });
@@ -1752,7 +1752,7 @@ function setupEventListeners() {
         const hasCompleted = checkStage1Completion();
         if (hasCompleted) {
           // Fail-safe: if all Group Stage matches are completed, clicking the tab auto-launches Stage 2!
-          launchChampionshipStageAutomatically();
+          launchFinalStageAutomatically();
           if (appState.isAdmin) {
             navigateTo('admin-success');
           } else {
@@ -1762,13 +1762,13 @@ function setupEventListeners() {
         }
 
         if (appState.isAdmin) {
-          const msg = "Group Stage matches are not all completed. Do you want to force-launch the Championship Stage based on current scores?";
+          const msg = "Group Stage matches are not all completed. Do you want to force-launch the Final Stage based on current scores?";
           if (confirm(msg)) {
-            launchChampionshipStageAutomatically();
+            launchFinalStageAutomatically();
             navigateTo('admin-success');
           }
         } else {
-          showPremiumToast("Championship Stage will begin automatically once all Group Stage matches are completed!");
+          showPremiumToast("Final Stage will begin automatically once all Group Stage matches are completed!");
         }
         return;
       }
@@ -1823,6 +1823,41 @@ function setupEventListeners() {
       hideCustomConfirm();
       if (confirmCallback) {
         confirmCallback();
+      }
+    });
+  }
+
+  // How It Works / Player Help Modal Logic
+  const helpModal = document.getElementById('help-modal');
+  const btnPlayerHelp = document.getElementById('btn-player-help');
+  const btnStandbyHelp = document.getElementById('btn-standby-help');
+  const helpCloseBtn = document.getElementById('help-modal-close-btn');
+  const helpConfirmBtn = document.getElementById('help-modal-confirm-btn');
+
+  const showHelpModal = () => {
+    if (helpModal) {
+      helpModal.classList.remove('view-hidden');
+      document.body.classList.add('modal-open');
+    }
+  };
+
+  const hideHelpModal = () => {
+    if (helpModal) {
+      helpModal.classList.add('view-hidden');
+      document.body.classList.remove('modal-open');
+    }
+  };
+
+  if (btnPlayerHelp) btnPlayerHelp.addEventListener('click', showHelpModal);
+  if (btnStandbyHelp) btnStandbyHelp.addEventListener('click', showHelpModal);
+  if (helpCloseBtn) helpCloseBtn.addEventListener('click', hideHelpModal);
+  if (helpConfirmBtn) helpConfirmBtn.addEventListener('click', hideHelpModal);
+
+  // Also close help modal if overlay is clicked
+  if (helpModal) {
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) {
+        hideHelpModal();
       }
     });
   }
@@ -2090,7 +2125,7 @@ function checkStage1Completion() {
   });
 }
 
-function launchChampionshipStageAutomatically() {
+function launchFinalStageAutomatically() {
   const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
   const allPlayers = [];
 
@@ -2187,7 +2222,7 @@ function launchChampionshipStageAutomatically() {
   appState.selectedCourtNumber = 1;
   appState.viewingRound = 1;
 
-  // Save new Championship stage to Cloud!
+  // Save new Final Stage to Cloud!
   saveStateToCloud();
 }
 
@@ -2327,7 +2362,7 @@ function confirmStage2() {
   appState.selectedCourtNumber = 1;
   appState.viewingRound = 1;
 
-  // Save new Championship stage to Cloud!
+  // Save new Final Stage to Cloud!
   saveStateToCloud();
 
   // Navigate to Success Screen
@@ -2346,8 +2381,8 @@ function renderAdminSuccess() {
   const subtitleContainer = document.querySelector('#view-admin-success p.subtitle-md');
   if (headerContainer && subtitleContainer) {
     if (appState.currentStage === 2) {
-      headerContainer.textContent = "Championship Launched!";
-      subtitleContainer.textContent = "Seeding tiers and real-time scoreboards for the Championship Stage are now active. Player dashboards are synced!";
+      headerContainer.textContent = "Final Stage Launched!";
+      subtitleContainer.textContent = "Seeding tiers and real-time scoreboards for the Final Stage are now active. Player dashboards are synced!";
     } else {
       headerContainer.textContent = "Tournament Launched!";
       subtitleContainer.textContent = "Court pairings and real-time scoreboards are now active. All player dashboards are synced and running!";
@@ -2391,7 +2426,7 @@ function renderGlobalLeaderboard(sourceCourts) {
       if (mode === 'cumulative') {
         subtitle.textContent = "All players sorted by cumulative total score (Stage 1 + Stage 2).";
       } else if (mode === 'stage2') {
-        subtitle.textContent = "All players sorted by Championship Stage total score.";
+        subtitle.textContent = "All players sorted by Final Stage total score.";
       } else {
         subtitle.textContent = "All players sorted by Group Stage total score.";
       }
