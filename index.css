@@ -1827,7 +1827,7 @@ input:checked + .slider:before {
   background-color: rgba(255, 214, 10, 0.2);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .admin-top-btn {
     padding: 0;
     width: 36px;

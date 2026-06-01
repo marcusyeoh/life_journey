@@ -2384,8 +2384,8 @@ function renderAdminSuccess() {
   if (activeCourtsEl) activeCourtsEl.textContent = `${activeCourts.length} Court${activeCourts.length === 1 ? '' : 's'}`;
 
   // Dynamic header based on stage
-  const headerContainer = document.querySelector('#view-admin-success h2');
-  const subtitleContainer = document.querySelector('#view-admin-success p.subtitle-md');
+  const headerContainer = document.getElementById('success-header-title');
+  const subtitleContainer = document.getElementById('success-header-subtitle');
   if (headerContainer && subtitleContainer) {
     if (appState.currentStage === 2) {
       headerContainer.textContent = "Final Stage Launched!";
