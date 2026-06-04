@@ -296,6 +296,13 @@ async function startApp() {
       const data = docSnap.data();
       console.log("Real-time cloud update received!");
 
+      // 1. Capture old state to dynamically advance the viewer
+      const oldStage = appState.currentStage;
+      const oldCourt = appState.courts ? appState.courts.find(c => c.courtNumber === appState.selectedCourtNumber) : null;
+      const oldActiveRound = oldCourt ? oldCourt.activeRound : null;
+      const wasViewingActive = oldActiveRound !== null && appState.viewingRound === oldActiveRound;
+
+      // 2. Overwrite current state with database data
       appState.currentStage = data.currentStage || 1;
       appState.stage1Courts = data.stage1Courts || null;
       appState.stage2ViewingQualifying = data.stage2ViewingQualifying || false;
@@ -333,27 +340,43 @@ async function startApp() {
         } else if (appState.currentView === 'dashboard') {
           targetView = 'court-setup'; // Admins use the player link to view dashboard
         }
-        // Otherwise, keep the admin on their current screen (e.g. admin-success, player-entry)
-
-        // Ensure selections are valid inside the active courts list
-        const activeCourts = appState.courts.filter(c => c.isActive);
-        if (activeCourts.length > 0 && !activeCourts.some(c => c.courtNumber === appState.selectedCourtNumber)) {
-          appState.selectedCourtNumber = activeCourts[0].courtNumber;
-        }
       } else {
         // Players (User Mode) are automatically locked to active screens
         if (hasActiveMixer) {
           targetView = 'dashboard';
-          // Ensure active court tab is selected if none currently chosen
-          const activeCourts = appState.courts.filter(c => c.isActive);
-          if (activeCourts.length > 0) {
-            if (!activeCourts.some(c => c.courtNumber === appState.selectedCourtNumber)) {
-              appState.selectedCourtNumber = activeCourts[0].courtNumber;
-              appState.viewingRound = activeCourts[0].activeRound;
-            }
-          }
         } else {
           targetView = 'user-landing';
+        }
+      }
+
+      // 3. Ensure selections are valid inside the active courts list and match activeRound changes
+      const sourceCourts = (appState.currentStage === 2 && appState.stage2ViewingQualifying)
+        ? appState.stage1Courts
+        : appState.courts;
+
+      const activeCourts = sourceCourts ? sourceCourts.filter(c => c.isActive) : [];
+      if (activeCourts.length > 0) {
+        const stageChanged = oldStage !== appState.currentStage;
+
+        // If the selected court is no longer active, select the first active court and its activeRound
+        if (!activeCourts.some(c => c.courtNumber === appState.selectedCourtNumber)) {
+          appState.selectedCourtNumber = activeCourts[0].courtNumber;
+          appState.viewingRound = activeCourts[0].activeRound;
+        } else {
+          // If the selected court is still active, sync viewingRound if:
+          // 1. The tournament stage changed
+          // 2. The user has never loaded the database (oldActiveRound was null)
+          // 3. The user was viewing the active round and it has advanced in Firestore
+          // 4. The current viewingRound is out of bounds for the matches (e.g. stage changed/regenerated)
+          const currentCourt = activeCourts.find(c => c.courtNumber === appState.selectedCourtNumber);
+          if (currentCourt) {
+            if (stageChanged ||
+                oldActiveRound === null ||
+                wasViewingActive ||
+                appState.viewingRound > currentCourt.matches.length) {
+              appState.viewingRound = currentCourt.activeRound;
+            }
+          }
         }
       }
 
