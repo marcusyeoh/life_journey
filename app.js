@@ -1152,9 +1152,7 @@ function renderDashboard(activeCourts) {
     const tab = document.createElement('div');
     tab.className = `tab-chip ${isSelected ? 'active' : ''} ${courtCompleted ? 'completed' : ''}`;
 
-    const tabName = (appState.currentStage === 2 && !appState.stage2ViewingQualifying)
-      ? `${TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`} (Court ${c.courtNumber})`
-      : `Court ${c.courtNumber}`;
+    const tabName = `Court ${c.courtNumber}`;
 
     if (courtCompleted) {
       tab.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>${tabName}`;
