@@ -48,6 +48,7 @@ const appState = {
   // List of 6 Courts
   courts: Array.from({ length: 6 }, (_, i) => ({
     courtNumber: i + 1,
+    courtName: '',
     isActive: false,
     players: [], // Array of Player objects: { name, totalScore, initialIndex }
     matches: [], // Array of Match objects
@@ -125,6 +126,14 @@ class Player {
     this.pointsPlayed = 0;
     this.initialIndex = initialIndex;
   }
+}
+
+function getCourtName(courtNumber, stage = 1) {
+  if (!courtNumber) return 'N/A';
+  const courtsSource = (stage === 1) ? (appState.stage1Courts || appState.courts) : appState.courts;
+  if (!courtsSource) return `Court ${courtNumber}`;
+  const court = courtsSource.find(c => c.courtNumber === courtNumber);
+  return court && court.courtName ? court.courtName : `Court ${courtNumber}`;
 }
 
 function recalculateScoresForCourt(court) {
@@ -579,7 +588,7 @@ function renderCourtSetup() {
       <div class="court-card-header">
         <div class="court-title-area">
           <span class="material-symbols-outlined">grid_view</span>
-          <span>Court ${court.courtNumber}</span>
+          <input type="text" class="court-name-input" value="${court.courtName || `Court ${court.courtNumber}`}" data-court-number="${court.courtNumber}" placeholder="Court ${court.courtNumber}">
         </div>
         <label class="switch">
           <input type="checkbox" class="court-toggle" ${isActive ? 'checked' : ''}>
@@ -601,6 +610,23 @@ function renderCourtSetup() {
         court.isActive = toggle.checked;
         saveStateToCloud(); // Save instantly to Cloud to sync all views and prevent race conditions!
         render();
+      });
+    }
+
+    // Court Name Input listener
+    const nameInput = card.querySelector('.court-name-input');
+    if (nameInput) {
+      nameInput.addEventListener('input', (e) => {
+        court.courtName = e.target.value;
+      });
+      nameInput.addEventListener('blur', () => {
+        court.courtName = (court.courtName || '').trim();
+        saveStateToCloud();
+      });
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          nameInput.blur();
+        }
       });
     }
 
@@ -705,7 +731,7 @@ function renderPlayerEntry(activeCourts) {
     colHeader.innerHTML = `
       <div class="board-column-title" style="display: flex; align-items: center;">
         <span class="material-symbols-outlined">grid_view</span>
-        <span>Court ${court.courtNumber}</span>
+        <span>${court.courtName || `Court ${court.courtNumber}`}</span>
         ${avgBadgeHtml}
       </div>
       <span class="capacity-badge ${badgeClass}">${badgeText}</span>
@@ -1152,7 +1178,11 @@ function renderDashboard(activeCourts) {
     const tab = document.createElement('div');
     tab.className = `tab-chip ${isSelected ? 'active' : ''} ${courtCompleted ? 'completed' : ''}`;
 
-    const tabName = `Court ${c.courtNumber}`;
+    let tabName = c.courtName || `Court ${c.courtNumber}`;
+    if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
+      const tierName = TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`;
+      tabName = c.courtName ? `${c.courtName} (${tierName})` : tierName;
+    }
 
     if (courtCompleted) {
       tab.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>${tabName}`;
@@ -1201,6 +1231,11 @@ function renderDashboard(activeCourts) {
   const match = court.matches[matchIndex];
 
   if (match) {
+    let courtLabel = court.courtName || `Court ${court.courtNumber}`;
+    if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
+      const tierName = TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
+      courtLabel = court.courtName ? `${court.courtName} (${tierName})` : tierName;
+    }
 
     // Render Card Contents
     matchCard.innerHTML = `
@@ -1216,7 +1251,7 @@ function renderDashboard(activeCourts) {
             `}
           </div>
           <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); background: var(--surface-highest); padding: 4px 10px; border-radius: 6px;">
-            Court ${court.courtNumber}
+            ${courtLabel}
           </div>
         </div>
         ${match.isCompleted ? `
@@ -1403,8 +1438,16 @@ function renderScoreModal() {
   const court = appState.courts.find(c => c.courtNumber === appState.modal.courtNumber);
   const match = court.matches[appState.modal.matchIndex];
 
+  // Resolve custom court/tier label
+  let courtLabel = court.courtName || `Court ${court.courtNumber}`;
+  if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
+    const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
+    const tierName = TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
+    courtLabel = court.courtName ? `${court.courtName} (${tierName})` : tierName;
+  }
+
   // Set players names in modal
-  document.getElementById('modal-court-round-badge').textContent = `Court ${court.courtNumber} • Game ${appState.modal.matchIndex + 1}`;
+  document.getElementById('modal-court-round-badge').textContent = `${courtLabel} • Game ${appState.modal.matchIndex + 1}`;
   document.getElementById('modal-team1-names').textContent = `${formatPlayerName(match.team1Player1.name)} & ${formatPlayerName(match.team1Player2.name)}`;
   document.getElementById('modal-team2-names').textContent = `${formatPlayerName(match.team2Player1.name)} & ${formatPlayerName(match.team2Player2.name)}`;
 
@@ -1502,10 +1545,13 @@ function setupEventListeners() {
   const themeIcon = document.getElementById('theme-icon');
   if (themeToggle && themeIcon) {
     // Check saved preference
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+    const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'light') {
       document.documentElement.setAttribute('data-theme', 'light');
       themeIcon.textContent = 'dark_mode';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      themeIcon.textContent = 'light_mode';
     }
 
     themeToggle.addEventListener('click', () => {
@@ -2399,7 +2445,7 @@ function renderStage2Review() {
         <div class="tier-player-item">
           <span style="font-weight: 700; color: var(--text-primary);">${formatPlayerName(p.name)}</span>
           <span class="seed-badge">
-            Rank ${p.courtRank} (Court ${p.courtNumber}) • ${scorePrefix}${p.stage1Score} diff
+            Rank ${p.courtRank} (${getCourtName(p.courtNumber, 1)}) • ${scorePrefix}${p.stage1Score} diff
           </span>
         </div>
       `;
@@ -2634,11 +2680,11 @@ function renderGlobalLeaderboard(sourceCourts) {
 
     let subtitleHtml = '';
     if (p.isCumulative) {
-      subtitleHtml = `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} • Group Court ${p.qualifyingCourt || 'N/A'}`;
+      subtitleHtml = `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} • Group ${getCourtName(p.qualifyingCourt, 1)}`;
     } else {
       subtitleHtml = (appState.currentStage === 2 && appState.leaderboardViewMode !== 'stage1')
-        ? `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} (Court ${p.courtNumber})`
-        : `Qualifying Court ${p.courtNumber}`;
+        ? `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} (${getCourtName(p.courtNumber, 2)})`
+        : getCourtName(p.courtNumber, 1);
     }
 
     return `

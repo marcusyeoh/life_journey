@@ -229,10 +229,13 @@ const themeToggleBtn = document.getElementById('theme-toggle');
 const themeIcon = document.getElementById('theme-icon');
 
 function initTheme() {
-  const currentTheme = localStorage.getItem('theme') || 'dark';
+  const currentTheme = localStorage.getItem('theme') || 'light';
   if (currentTheme === 'light') {
     document.documentElement.setAttribute('data-theme', 'light');
     if (themeIcon) themeIcon.textContent = 'dark_mode';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    if (themeIcon) themeIcon.textContent = 'light_mode';
   }
 
   if (themeToggleBtn) {

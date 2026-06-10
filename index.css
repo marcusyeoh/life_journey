@@ -349,6 +349,35 @@ header.app-bar h1 {
   font-weight: 700;
 }
 
+.court-name-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 2px 6px;
+  width: 135px;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.court-name-input:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.court-name-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid var(--neon);
+}
+
+.court-name-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
 .court-card.active {
   border-color: rgba(255, 255, 255, 0.15);
   background-color: rgba(255, 255, 255, 0.04);
