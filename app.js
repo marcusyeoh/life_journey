@@ -160,11 +160,22 @@ function recalculateScoresForCourt(court) {
   }
 }
 
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
 function generatePairingsForCourt(court) {
   court.matches = [];
   // Reset all players scores to 0 for a fresh start
   court.players.forEach(p => p.totalScore = 0);
   court.activeRound = 1;
+
+  // Shuffle the players array to ensure random rotation and fair bye/play distribution
+  shuffleArray(court.players);
 
   const n = court.players.length;
   const p = court.players;
@@ -192,12 +203,13 @@ function generatePairingsForCourt(court) {
     court.matches.push(new Match(p[2], p[5], p[3], p[4])); // Byes: p[0], p[1]
   } else if (n === 7) {
     // 7 rounds custom rotation - every player plays exactly 4 games, sits out exactly 3 games, no duplicate partnerships, byes distributed evenly
-    court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5], p[6]
-    court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5], p[6]
-    court.matches.push(new Match(p[0], p[4], p[5], p[6])); // Byes: p[1], p[2], p[3]
-    court.matches.push(new Match(p[1], p[2], p[3], p[4])); // Byes: p[0], p[5], p[6]
+    // Order is optimized to prevent any player from sitting out two consecutive rounds:
     court.matches.push(new Match(p[0], p[5], p[1], p[6])); // Byes: p[2], p[3], p[4]
+    court.matches.push(new Match(p[1], p[2], p[3], p[4])); // Byes: p[0], p[5], p[6]
+    court.matches.push(new Match(p[0], p[4], p[5], p[6])); // Byes: p[1], p[2], p[3]
+    court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5], p[6]
     court.matches.push(new Match(p[2], p[5], p[4], p[6])); // Byes: p[0], p[1], p[3]
+    court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5], p[6]
     court.matches.push(new Match(p[3], p[6], p[4], p[5])); // Byes: p[0], p[1], p[2]
   }
 }
