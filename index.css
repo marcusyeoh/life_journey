@@ -1983,3 +1983,276 @@ input:checked + .slider:before {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
+
+/* --- STANDINGS GRID SECTION --- */
+.standings-grid-card {
+  background: var(--surface);
+  border: 1px solid var(--border-gloss);
+  border-radius: 20px;
+  box-shadow: var(--shadow-glass);
+}
+
+#standings-grid-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-player-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .grid-player-row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.grid-player-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.grid-player-row:first-child {
+  padding-top: 0;
+}
+
+.grid-player-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.grid-player-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.grid-group-rank-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 214, 10, 0.08);
+  border: 1px solid rgba(255, 214, 10, 0.2);
+  color: var(--neon);
+  font-weight: 800;
+  font-size: 13px;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .grid-group-rank-badge {
+  background: rgba(255, 149, 0, 0.08);
+  border-color: rgba(255, 149, 0, 0.2);
+  color: var(--neon);
+}
+
+.grid-player-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.grid-player-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.grid-player-tot-rank {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.grid-player-right {
+  display: flex;
+  align-items: center;
+}
+
+.grid-player-total-badge {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.grid-player-total-badge.positive {
+  background: rgba(50, 215, 75, 0.08);
+  border: 1px solid rgba(50, 215, 75, 0.2);
+  color: var(--green);
+}
+
+.grid-player-total-badge.negative {
+  background: rgba(255, 69, 58, 0.08);
+  border: 1px solid rgba(255, 69, 58, 0.2);
+  color: var(--red);
+}
+
+.grid-player-total-badge.neutral {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .grid-player-total-badge.neutral {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.grid-player-games {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 46px; /* Align with details (32px badge + 14px gap) */
+}
+
+.grid-games-label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+.grid-games-pills {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.game-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--input-bg);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .game-pill {
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.game-pill.positive {
+  background: rgba(50, 215, 75, 0.08);
+  border-color: rgba(50, 215, 75, 0.15);
+  color: var(--green);
+}
+
+.game-pill.negative {
+  background: rgba(255, 69, 58, 0.08);
+  border-color: rgba(255, 69, 58, 0.15);
+  color: var(--red);
+}
+
+.game-pill.neutral {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .game-pill.neutral {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+/* --- MOBILE RESPONSIVE OVERRIDES --- */
+@media (max-width: 500px) {
+  /* 1. Court Setup Screen single-column collapse */
+  .court-card-wrapper {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .court-name-input {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    max-width: 180px;
+  }
+
+  #setup-title {
+    padding-right: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 2. Global Card Spacings */
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  /* 3. Score Entry Modal Adjustments */
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .modal-content {
+    padding: 24px 16px;
+    border-radius: 20px;
+  }
+
+  .modal-stepper-row {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .stepper-controls {
+    gap: 8px;
+  }
+
+  .stepper-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stepper-value {
+    width: 44px;
+    font-size: 24px;
+  }
+
+  /* 4. Stage 2 Seeding Review */
+  .tier-player-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  /* 5. Bottom Navigation Bar */
+  .bottom-nav {
+    min-height: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nav-item {
+    padding: 6px 8px;
+    font-size: 9px;
+    gap: 2px;
+  }
+
+  .nav-item.active {
+    padding: 8px 12px;
+    font-size: 10px;
+    gap: 4px;
+    border-radius: 14px;
+  }
+
+  .nav-item .material-symbols-outlined {
+    font-size: 20px;
+  }
+}

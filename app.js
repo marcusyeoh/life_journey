@@ -1077,6 +1077,44 @@ function formatPlayerName(name) {
   return name;
 }
 
+// Helper to compute overall ranks map (playerName -> rank)
+function getGlobalRanksMap() {
+  const ranksMap = new Map();
+  let allPlayers = [];
+  
+  const targetCourts = (appState.currentStage === 2 && appState.stage2ViewingQualifying)
+    ? appState.stage1Courts
+    : appState.courts;
+
+  if (targetCourts && Array.isArray(targetCourts)) {
+    targetCourts.forEach(court => {
+      if (court.isActive && court.players && Array.isArray(court.players)) {
+        court.players.forEach(p => {
+          if (!allPlayers.some(existing => existing.name === p.name)) {
+            allPlayers.push({
+              name: p.name,
+              totalScore: p.totalScore || 0,
+              pointsPlayed: p.pointsPlayed || 0
+            });
+          }
+        });
+      }
+    });
+  }
+
+  // Sort descending by total score, then by points played (tiebreaker)
+  allPlayers.sort((a, b) => {
+    if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+    return b.pointsPlayed - a.pointsPlayed;
+  });
+
+  allPlayers.forEach((p, index) => {
+    ranksMap.set(p.name, index + 1);
+  });
+
+  return ranksMap;
+}
+
 // --- SCREEN 3: DASHBOARD RENDER ---
 function renderDashboard(activeCourts) {
   // If no selected court, default to the first active court
@@ -1413,6 +1451,119 @@ function renderDashboard(activeCourts) {
       });
     } else {
       overviewContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 16px 0;">No matches generated for this court.</p>';
+    }
+  }
+
+  // 7. Render Standings Grid
+  const gridContainer = document.getElementById('standings-grid-container');
+  if (gridContainer) {
+    gridContainer.innerHTML = '';
+
+    if (court && court.players && court.players.length > 0) {
+      const sortedPlayers = [...court.players];
+      sortedPlayers.sort((a, b) => {
+        if (b.totalScore !== a.totalScore) {
+          return b.totalScore - a.totalScore;
+        }
+        return a.initialIndex - b.initialIndex;
+      });
+
+      const globalRanks = getGlobalRanksMap();
+      let listHtml = '';
+
+      sortedPlayers.forEach((player, idx) => {
+        const globalRank = globalRanks.get(player.name) || '-';
+
+        // Find matches player played on this court
+        const playerMatches = (court.matches || []).filter(m => 
+          m.team1Player1.name === player.name || 
+          m.team1Player2.name === player.name || 
+          m.team2Player1.name === player.name || 
+          m.team2Player2.name === player.name
+        );
+
+        const diffs = [];
+        const maxGames = 4;
+        for (let i = 0; i < maxGames; i++) {
+          if (i < playerMatches.length) {
+            const match = playerMatches[i];
+            if (match.isCompleted) {
+              const isTeam1 = (match.team1Player1.name === player.name || match.team1Player2.name === player.name);
+              const diff = isTeam1 ? (match.team1Score - match.team2Score) : (match.team2Score - match.team1Score);
+              diffs.push(diff);
+            } else {
+              diffs.push('-');
+            }
+          } else {
+            diffs.push('-');
+          }
+        }
+
+        const hasPlayedAny = playerMatches.some(m => m.isCompleted);
+        const groupRank = hasPlayedAny ? (idx + 1) : '-';
+
+        // Format game pills HTML
+        let pillsHtml = '';
+        diffs.forEach(diff => {
+          if (diff === '-') {
+            pillsHtml += `<div class="game-pill neutral">-</div>`;
+          } else if (diff > 0) {
+            pillsHtml += `<div class="game-pill positive">+${diff}</div>`;
+          } else if (diff < 0) {
+            pillsHtml += `<div class="game-pill negative">${diff}</div>`;
+          } else {
+            pillsHtml += `<div class="game-pill neutral">0</div>`;
+          }
+        });
+
+        // Format total score badge
+        let totalClass = 'neutral';
+        let totalVal = player.totalScore;
+        if (hasPlayedAny) {
+          if (player.totalScore > 0) {
+            totalClass = 'positive';
+            totalVal = `+${player.totalScore}`;
+          } else if (player.totalScore < 0) {
+            totalClass = 'negative';
+          }
+        } else {
+          if (player.totalScore === -99) {
+            totalClass = 'negative';
+          } else if (player.totalScore > 0) {
+            totalClass = 'positive';
+            totalVal = `+${player.totalScore}`;
+          } else if (player.totalScore < 0) {
+            totalClass = 'negative';
+          }
+        }
+
+        listHtml += `
+          <div class="grid-player-row">
+            <div class="grid-player-main">
+              <div class="grid-player-left">
+                <div class="grid-group-rank-badge">#${groupRank}</div>
+                <div class="grid-player-details">
+                  <span class="grid-player-name">${formatPlayerName(player.name).toUpperCase()}</span>
+                  <span class="grid-player-tot-rank">Overall Rank: #${globalRank}</span>
+                </div>
+              </div>
+              <div class="grid-player-right">
+                <div class="grid-player-total-badge ${totalClass}">${totalVal} pts</div>
+              </div>
+            </div>
+            <div class="grid-player-games">
+              <span class="grid-games-label">GAMES:</span>
+              <div class="grid-games-pills">
+                ${pillsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      gridContainer.innerHTML = listHtml;
+    } else {
+      gridContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 16px 0;">No players found on this court.</p>';
     }
   }
 }

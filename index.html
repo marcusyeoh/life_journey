@@ -533,14 +533,14 @@
         <!-- Injected via JS -->
       </div>
     </div>
-    <!-- Live Leaderboard Section -->
-    <div class="leaderboard-title-row">
+    <!-- Live Leaderboard Section (Hidden) -->
+    <div class="leaderboard-title-row" style="display: none;">
       <span class="material-symbols-outlined">leaderboard</span>
-      <h3 id="leaderboard-title-text">Live Leaderboard (Group Stage)</h3>
+      <h3 id="old-leaderboard-title-text">Live Leaderboard (Group Stage)</h3>
     </div>
 
-    <!-- Leaderboard rankings card -->
-    <div class="card leaderboard-card">
+    <!-- Leaderboard rankings card (Hidden) -->
+    <div class="card leaderboard-card" style="display: none;">
       <div class="leaderboard-header">
         <span class="leaderboard-header-rank">RANK</span>
         <span class="leaderboard-header-name">PLAYER NAME</span>
@@ -548,14 +548,7 @@
       </div>
       <div id="leaderboard-items-container">
         <!-- Generated dynamically, sorted by score descending: -->
-        <!-- Example Item:
-        <div class="leaderboard-item first-place">
-          <span class="leaderboard-rank">1</span>
-          <span class="leaderboard-name">Sarah Jenkins</span>
-          <span class="leaderboard-score-chip score-positive">+12</span>
-        </div>
-        -->
-    </div>
+      </div>
     </div>
 
     <!-- Match Results Overview Section -->
@@ -566,6 +559,18 @@
 
     <div class="card match-results-card" style="margin-top: 16px; padding: 16px 20px; margin-bottom: 24px;">
       <div id="match-results-overview-container" style="display: flex; flex-direction: column;">
+        <!-- Generated dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- Standings Grid Section (Now Leaderboard) -->
+    <div class="leaderboard-title-row" style="margin-top: 32px;" id="standings-grid-title">
+      <span class="material-symbols-outlined">leaderboard</span>
+      <h3 id="leaderboard-title-text">Live Leaderboard (Group Stage)</h3>
+    </div>
+
+    <div class="card standings-grid-card" style="margin-top: 16px; padding: 16px 20px; margin-bottom: 24px;">
+      <div id="standings-grid-container" style="display: flex; flex-direction: column;">
         <!-- Generated dynamically by JS -->
       </div>
     </div>
