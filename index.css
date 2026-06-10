@@ -1845,78 +1845,68 @@ input:checked + .slider:before {
 }
 
 /* --- MATCH RESULTS OVERVIEW SECTION --- */
-.overview-game-card {
-  background: var(--surface);
-  border-radius: 18px;
-  border: 1px solid var(--border-gloss);
-  padding: 16px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: var(--shadow-glass);
-  backdrop-filter: blur(20px) saturate(210%);
-  -webkit-backdrop-filter: blur(20px) saturate(210%);
+.overview-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   gap: 12px;
 }
 
-.overview-game-card:hover {
-  transform: translateY(-1px);
-  border-color: var(--border-gloss-hover);
-  box-shadow: var(--shadow-glass-hover);
+.overview-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
-.overview-game-header {
+.overview-row:first-child {
+  padding-top: 0;
+}
+
+.overview-row-header {
+  flex-shrink: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding-bottom: 8px;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 65px;
 }
 
-.overview-game-title {
+.overview-row-game-label {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
   color: var(--neon);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.overview-game-status {
-  font-size: 10px;
+.overview-row-status-text {
+  font-size: 9px;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  display: inline-flex;
+}
+
+.overview-row-status-text.completed {
+  color: var(--green);
+}
+
+.overview-row-status-text.in-progress {
+  color: var(--neon);
+  display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.overview-game-status.completed {
-  background-color: var(--green-bg);
-  color: var(--green);
-}
-
-.overview-game-status.in-progress {
-  background-color: rgba(255, 214, 10, 0.1);
-  color: var(--neon);
-}
-
-.overview-game-status.pending {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: var(--text-secondary);
-}
-
-.overview-game-body {
+.overview-row-body {
+  flex-grow: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 16px;
 }
 
-.overview-team {
+.overview-row-team {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1928,62 +1918,39 @@ input:checked + .slider:before {
   word-break: break-word;
 }
 
-.overview-team.team-2 {
+.overview-row-team.team-2 {
   align-items: flex-end;
   text-align: right;
 }
 
-.overview-score-cell {
+.overview-row-score-cell {
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   min-width: 65px;
 }
 
-.overview-vs-badge {
+.overview-row-score-badge {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--neon);
+  background: rgba(255, 214, 10, 0.08);
+  border: 1px solid rgba(255, 214, 10, 0.25);
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.overview-row-vs-badge {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: 10px;
   font-weight: 800;
   color: var(--text-secondary);
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.04);
   padding: 4px 8px;
-  border-radius: 20px;
-}
-
-.overview-score-badge {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--neon);
-  background: rgba(255, 214, 10, 0.1);
-  border: 1px solid rgba(255, 214, 10, 0.25);
-  padding: 4px 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  white-space: nowrap;
-}
-
-.overview-game-footer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--text-secondary);
-  background-color: rgba(255, 255, 255, 0.02);
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-}
-
-.overview-byes-label {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.overview-byes-names {
-  font-weight: 500;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }

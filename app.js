@@ -1346,63 +1346,42 @@ function renderDashboard(activeCourts) {
         let scoreHtml = '';
         
         if (m.isCompleted) {
-          statusHtml = `<span class="overview-game-status completed"><span class="material-symbols-outlined" style="font-size: 12px;">check_circle</span>Completed</span>`;
-          scoreHtml = `<span class="overview-score-badge">${m.team1Score} - ${m.team2Score}</span>`;
+          statusHtml = `<span class="overview-row-status-text completed">Completed</span>`;
+          scoreHtml = `<span class="overview-row-score-badge">${m.team1Score} - ${m.team2Score}</span>`;
         } else if (isActive) {
-          statusHtml = `<span class="overview-game-status in-progress"><span class="pulse-dot" style="width: 5px; height: 5px;"></span>In Progress</span>`;
-          scoreHtml = `<span class="overview-vs-badge">VS</span>`;
+          statusHtml = `<span class="overview-row-status-text in-progress"><span class="pulse-dot" style="width: 4px; height: 4px;"></span>In Progress</span>`;
+          scoreHtml = `<span class="overview-row-vs-badge">VS</span>`;
         } else {
-          statusHtml = `<span class="overview-game-status pending">Pending</span>`;
-          scoreHtml = `<span class="overview-vs-badge">VS</span>`;
+          statusHtml = `<span class="overview-row-status-text">Pending</span>`;
+          scoreHtml = `<span class="overview-row-vs-badge">VS</span>`;
         }
         
-        const playingNames = [
-          m.team1Player1.name,
-          m.team1Player2.name,
-          m.team2Player1.name,
-          m.team2Player2.name
-        ];
-        const restingNames = court.players
-          .filter(p => !playingNames.includes(p.name))
-          .map(p => formatPlayerName(p.name));
-          
-        let footerHtml = '';
-        if (restingNames.length > 0) {
-          footerHtml = `
-            <div class="overview-game-footer">
-              <span class="overview-byes-label">Resting:</span>
-              <span class="overview-byes-names">${restingNames.join(', ')}</span>
-            </div>
-          `;
-        }
-        
-        const gameCard = document.createElement('div');
-        gameCard.className = 'overview-game-card';
-        gameCard.innerHTML = `
-          <div class="overview-game-header">
-            <span class="overview-game-title">Game ${gameNum}</span>
+        const gameRow = document.createElement('div');
+        gameRow.className = 'overview-row';
+        gameRow.innerHTML = `
+          <div class="overview-row-header">
+            <span class="overview-row-game-label">Game ${gameNum}</span>
             ${statusHtml}
           </div>
-          <div class="overview-game-body">
-            <div class="overview-team">
+          <div class="overview-row-body">
+            <div class="overview-row-team">
               <span>${formatPlayerName(m.team1Player1.name)}</span>
               <span>${formatPlayerName(m.team1Player2.name)}</span>
             </div>
-            <div class="overview-score-cell">
+            <div class="overview-row-score-cell">
               ${scoreHtml}
             </div>
-            <div class="overview-team team-2">
+            <div class="overview-row-team team-2">
               <span>${formatPlayerName(m.team2Player1.name)}</span>
               <span>${formatPlayerName(m.team2Player2.name)}</span>
             </div>
           </div>
-          ${footerHtml}
         `;
         
-        overviewContainer.appendChild(gameCard);
+        overviewContainer.appendChild(gameRow);
       });
     } else {
-      overviewContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No matches generated for this court.</p>';
+      overviewContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 16px 0;">No matches generated for this court.</p>';
     }
   }
 }
