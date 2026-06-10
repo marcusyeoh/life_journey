@@ -1180,8 +1180,7 @@ function renderDashboard(activeCourts) {
 
     let tabName = c.courtName || `Court ${c.courtNumber}`;
     if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
-      const tierName = TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`;
-      tabName = c.courtName ? `${c.courtName} (${tierName})` : tierName;
+      tabName = c.courtName || TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`;
     }
 
     if (courtCompleted) {
@@ -1233,8 +1232,7 @@ function renderDashboard(activeCourts) {
   if (match) {
     let courtLabel = court.courtName || `Court ${court.courtNumber}`;
     if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
-      const tierName = TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
-      courtLabel = court.courtName ? `${court.courtName} (${tierName})` : tierName;
+      courtLabel = court.courtName || TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
     }
 
     // Render Card Contents
@@ -1442,8 +1440,7 @@ function renderScoreModal() {
   let courtLabel = court.courtName || `Court ${court.courtNumber}`;
   if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
     const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
-    const tierName = TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
-    courtLabel = court.courtName ? `${court.courtName} (${tierName})` : tierName;
+    courtLabel = court.courtName || TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
   }
 
   // Set players names in modal
@@ -2682,8 +2679,9 @@ function renderGlobalLeaderboard(sourceCourts) {
     if (p.isCumulative) {
       subtitleHtml = `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} • Group ${getCourtName(p.qualifyingCourt, 1)}`;
     } else {
+      const courtName = getCourtName(p.courtNumber, 2);
       subtitleHtml = (appState.currentStage === 2 && appState.leaderboardViewMode !== 'stage1')
-        ? `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} (${getCourtName(p.courtNumber, 2)})`
+        ? (courtName !== `Court ${p.courtNumber}` ? courtName : (TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`))
         : getCourtName(p.courtNumber, 1);
     }
 
