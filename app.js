@@ -202,24 +202,22 @@ function generatePairingsForCourt(court) {
     court.matches.push(new Match(p[3], p[1], p[4], p[0])); // Bye: p[2]
     court.matches.push(new Match(p[4], p[2], p[0], p[1])); // Bye: p[3]
   } else if (n === 6) {
-    // 6 rounds - perfect rotation, every player plays exactly 4 rounds, no duplicate partnerships
-    // Matches are interleaved to prevent any player from sitting out two consecutive rounds
+    // 6 rounds - perfect rotation, every player plays exactly 4 rounds, no duplicate partnerships, no consecutive byes
     court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5]
     court.matches.push(new Match(p[0], p[4], p[1], p[5])); // Byes: p[2], p[3]
-    court.matches.push(new Match(p[2], p[4], p[3], p[5])); // Byes: p[0], p[1]
-    court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5]
-    court.matches.push(new Match(p[0], p[5], p[1], p[4])); // Byes: p[2], p[3]
-    court.matches.push(new Match(p[2], p[5], p[3], p[4])); // Byes: p[0], p[1]
+    court.matches.push(new Match(p[0], p[2], p[3], p[4])); // Byes: p[1], p[5]
+    court.matches.push(new Match(p[1], p[2], p[3], p[5])); // Byes: p[0], p[4]
+    court.matches.push(new Match(p[0], p[5], p[2], p[4])); // Byes: p[1], p[3]
+    court.matches.push(new Match(p[1], p[3], p[4], p[5])); // Byes: p[0], p[2]
   } else if (n === 7) {
-    // 7 rounds custom rotation - every player plays exactly 4 games, sits out exactly 3 games, no duplicate partnerships, byes distributed evenly
-    // Order is optimized to prevent any player from sitting out two consecutive rounds:
-    court.matches.push(new Match(p[0], p[5], p[1], p[6])); // Byes: p[2], p[3], p[4]
-    court.matches.push(new Match(p[1], p[2], p[3], p[4])); // Byes: p[0], p[5], p[6]
-    court.matches.push(new Match(p[0], p[4], p[5], p[6])); // Byes: p[1], p[2], p[3]
+    // 7 rounds - perfect rotation, every player plays exactly 4 rounds, no duplicate partnerships, no consecutive byes
     court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5], p[6]
-    court.matches.push(new Match(p[2], p[5], p[4], p[6])); // Byes: p[0], p[1], p[3]
-    court.matches.push(new Match(p[0], p[2], p[1], p[3])); // Byes: p[4], p[5], p[6]
-    court.matches.push(new Match(p[3], p[6], p[4], p[5])); // Byes: p[0], p[1], p[2]
+    court.matches.push(new Match(p[0], p[4], p[5], p[6])); // Byes: p[1], p[2], p[3]
+    court.matches.push(new Match(p[1], p[2], p[3], p[4])); // Byes: p[0], p[5], p[6]
+    court.matches.push(new Match(p[0], p[5], p[1], p[6])); // Byes: p[2], p[3], p[4]
+    court.matches.push(new Match(p[2], p[4], p[3], p[5])); // Byes: p[0], p[1], p[6]
+    court.matches.push(new Match(p[0], p[6], p[1], p[3])); // Byes: p[2], p[4], p[5]
+    court.matches.push(new Match(p[2], p[6], p[4], p[5])); // Byes: p[0], p[1], p[3]
   }
 }
 
@@ -435,6 +433,11 @@ if (document.readyState === 'loading') {
 }
 
 function navigateTo(viewName) {
+  // Save state to cloud when navigating away from edit screens to commit any unsaved text inputs (like court or player names)
+  if (appState.isAdmin && (appState.currentView === 'court-setup' || appState.currentView === 'player-entry')) {
+    saveStateToCloud();
+  }
+
   appState.currentView = viewName;
 
   // Hide all screens
@@ -1216,17 +1219,35 @@ function renderDashboard(activeCourts) {
     const tab = document.createElement('div');
     tab.className = `tab-chip ${isSelected ? 'active' : ''} ${courtCompleted ? 'completed' : ''}`;
 
-    let tabName = c.courtName || `Court ${c.courtNumber}`;
-    if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
-      tabName = c.courtName || TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`;
-    }
+    const courtDisplayName = c.courtName || `Court ${c.courtNumber}`;
 
-    if (courtCompleted) {
-      tab.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>${tabName}`;
-    } else if (completedCount > 0) {
-      tab.innerHTML = `${tabName}<span class="tab-progress-badge">${completedCount}/${totalCount}</span>`;
+    if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
+      const tierName = (TIER_NAMES[c.courtNumber - 1] || `Tier ${c.courtNumber}`).replace(/\s*tier/gi, '');
+      
+      let badgeHtml = '';
+      if (courtCompleted) {
+        badgeHtml = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green);">check_circle</span>`;
+      } else if (completedCount > 0) {
+        badgeHtml = `<span class="tab-progress-badge" style="margin-left: 0; margin-top: 2px;">${completedCount}/${totalCount}</span>`;
+      }
+
+      tab.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; height: 100%;">
+          <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700;">
+            ${badgeHtml}
+            ${courtDisplayName}
+          </span>
+          <span style="font-size: 8px; font-weight: 800; opacity: 0.6; letter-spacing: 1px; text-transform: uppercase; margin-top: 1px;">${tierName}</span>
+        </div>
+      `;
     } else {
-      tab.textContent = tabName;
+      if (courtCompleted) {
+        tab.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>${courtDisplayName}`;
+      } else if (completedCount > 0) {
+        tab.innerHTML = `${courtDisplayName}<span class="tab-progress-badge">${completedCount}/${totalCount}</span>`;
+      } else {
+        tab.textContent = courtDisplayName;
+      }
     }
 
     tab.addEventListener('click', () => {
@@ -1270,7 +1291,14 @@ function renderDashboard(activeCourts) {
   if (match) {
     let courtLabel = court.courtName || `Court ${court.courtNumber}`;
     if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
-      courtLabel = court.courtName || TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
+      const tierName = (TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`).replace(/\s*tier/gi, '');
+      const courtDisplayName = court.courtName || `Court ${court.courtNumber}`;
+      courtLabel = `
+        <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;">
+          <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">${courtDisplayName}</span>
+          <span style="font-size: 8px; font-weight: 800; color: var(--text-secondary); opacity: 0.7; letter-spacing: 0.8px; text-transform: uppercase; margin-top: 1px;">${tierName}</span>
+        </div>
+      `;
     }
 
     // Render Card Contents
@@ -1591,7 +1619,9 @@ function renderScoreModal() {
   let courtLabel = court.courtName || `Court ${court.courtNumber}`;
   if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
     const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
-    courtLabel = court.courtName || TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`;
+    const tierName = (TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`).replace(/\s*tier/gi, '');
+    const courtDisplayName = court.courtName || `Court ${court.courtNumber}`;
+    courtLabel = `${courtDisplayName} (${tierName})`;
   }
 
   // Set players names in modal
@@ -2828,11 +2858,14 @@ function renderGlobalLeaderboard(sourceCourts) {
 
     let subtitleHtml = '';
     if (p.isCumulative) {
-      subtitleHtml = `${TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`} • Group ${getCourtName(p.qualifyingCourt, 1)}`;
+      const tierName = (TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`).replace(/\s*tier/gi, '');
+      const courtName = getCourtName(p.courtNumber, 2);
+      subtitleHtml = `${courtName} (${tierName}) • Group ${getCourtName(p.qualifyingCourt, 1)}`;
     } else {
       const courtName = getCourtName(p.courtNumber, 2);
+      const tierName = (TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`).replace(/\s*tier/gi, '');
       subtitleHtml = (appState.currentStage === 2 && appState.leaderboardViewMode !== 'stage1')
-        ? (courtName !== `Court ${p.courtNumber}` ? courtName : (TIER_NAMES[p.courtNumber - 1] || `Tier ${p.courtNumber}`))
+        ? `${courtName} (${tierName})`
         : getCourtName(p.courtNumber, 1);
     }
 
