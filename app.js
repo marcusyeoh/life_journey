@@ -75,6 +75,65 @@ const appState = {
 };
 
 let confirmCallback = null;
+let editingCourtNumber = null;
+let debounceTimer = null;
+
+function showCourtNameModal(courtNumber) {
+  editingCourtNumber = courtNumber;
+  const modal = document.getElementById('court-name-modal');
+  if (!modal) return;
+
+  const titleEl = document.getElementById('court-name-modal-title');
+  const inputEl = document.getElementById('court-name-modal-input');
+
+  if (titleEl) {
+    titleEl.textContent = `Rename Court ${courtNumber}`;
+  }
+
+  const court = appState.courts.find(c => c.courtNumber === courtNumber);
+  const currentName = court && court.courtName ? court.courtName : `Court ${courtNumber}`;
+  if (inputEl) {
+    inputEl.value = currentName;
+  }
+
+  modal.classList.remove('view-hidden');
+  setTimeout(() => {
+    document.body.classList.add('modal-open');
+    if (inputEl) {
+      inputEl.focus();
+      inputEl.select();
+    }
+  }, 50);
+}
+
+function hideCourtNameModal() {
+  const modal = document.getElementById('court-name-modal');
+  if (modal) {
+    modal.classList.add('view-hidden');
+    document.body.classList.remove('modal-open');
+  }
+  editingCourtNumber = null;
+}
+
+function saveCourtNameFromModal() {
+  if (!editingCourtNumber) return;
+  const inputEl = document.getElementById('court-name-modal-input');
+  if (!inputEl) return;
+
+  let finalName = (inputEl.value || '').trim();
+  if (!finalName) {
+    finalName = `Court ${editingCourtNumber}`;
+  }
+
+  const court = appState.courts.find(c => c.courtNumber === editingCourtNumber);
+  if (court) {
+    court.courtName = finalName;
+    saveStateToCloud();
+  }
+
+  hideCourtNameModal();
+  render();
+}
 
 function showCustomConfirm(title, message, icon, onConfirm) {
   const modal = document.getElementById('confirm-modal');
@@ -354,7 +413,7 @@ async function startApp() {
         // Only force admin navigation if they are just loading, or if tournament was reset
         if (!appState.currentView || appState.currentView === 'user-landing') {
           targetView = 'court-setup';
-        } else if (!hasActiveMixer && appState.currentView !== 'court-setup') {
+        } else if (!hasActiveMixer && appState.currentView !== 'court-setup' && appState.currentView !== 'player-entry') {
           targetView = 'court-setup';
         } else if (appState.currentView === 'dashboard') {
           targetView = 'court-setup'; // Admins use the player link to view dashboard
@@ -434,7 +493,7 @@ if (document.readyState === 'loading') {
 
 function navigateTo(viewName) {
   // Save state to cloud when navigating away from edit screens to commit any unsaved text inputs (like court or player names)
-  if (appState.isAdmin && (appState.currentView === 'court-setup' || appState.currentView === 'player-entry')) {
+  if (appState.isAdmin && appState.currentView !== viewName && (appState.currentView === 'court-setup' || appState.currentView === 'player-entry')) {
     saveStateToCloud();
   }
 
@@ -581,17 +640,23 @@ function renderCourtSetup() {
   container.innerHTML = '';
 
   appState.courts.forEach(court => {
+    const courtNumber = court.courtNumber;
     const isActive = court.isActive;
 
     const card = document.createElement('div');
     card.className = `card court-card ${isActive ? 'active' : ''}`;
-    card.setAttribute('data-court-number', court.courtNumber);
+    card.setAttribute('data-court-number', courtNumber);
 
     card.innerHTML = `
       <div class="court-card-header">
         <div class="court-title-area">
           <span class="material-symbols-outlined">grid_view</span>
-          <input type="text" class="court-name-input" value="${court.courtName || `Court ${court.courtNumber}`}" data-court-number="${court.courtNumber}" placeholder="Court ${court.courtNumber}">
+          <div class="court-name-wrapper">
+            <span class="court-name-text">${court.courtName || `Court ${courtNumber}`}</span>
+            <button class="court-name-edit-btn" aria-label="Edit court name">
+              <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
+            </button>
+          </div>
         </div>
         <label class="switch">
           <input type="checkbox" class="court-toggle" ${isActive ? 'checked' : ''}>
@@ -610,26 +675,22 @@ function renderCourtSetup() {
     const toggle = card.querySelector('.court-toggle');
     if (toggle) {
       toggle.addEventListener('change', () => {
-        court.isActive = toggle.checked;
+        const activeCourt = appState.courts.find(c => c.courtNumber === courtNumber);
+        if (activeCourt) {
+          activeCourt.isActive = toggle.checked;
+        }
         saveStateToCloud(); // Save instantly to Cloud to sync all views and prevent race conditions!
         render();
       });
     }
 
-    // Court Name Input listener
-    const nameInput = card.querySelector('.court-name-input');
-    if (nameInput) {
-      nameInput.addEventListener('input', (e) => {
-        court.courtName = e.target.value;
-      });
-      nameInput.addEventListener('blur', () => {
-        court.courtName = (court.courtName || '').trim();
-        saveStateToCloud();
-      });
-      nameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          nameInput.blur();
-        }
+    // Court Name Edit Button listener
+    const editBtn = card.querySelector('.court-name-edit-btn');
+    if (editBtn) {
+      editBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showCourtNameModal(courtNumber);
       });
     }
 
@@ -639,8 +700,7 @@ function renderCourtSetup() {
       if (btn) {
         btn.addEventListener('click', () => {
           // Select this court as the active input court
-          const activeCourts = appState.courts.filter(c => c.isActive);
-          appState.selectedCourtNumber = court.courtNumber;
+          appState.selectedCourtNumber = courtNumber;
           navigateTo('player-entry');
         });
       }
@@ -697,15 +757,16 @@ function renderPlayerEntry(activeCourts) {
 
   // 1. Render Court Columns
   activeCourts.forEach(court => {
+    const courtNumber = court.courtNumber;
     const col = document.createElement('div');
     col.className = 'board-column';
-    col.setAttribute('data-list-id', court.courtNumber.toString());
+    col.setAttribute('data-list-id', courtNumber.toString());
 
     // Defensive: Get court entry and ensure names exists
-    let entry = appState.entryState[court.courtNumber];
+    let entry = appState.entryState[courtNumber];
     if (!entry) {
       entry = { names: [], count: 4 };
-      appState.entryState[court.courtNumber] = entry;
+      appState.entryState[courtNumber] = entry;
     }
     if (!entry.names) {
       entry.names = [];
@@ -734,7 +795,7 @@ function renderPlayerEntry(activeCourts) {
     colHeader.innerHTML = `
       <div class="board-column-title" style="display: flex; align-items: center;">
         <span class="material-symbols-outlined">grid_view</span>
-        <span>${court.courtName || `Court ${court.courtNumber}`}</span>
+        <span>${court.courtName || `Court ${courtNumber}`}</span>
         ${avgBadgeHtml}
       </div>
       <span class="capacity-badge ${badgeClass}">${badgeText}</span>
@@ -743,7 +804,7 @@ function renderPlayerEntry(activeCourts) {
 
     const dragList = document.createElement('div');
     dragList.className = 'player-drag-list';
-    dragList.setAttribute('data-list-id', court.courtNumber.toString());
+    dragList.setAttribute('data-list-id', courtNumber.toString());
 
     entry.names.forEach((name, idx) => {
       const item = document.createElement('div');
@@ -761,49 +822,56 @@ function renderPlayerEntry(activeCourts) {
       const input = item.querySelector('.player-drag-input');
       if (input) {
         input.addEventListener('input', (e) => {
-          entry.names[idx] = e.target.value;
+          const currentEntry = appState.entryState[courtNumber];
+          if (currentEntry && currentEntry.names) {
+            currentEntry.names[idx] = e.target.value;
 
-          // Dynamically update count badge and bottom generate button state
-          const updatedFilled = entry.names.filter(n => n && n.trim() !== '').length;
-          const badge = col.querySelector('.capacity-badge');
-          if (badge) {
-            if (updatedFilled < 4) {
-              badge.textContent = `Needs 4-7 Players`;
-              badge.className = 'capacity-badge invalid';
-            } else if (updatedFilled === 7) {
-              badge.textContent = `7/7 (Full)`;
-              badge.className = 'capacity-badge valid';
+            // Dynamically update count badge and bottom generate button state
+            const updatedFilled = currentEntry.names.filter(n => n && n.trim() !== '').length;
+            const badge = col.querySelector('.capacity-badge');
+            if (badge) {
+              if (updatedFilled < 4) {
+                badge.textContent = `Needs 4-7 Players`;
+                badge.className = 'capacity-badge invalid';
+              } else if (updatedFilled === 7) {
+                badge.textContent = `7/7 (Full)`;
+                badge.className = 'capacity-badge valid';
+              } else {
+                badge.textContent = `${updatedFilled}/7 Players`;
+                badge.className = 'capacity-badge valid';
+              }
+            }
+
+            // Dynamically update average DUPR badge
+            const avgDupr = getCourtAverageDUPR(currentEntry.names);
+            let avgBadge = col.querySelector('.avg-dupr-badge');
+            const titleArea = col.querySelector('.board-column-title');
+            if (avgDupr > 0) {
+              if (!avgBadge && titleArea) {
+                avgBadge = document.createElement('span');
+                avgBadge.className = 'avg-dupr-badge';
+                avgBadge.style.cssText = "font-size: 11px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: var(--neon); background: rgba(255, 214, 10, 0.1); border: 1px solid rgba(255, 214, 10, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(255, 214, 10, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;";
+                titleArea.appendChild(avgBadge);
+              }
+              if (avgBadge) {
+                avgBadge.textContent = `Avg: ${avgDupr.toFixed(2)}`;
+              }
             } else {
-              badge.textContent = `${updatedFilled}/7 Players`;
-              badge.className = 'capacity-badge valid';
-            }
-          }
-
-          // Dynamically update average DUPR badge
-          const avgDupr = getCourtAverageDUPR(entry.names);
-          let avgBadge = col.querySelector('.avg-dupr-badge');
-          const titleArea = col.querySelector('.board-column-title');
-          if (avgDupr > 0) {
-            if (!avgBadge && titleArea) {
-              avgBadge = document.createElement('span');
-              avgBadge.className = 'avg-dupr-badge';
-              avgBadge.style.cssText = "font-size: 11px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: var(--neon); background: rgba(255, 214, 10, 0.1); border: 1px solid rgba(255, 214, 10, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(255, 214, 10, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;";
-              titleArea.appendChild(avgBadge);
-            }
-            if (avgBadge) {
-              avgBadge.textContent = `Avg: ${avgDupr.toFixed(2)}`;
-            }
-          } else {
-            if (avgBadge) {
-              avgBadge.remove();
+              if (avgBadge) {
+                avgBadge.remove();
+              }
             }
           }
 
           validateEntryGeneration(activeCourts);
+          debouncedSaveStateToCloud();
         });
 
         input.addEventListener('blur', (e) => {
-          entry.names[idx] = e.target.value.trim();
+          const currentEntry = appState.entryState[courtNumber];
+          if (currentEntry && currentEntry.names) {
+            currentEntry.names[idx] = e.target.value.trim();
+          }
           saveStateToCloud();
         });
       }
@@ -812,7 +880,10 @@ function renderPlayerEntry(activeCourts) {
       const deleteBtn = item.querySelector('.delete-player-btn');
       if (deleteBtn) {
         deleteBtn.addEventListener('click', () => {
-          entry.names.splice(idx, 1);
+          const currentEntry = appState.entryState[courtNumber];
+          if (currentEntry && currentEntry.names) {
+            currentEntry.names.splice(idx, 1);
+          }
           renderPlayerEntry(activeCourts);
           saveStateToCloud();
         });
@@ -829,8 +900,12 @@ function renderPlayerEntry(activeCourts) {
       addBtn.className = 'inline-add-player-btn';
       addBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">add</span> Add Player`;
       addBtn.addEventListener('click', () => {
-        entry.names.push('');
-        listToFocus = court.courtNumber.toString();
+        const currentEntry = appState.entryState[courtNumber];
+        if (currentEntry) {
+          if (!currentEntry.names) currentEntry.names = [];
+          currentEntry.names.push('');
+        }
+        listToFocus = courtNumber.toString();
         renderPlayerEntry(activeCourts);
       });
       col.appendChild(addBtn);
@@ -2144,6 +2219,38 @@ function setupEventListeners() {
     });
   }
 
+  // Court Name Modal Handlers
+  const courtNameModal = document.getElementById('court-name-modal');
+  const courtNameModalCancel = document.getElementById('court-name-modal-cancel');
+  const courtNameModalSave = document.getElementById('court-name-modal-save');
+  const courtNameModalInput = document.getElementById('court-name-modal-input');
+
+  if (courtNameModalCancel) {
+    courtNameModalCancel.addEventListener('click', hideCourtNameModal);
+  }
+
+  if (courtNameModalSave) {
+    courtNameModalSave.addEventListener('click', saveCourtNameFromModal);
+  }
+
+  if (courtNameModalInput) {
+    courtNameModalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        saveCourtNameFromModal();
+      } else if (e.key === 'Escape') {
+        hideCourtNameModal();
+      }
+    });
+  }
+
+  if (courtNameModal) {
+    courtNameModal.addEventListener('click', (e) => {
+      if (e.target === courtNameModal) {
+        hideCourtNameModal();
+      }
+    });
+  }
+
   // How It Works / Player Help Modal Logic
   const helpModal = document.getElementById('help-modal');
   const btnPlayerHelp = document.getElementById('btn-player-help');
@@ -2218,6 +2325,14 @@ function updateSyncStatus(status) {
     textEl.textContent = 'Ready';
     iconEl.textContent = 'cloud';
   }
+}
+
+function debouncedSaveStateToCloud() {
+  updateSyncStatus('syncing');
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    saveStateToCloud();
+  }, 1000);
 }
 
 async function saveStateToCloud() {
@@ -2378,13 +2493,19 @@ async function resetMixer() {
   appState.stage2PreviewTiers = [];
   appState.selectedCourtNumber = 1;
   appState.viewingRound = 1;
-  appState.courts = Array.from({ length: 6 }, (_, i) => ({
-    courtNumber: i + 1,
-    isActive: false,
-    players: [],
-    matches: [],
-    activeRound: 1
-  }));
+  const existingCourts = appState.courts || [];
+  appState.courts = Array.from({ length: 6 }, (_, i) => {
+    const courtNum = i + 1;
+    const existing = existingCourts.find(c => c.courtNumber === courtNum);
+    return {
+      courtNumber: courtNum,
+      courtName: existing ? (existing.courtName || '') : '',
+      isActive: false,
+      players: [],
+      matches: [],
+      activeRound: 1
+    };
+  });
 
   for (let i = 1; i <= 6; i++) {
     appState.entryState[i] = {
@@ -3295,6 +3416,7 @@ function setupMagicAutoFill() {
           document.body.classList.remove('modal-open');
           setTimeout(() => {
             aiModal.classList.add('view-hidden');
+            navigateTo('player-entry');
           }, 300);
         } else {
           alert("No players could be extracted from the uploaded images. Please try again with clearer screenshots.");

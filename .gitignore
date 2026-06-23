@@ -54,3 +54,5 @@ recover_robust.py
 test_target.py
 index
 zbpack.json
+/scratch/
+*.xlsx

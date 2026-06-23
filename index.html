@@ -729,6 +729,22 @@
     </div>
   </div>
 
+  <!-- RENAME COURT MODAL -->
+  <div class="modal-overlay view-hidden" id="court-name-modal">
+    <div class="modal-content" style="max-height: 400px; justify-content: center; padding: 32px 24px;">
+      <div class="flex-col" style="align-items: center; text-align: center; margin-bottom: 24px; width: 100%;">
+        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--neon); margin-bottom: 16px;">edit_note</span>
+        <h2 class="title-lg" id="court-name-modal-title" style="margin-bottom: 8px;">Rename Court</h2>
+        <p class="subtitle-md" style="margin-bottom: 20px;">Enter a custom display name for this court.</p>
+        <input type="text" id="court-name-modal-input" class="court-modal-input" maxlength="20" placeholder="Court Name" style="width: 100%; text-align: center; font-size: 16px; font-weight: 600; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.06); border: 1px solid var(--border-gloss); color: var(--text-primary); outline: none;">
+      </div>
+      <div style="display: flex; gap: 12px; width: 100%;">
+        <button class="add-players-btn" id="court-name-modal-cancel" style="flex: 1; border-color: rgba(255,255,255,0.2); color: var(--text-primary); font-size: 14px; height: 52px; background: transparent;">Cancel</button>
+        <button class="btn-primary neon-glow" id="court-name-modal-save" style="flex: 1; font-size: 14px; height: 52px; border-radius: 12px; justify-content: center;">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- AI UPLOAD MODAL -->
   <div class="modal-overlay view-hidden" id="ai-upload-modal">
     <div class="modal-content" style="max-width: 480px; padding: 32px 24px; border-radius: 28px;">
@@ -769,14 +785,10 @@
         style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0; width: 100%;">
         <div
           style="position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;">
-          <div
-            style="position: absolute; width: 72px; height: 72px; border: 2px dashed var(--neon); border-radius: 50%; animation: spin 4s linear infinite;">
-          </div>
-          <span class="material-symbols-outlined"
-            style="font-size: 32px; color: var(--neon); animation: pulse 1.2s infinite ease-in-out;">auto_awesome</span>
+          <div class="ai-processing-spinner"></div>
+          <span class="material-symbols-outlined ai-processing-icon">auto_awesome</span>
         </div>
-        <p style="margin-top: 20px; font-size: 15px; font-weight: 700; color: var(--neon); text-align: center;"
-          id="ai-processing-title">Extracting Players & DUPR...</p>
+        <p class="ai-processing-title" id="ai-processing-title">Extracting Players & DUPR...</p>
       </div>
     </div>
   </div>

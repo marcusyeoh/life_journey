@@ -28,6 +28,7 @@
                    0 8px 32px rgba(0, 0, 0, 0.4);
   --shadow-glass-hover: inset 0 1px 2px rgba(255, 255, 255, 0.25), 
                          0 12px 48px rgba(0, 0, 0, 0.5);
+  --modal-loading-text: var(--neon);
 }
 
 [data-theme="light"] {
@@ -59,6 +60,7 @@
                    0 8px 32px rgba(0, 0, 0, 0.08);
   --shadow-glass-hover: inset 0 1px 2px rgba(255, 255, 255, 1), 
                          0 12px 48px rgba(0, 0, 0, 0.12);
+  --modal-loading-text: var(--text-primary);
 }
 
 /* Global Reset & Base Styles */
@@ -349,33 +351,57 @@ header.app-bar h1 {
   font-weight: 700;
 }
 
-.court-name-input {
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+.court-name-text {
   color: var(--text-primary);
   font-family: inherit;
   font-size: 14px;
   font-weight: 700;
   padding: 2px 6px;
-  width: 135px;
-  border-radius: 6px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 145px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
-.court-name-input:hover {
-  background: rgba(255, 255, 255, 0.05);
+.court-modal-input {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.court-name-input:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.1);
-  border-bottom: 2px solid var(--neon);
+.court-modal-input:focus {
+  border-color: var(--neon) !important;
+  box-shadow: 0 0 12px rgba(255, 214, 10, 0.2);
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
-.court-name-input::placeholder {
+.court-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.court-name-edit-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
   color: var(--text-secondary);
-  opacity: 0.6;
+  opacity: 0.4;
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  border-radius: 50%;
+}
+
+.court-name-wrapper:hover .court-name-edit-btn {
+  opacity: 0.8;
+}
+
+.court-name-edit-btn:hover {
+  opacity: 1 !important;
+  color: var(--neon);
+  transform: scale(1.1);
 }
 
 .court-card.active {
@@ -1141,6 +1167,40 @@ input:checked + .slider:before {
 .modal-open .modal-content {
   transform: scale(1) translateY(0);
   opacity: 1;
+}
+
+/* AI Auto-Fill loading state & light-theme overrides */
+.ai-processing-spinner {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  border: 2px dashed var(--neon);
+  border-radius: 50%;
+  animation: spin 4s linear infinite;
+}
+
+.ai-processing-icon {
+  font-size: 32px;
+  color: var(--neon);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+
+.ai-processing-title {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--modal-loading-text);
+  text-align: center;
+}
+
+[data-theme="light"] .modal-overlay {
+  background-color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="light"] .modal-content {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .modal-drag-bar {
