@@ -41,6 +41,7 @@ const appState = {
   currentView: checkAdminMode() ? 'court-setup' : 'user-landing',
   currentStage: 1, // 1: Qualifying, 2: Final Stage
   stage1Courts: null,
+  draftingStyle: 'snake', // 'snake' | 'skill-grouped'
   stage2ViewingQualifying: false,
   stage2PreviewTiers: [],
   leaderboardViewMode: 'cumulative', // 'cumulative' | 'stage2' | 'stage1'
@@ -236,48 +237,204 @@ function shuffleArray(array) {
   return array;
 }
 
+const COURT_SCHEDULES = {
+  4: [
+    { t1: [0, 1], t2: [2, 3] },
+    { t1: [0, 2], t2: [1, 3] },
+    { t1: [0, 3], t2: [1, 2] }
+  ],
+  5: [
+    { t1: [0, 3], t2: [1, 2] },
+    { t1: [1, 4], t2: [2, 3] },
+    { t1: [2, 0], t2: [3, 4] },
+    { t1: [3, 1], t2: [4, 0] },
+    { t1: [4, 2], t2: [0, 1] }
+  ],
+  6: [
+    { t1: [0, 1], t2: [2, 3] },
+    { t1: [0, 4], t2: [1, 5] },
+    { t1: [0, 2], t2: [3, 4] },
+    { t1: [1, 2], t2: [3, 5] },
+    { t1: [0, 5], t2: [2, 4] },
+    { t1: [1, 3], t2: [4, 5] }
+  ],
+  7: [
+    { t1: [0, 1], t2: [2, 3] },
+    { t1: [0, 4], t2: [5, 6] },
+    { t1: [1, 2], t2: [3, 4] },
+    { t1: [0, 5], t2: [1, 6] },
+    { t1: [2, 4], t2: [3, 5] },
+    { t1: [0, 6], t2: [1, 3] },
+    { t1: [2, 6], t2: [4, 5] }
+  ]
+};
+
+const permutationsCache = {};
+function getPermutations(n) {
+  if (permutationsCache[n]) return permutationsCache[n];
+  const results = [];
+  const arr = Array.from({ length: n }, (_, i) => i);
+
+  function permute(temp, remaining) {
+    if (remaining.length === 0) {
+      results.push(temp);
+      return;
+    }
+    for (let i = 0; i < remaining.length; i++) {
+      permute([...temp, remaining[i]], remaining.filter((_, idx) => idx !== i));
+    }
+  }
+
+  permute([], arr);
+  permutationsCache[n] = results;
+  return results;
+}
+
+function getPlayerRating(player) {
+  if (!player || !player.name) return 2.50;
+  const match = player.name.match(/\((\d+(?:\.\d+)?)\)/);
+  return match ? parseFloat(match[1]) : 2.50;
+}
+
+function buildStage1History() {
+  const opponentRepeats = {};
+  const partnerRepeats = {};
+
+  if (appState.stage1Courts) {
+    appState.stage1Courts.forEach(court => {
+      if (court.matches) {
+        court.matches.forEach(match => {
+          if (!match.team1Player1 || !match.team1Player2 || !match.team2Player1 || !match.team2Player2) return;
+          const p1 = match.team1Player1.name;
+          const p2 = match.team1Player2.name;
+          const p3 = match.team2Player1.name;
+          const p4 = match.team2Player2.name;
+
+          const increment = (map, n1, n2) => {
+            if (!map[n1]) map[n1] = {};
+            if (!map[n2]) map[n2] = {};
+            map[n1][n2] = (map[n1][n2] || 0) + 1;
+            map[n2][n1] = (map[n2][n1] || 0) + 1;
+          };
+
+          // Partners
+          increment(partnerRepeats, p1, p2);
+          increment(partnerRepeats, p3, p4);
+
+          // Opponents
+          increment(opponentRepeats, p1, p3);
+          increment(opponentRepeats, p1, p4);
+          increment(opponentRepeats, p2, p3);
+          increment(opponentRepeats, p2, p4);
+        });
+      }
+    });
+  }
+
+  return { opponentRepeats, partnerRepeats };
+}
+
+function evaluatePermutation(P, players, schedule, history) {
+  let imbalanceCost = 0;
+  let repeatCost = 0;
+
+  const { opponentRepeats, partnerRepeats } = history;
+
+  schedule.forEach(match => {
+    const p1 = players[P[match.t1[0]]];
+    const p2 = players[P[match.t1[1]]];
+    const p3 = players[P[match.t2[0]]];
+    const p4 = players[P[match.t2[1]]];
+
+    const r1 = getPlayerRating(p1);
+    const r2 = getPlayerRating(p2);
+    const r3 = getPlayerRating(p3);
+    const r4 = getPlayerRating(p4);
+
+    const team1Rating = r1 + r2;
+    const team2Rating = r3 + r4;
+    const diff = Math.abs(team1Rating - team2Rating);
+
+    // Sum of squared differences for imbalance cost
+    imbalanceCost += diff * diff;
+
+    // Check repeat matchups from Stage 1
+    const checkOpponents = (n1, n2) => {
+      if (opponentRepeats[n1] && opponentRepeats[n1][n2]) {
+        repeatCost += opponentRepeats[n1][n2] * 10.0;
+      }
+    };
+    const checkPartners = (n1, n2) => {
+      if (partnerRepeats[n1] && partnerRepeats[n1][n2]) {
+        repeatCost += partnerRepeats[n1][n2] * 5.0;
+      }
+    };
+
+    checkOpponents(p1.name, p3.name);
+    checkOpponents(p1.name, p4.name);
+    checkOpponents(p2.name, p3.name);
+    checkOpponents(p2.name, p4.name);
+
+    checkPartners(p1.name, p2.name);
+    checkPartners(p3.name, p4.name);
+  });
+
+  return imbalanceCost + repeatCost;
+}
+
+function selectOptimalPermutation(players, history) {
+  const n = players.length;
+  const schedule = COURT_SCHEDULES[n];
+  if (!schedule) return Array.from({ length: n }, (_, i) => i);
+
+  const permutations = getPermutations(n);
+  let minCost = Infinity;
+  let bestPermutations = [];
+
+  permutations.forEach(P => {
+    const cost = evaluatePermutation(P, players, schedule, history);
+    if (cost < minCost) {
+      minCost = cost;
+      bestPermutations = [P];
+    } else if (Math.abs(cost - minCost) < 0.0001) {
+      bestPermutations.push(P);
+    }
+  });
+
+  const randomIndex = Math.floor(Math.random() * bestPermutations.length);
+  return bestPermutations[randomIndex];
+}
+
 function generatePairingsForCourt(court) {
   court.matches = [];
   // Reset all players scores to 0 for a fresh start
   court.players.forEach(p => p.totalScore = 0);
   court.activeRound = 1;
 
-  // Shuffle the players array to ensure random rotation and fair bye/play distribution
-  shuffleArray(court.players);
-
   const n = court.players.length;
-  const p = court.players;
+  if (n < 4 || n > 7) return; // Supported sizes are 4, 5, 6, 7
 
-  if (n === 4) {
-    // 3 rounds - everyone partners with everyone else exactly once
-    court.matches.push(new Match(p[0], p[1], p[2], p[3]));
-    court.matches.push(new Match(p[0], p[2], p[1], p[3]));
-    court.matches.push(new Match(p[0], p[3], p[1], p[2]));
-  } else if (n === 5) {
-    // 5 rounds - everyone partners with everyone exactly once, 1 bye per round
-    court.matches.push(new Match(p[0], p[3], p[1], p[2])); // Bye: p[4]
-    court.matches.push(new Match(p[1], p[4], p[2], p[3])); // Bye: p[0]
-    court.matches.push(new Match(p[2], p[0], p[3], p[4])); // Bye: p[1]
-    court.matches.push(new Match(p[3], p[1], p[4], p[0])); // Bye: p[2]
-    court.matches.push(new Match(p[4], p[2], p[0], p[1])); // Bye: p[3]
-  } else if (n === 6) {
-    // 6 rounds - perfect rotation, every player plays exactly 4 rounds, no duplicate partnerships, no consecutive byes
-    court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5]
-    court.matches.push(new Match(p[0], p[4], p[1], p[5])); // Byes: p[2], p[3]
-    court.matches.push(new Match(p[0], p[2], p[3], p[4])); // Byes: p[1], p[5]
-    court.matches.push(new Match(p[1], p[2], p[3], p[5])); // Byes: p[0], p[4]
-    court.matches.push(new Match(p[0], p[5], p[2], p[4])); // Byes: p[1], p[3]
-    court.matches.push(new Match(p[1], p[3], p[4], p[5])); // Byes: p[0], p[2]
-  } else if (n === 7) {
-    // 7 rounds - perfect rotation, every player plays exactly 4 rounds, no duplicate partnerships, no consecutive byes
-    court.matches.push(new Match(p[0], p[1], p[2], p[3])); // Byes: p[4], p[5], p[6]
-    court.matches.push(new Match(p[0], p[4], p[5], p[6])); // Byes: p[1], p[2], p[3]
-    court.matches.push(new Match(p[1], p[2], p[3], p[4])); // Byes: p[0], p[5], p[6]
-    court.matches.push(new Match(p[0], p[5], p[1], p[6])); // Byes: p[2], p[3], p[4]
-    court.matches.push(new Match(p[2], p[4], p[3], p[5])); // Byes: p[0], p[1], p[6]
-    court.matches.push(new Match(p[0], p[6], p[1], p[3])); // Byes: p[2], p[4], p[5]
-    court.matches.push(new Match(p[2], p[6], p[4], p[5])); // Byes: p[0], p[1], p[3]
-  }
+  // Build Stage 1 history of repeat matchups
+  const history = buildStage1History();
+
+  // Find the optimal permutation of players
+  const optimalP = selectOptimalPermutation(court.players, history);
+
+  // Map the players to the optimal permutation
+  const p = optimalP.map(idx => court.players[idx]);
+
+  // Now build matches using the mapped players array `p`
+  const schedule = COURT_SCHEDULES[n];
+  schedule.forEach(match => {
+    const p1 = p[match.t1[0]];
+    const p2 = p[match.t1[1]];
+    const p3 = p[match.t2[0]];
+    const p4 = p[match.t2[1]];
+    court.matches.push(new Match(p1, p2, p3, p4));
+  });
+
+  // Update the court's players array to match the optimized order
+  court.players = p;
 }
 
 // ----------------------------------------------------
@@ -383,6 +540,7 @@ async function startApp() {
       // 2. Overwrite current state with database data
       appState.currentStage = data.currentStage || 1;
       appState.stage1Courts = data.stage1Courts || null;
+      appState.draftingStyle = data.draftingStyle || 'snake';
       appState.stage2ViewingQualifying = data.stage2ViewingQualifying || false;
       appState.stage2PreviewTiers = data.stage2PreviewTiers || [];
 
@@ -1148,11 +1306,23 @@ function initDragAndDrop(activeCourts) {
 
 // --- HELPER TO STRIP DUPR RATING FOR PLAYERS ---
 function formatPlayerName(name) {
-  if (!appState.isAdmin && name) {
+  const showDuprParam = new URLSearchParams(window.location.search).get('show_dupr') === 'true';
+  if (!appState.isAdmin && !showDuprParam && name) {
     // Strips " (X.XX)" or " (X.X)"
     return name.replace(/\s*\(\d+\.\d+\)/, '');
   }
   return name;
+}
+
+// Helper to extract DUPR rating from player name
+function getPlayerDupr(name) {
+  if (!name) return 2.50;
+  const match = name.match(/\((\d+(?:\.\d+)?)\)/);
+  if (match && match[1]) {
+    const val = parseFloat(match[1]);
+    if (!isNaN(val)) return val;
+  }
+  return 2.50;
 }
 
 // Helper to compute overall ranks map (playerName -> rank)
@@ -1528,6 +1698,26 @@ function renderDashboard(activeCourts) {
           scoreHtml = `<span class="overview-row-vs-badge">VS</span>`;
         }
         
+        const showDuprParam = new URLSearchParams(window.location.search).get('show_dupr') === 'true';
+        let team1AvgHtml = '';
+        let team2AvgHtml = '';
+        let diffHtml = '';
+        
+        if (showDuprParam) {
+          const t1p1 = getPlayerDupr(m.team1Player1.name);
+          const t1p2 = getPlayerDupr(m.team1Player2.name);
+          const t2p1 = getPlayerDupr(m.team2Player1.name);
+          const t2p2 = getPlayerDupr(m.team2Player2.name);
+          
+          const t1Avg = (t1p1 + t1p2) / 2;
+          const t2Avg = (t2p1 + t2p2) / 2;
+          const diff = Math.abs(t1Avg - t2Avg);
+          
+          team1AvgHtml = `<span style="font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-weight: 500;">Avg: ${t1Avg.toFixed(2)}</span>`;
+          team2AvgHtml = `<span style="font-size: 10px; color: var(--text-secondary); margin-top: 2px; font-weight: 500;">Avg: ${t2Avg.toFixed(2)}</span>`;
+          diffHtml = `<span style="font-size: 10px; color: var(--text-secondary); font-weight: 500; margin-top: 4px;">&Delta; ${diff.toFixed(2)}</span>`;
+        }
+
         const gameRow = document.createElement('div');
         gameRow.className = 'overview-row';
         gameRow.innerHTML = `
@@ -1539,13 +1729,16 @@ function renderDashboard(activeCourts) {
             <div class="overview-row-team">
               <span>${formatPlayerName(m.team1Player1.name)}</span>
               <span>${formatPlayerName(m.team1Player2.name)}</span>
+              ${team1AvgHtml}
             </div>
-            <div class="overview-row-score-cell">
+            <div class="overview-row-score-cell"${showDuprParam ? ' style="flex-direction: column;"' : ''}>
               ${scoreHtml}
+              ${diffHtml}
             </div>
             <div class="overview-row-team team-2">
               <span>${formatPlayerName(m.team2Player1.name)}</span>
               <span>${formatPlayerName(m.team2Player2.name)}</span>
+              ${team2AvgHtml}
             </div>
           </div>
         `;
@@ -2353,6 +2546,7 @@ async function saveStateToCloud() {
     const serializedState = {
       currentView: appState.currentView,
       currentStage: appState.currentStage,
+      draftingStyle: appState.draftingStyle || 'snake',
       stage1Courts: appState.stage1Courts,
       stage2ViewingQualifying: appState.stage2ViewingQualifying,
       stage2PreviewTiers: appState.stage2PreviewTiers,
@@ -2488,6 +2682,7 @@ async function resetMixer() {
   // Reset local state to default
   appState.currentView = 'court-setup';
   appState.currentStage = 1;
+  appState.draftingStyle = 'snake';
   appState.stage1Courts = null;
   appState.stage2ViewingQualifying = false;
   appState.stage2PreviewTiers = [];
@@ -2525,6 +2720,7 @@ async function resetMixer() {
     await setDoc(mixerDocRef, {
       currentView: 'court-setup',
       currentStage: 1,
+      draftingStyle: 'snake',
       stage1Courts: null,
       stage2ViewingQualifying: false,
       stage2PreviewTiers: [],
@@ -3312,6 +3508,12 @@ function assignBalancedPlayersToCourts(extractedPlayers) {
     }
   }
 
+  // Clear reserves bench
+  appState.entryState.bench = {
+    names: [],
+    count: 0
+  };
+
   // Assign to court entryState and pad to at least 4
   activeCourts.forEach((court, idx) => {
     const names = courtPlayersList[idx];
@@ -3360,6 +3562,8 @@ function setupMagicAutoFill() {
     if (providerSelect) providerSelect.value = savedProvider;
     if (keyInput) keyInput.value = savedKey;
   };
+
+
 
   autofillBtn.addEventListener('click', () => {
     aiModal.classList.remove('view-hidden');

@@ -6,6 +6,14 @@ const { URL } = require('url');
 
 const PORT = 8080;
 
+// Robust crash protection process listeners
+process.on('uncaughtException', (err) => {
+  console.error('🔥 Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -50,6 +58,14 @@ try {
 }
 
 const server = http.createServer((req, res) => {
+  // Add robust stream error handling
+  req.on('error', err => {
+    console.error('Incoming Request stream error:', err);
+  });
+  res.on('error', err => {
+    console.error('Outgoing Response stream error:', err);
+  });
+
   // Set CORS headers for all local requests just in case
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -164,51 +180,56 @@ function handleAIProxy(req, res) {
 }
 
 function proxyOpenAI(apiKey, clientPayload, clientRes) {
-  let model = clientPayload.model || 'gpt-4o';
-  if (!model.startsWith('gpt-')) {
-    model = 'gpt-4o'; // Force fallback to gpt-4o if a Gemini model is passed to OpenAI
-  }
-
-  // Reconstruct standard OpenAI request payload
-  const openaiPayload = JSON.stringify({
-    model: model,
-    response_format: { type: "json_object" },
-    messages: clientPayload.messages,
-    max_tokens: clientPayload.max_tokens || 2000
-  });
-
-  const options = {
-    hostname: 'api.openai.com',
-    port: 443,
-    path: '/v1/chat/completions',
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Length': Buffer.byteLength(openaiPayload)
+  try {
+    let model = clientPayload.model || 'gpt-4o';
+    if (!model.startsWith('gpt-')) {
+      model = 'gpt-4o'; // Force fallback to gpt-4o if a Gemini model is passed to OpenAI
     }
-  };
 
-  const req = https.request(options, res => {
-    let data = '';
-    res.on('data', chunk => {
-      data += chunk;
+    // Reconstruct standard OpenAI request payload
+    const openaiPayload = JSON.stringify({
+      model: model,
+      response_format: { type: "json_object" },
+      messages: clientPayload.messages,
+      max_tokens: clientPayload.max_tokens || 2000
     });
 
-    res.on('end', () => {
-      clientRes.writeHead(res.statusCode, { 'Content-Type': 'application/json' });
-      clientRes.end(data);
-    });
-  });
+    const options = {
+      hostname: 'api.openai.com',
+      port: 443,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Length': Buffer.byteLength(openaiPayload)
+      }
+    };
 
-  req.on('error', err => {
-    console.error("OpenAI Server Proxy Error:", err);
+    const req = https.request(options, res => {
+      let data = '';
+      res.on('data', chunk => {
+        data += chunk;
+      });
+
+      res.on('end', () => {
+        clientRes.writeHead(res.statusCode, { 'Content-Type': 'application/json' });
+        clientRes.end(data);
+      });
+    });
+
+    req.on('error', err => {
+      console.error("OpenAI Server Proxy Error:", err);
+      clientRes.writeHead(500, { 'Content-Type': 'application/json' });
+      clientRes.end(JSON.stringify({ error: `OpenAI proxy error: ${err.message}` }));
+    });
+
+    req.write(openaiPayload);
+    req.end();
+  } catch (err) {
     clientRes.writeHead(500, { 'Content-Type': 'application/json' });
-    clientRes.end(JSON.stringify({ error: `OpenAI proxy error: ${err.message}` }));
-  });
-
-  req.write(openaiPayload);
-  req.end();
+    clientRes.end(JSON.stringify({ error: `OpenAI payload assembly failed: ${err.message}` }));
+  }
 }
 
 function proxyGemini(apiKey, clientPayload, clientRes) {

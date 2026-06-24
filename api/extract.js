@@ -60,50 +60,55 @@ module.exports = async (req, res) => {
 
 function proxyOpenAI(apiKey, clientPayload, clientRes) {
   return new Promise((resolve, reject) => {
-    let model = clientPayload.model || 'gpt-4o';
-    if (!model.startsWith('gpt-')) {
-      model = 'gpt-4o';
-    }
-
-    const openaiPayload = JSON.stringify({
-      model: model,
-      response_format: { type: "json_object" },
-      messages: clientPayload.messages,
-      max_tokens: clientPayload.max_tokens || 2000
-    });
-
-    const options = {
-      hostname: 'api.openai.com',
-      port: 443,
-      path: '/v1/chat/completions',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Length': Buffer.byteLength(openaiPayload)
+    try {
+      let model = clientPayload.model || 'gpt-4o';
+      if (!model.startsWith('gpt-')) {
+        model = 'gpt-4o';
       }
-    };
 
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', chunk => {
-        data += chunk;
+      const openaiPayload = JSON.stringify({
+        model: model,
+        response_format: { type: "json_object" },
+        messages: clientPayload.messages,
+        max_tokens: clientPayload.max_tokens || 2000
       });
 
-      res.on('end', () => {
-        clientRes.status(res.statusCode).send(data);
+      const options = {
+        hostname: 'api.openai.com',
+        port: 443,
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Length': Buffer.byteLength(openaiPayload)
+        }
+      };
+
+      const req = https.request(options, res => {
+        let data = '';
+        res.on('data', chunk => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          clientRes.status(res.statusCode).send(data);
+          resolve();
+        });
+      });
+
+      req.on('error', err => {
+        console.error("OpenAI Server Proxy Error:", err);
+        clientRes.status(500).json({ error: `OpenAI proxy error: ${err.message}` });
         resolve();
       });
-    });
 
-    req.on('error', err => {
-      console.error("OpenAI Server Proxy Error:", err);
-      clientRes.status(500).json({ error: `OpenAI proxy error: ${err.message}` });
+      req.write(openaiPayload);
+      req.end();
+    } catch (err) {
+      clientRes.status(500).json({ error: `OpenAI payload assembly failed: ${err.message}` });
       resolve();
-    });
-
-    req.write(openaiPayload);
-    req.end();
+    }
   });
 }
 
