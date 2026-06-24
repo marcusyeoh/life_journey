@@ -3134,8 +3134,9 @@ GRID FORMAT & ALIGNMENT EXPLANATION:
   3. Optional green text 'Friend' or yellow icon 'Reserved' below the name.
   4. Optional blue 'DUPR X.XXX' or 'DUPR X' badge at the bottom of the group.
 
-CRITICAL NAME INTEGRITY RULES:
-- Every circular avatar represents EXACTLY ONE player. There are exactly 25 circular avatars representing 25 unique players.
+CRITICAL NAME INTEGRITY & DETECTION RULES:
+- Count the player profiles dynamically. A screenshot can contain any number of players (e.g., 23 players, 16 players, etc.). Do NOT assume a fixed or hardcoded number of players.
+- IGNORE empty placeholder/invitation slots. If a slot contains a grey circle, dashed circle, or has no player name text displayed directly below it (or just says '+', 'Add Player', 'Invite', 'Unconfirmed', 'unknown', or is empty), it is a placeholder slot. Do NOT transcribe it and do NOT include it in the 'players' array.
 - The text directly below a single circular avatar, even if it spans multiple lines (e.g., 'Adrian\nLow', 'Pui Yee\nLeong', 'HOCK\nSOON HO'), is the full name of a single player. Combine these lines into one player's full name (e.g., "Pui Yee Leong", "Adrian Low", "Hock Soon Ho").
 - NEVER split a single player's name into multiple players (e.g., do NOT output one player named 'Pui Yee' and another named 'Leong').
 
@@ -3146,6 +3147,7 @@ CRITICAL ALIGNMENT RULES:
 - A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name in that column.
 - If a player has a green 'Friend' label, look further down in that same column to see if a blue DUPR badge exists. For example, 'Adrian Low' has a green 'Friend' label AND a blue 'DUPR 3.218' badge below it, so his rating is 3.218. 'Yen' has a green 'Friend' label but NO blue DUPR badge below it, so her rating is 2.50.
 - DUPR badges can contain integer values as well (e.g. 'DUPR 2'). If the badge says 'DUPR 2', the rating is 2.00.
+- If the badge contains 'NR' or 'DUPR NR' or 'Unrated', it means the player has no rating and must default to 2.50.
 - If there is NO blue DUPR badge in the vertical group for a player, they have NO rating and must be assigned 2.50. Do NOT borrow ratings from adjacent columns or rows!
 
 EACH DUPR BADGE IS UNIQUE:
@@ -3160,9 +3162,9 @@ OCR NUMBER PRECISION:
 To prevent lazy scanning and ensure extreme accuracy for small numbers or decimal parts, you MUST follow a strict Chain-of-Thought:
 1. Scan the image grid systematically row by row, from left to right.
 2. For each participant profile card, transcribe the EXACT name of the player. Do not shorten or alter the name.
-3. Explicitly transcribe the exact subtext/label/badge content below the player's name (e.g. "DUPR 3.754", "DUPR 3.842", "Friend / DUPR 3.218", "Reserved", "Unrated", or empty).
+3. Explicitly transcribe the exact subtext/label/badge content below the player's name (e.g. "DUPR 3.754", "DUPR 3.842", "Friend / DUPR 3.218", "Reserved", "Unrated", "DUPR NR", or empty).
 4. Parse the numeric rating from that subtext with FULL 3-decimal digit precision (e.g. "3.754", "3.842", "2.836", "2.312", "2.148"). DO NOT round or truncate this number to 2 decimals under any circumstances! For example, "3.172" must remain "3.172" and "2.836" must remain "2.836".
-5. If no valid numeric DUPR badge or rating exists (e.g. labeled "Friend" with no rating, "Reserved", "Unrated", or empty), assign a default rating of 2.50.
+5. If no valid numeric DUPR badge or rating exists (e.g. labeled "Friend" with no rating, "Reserved", "Unrated", "NR", "DUPR NR", or empty), assign a default rating of 2.50.
 
 Respond ONLY with a JSON object in this format:
 {
@@ -3216,7 +3218,50 @@ Respond ONLY with a JSON object in this format:
   const resultData = await response.json();
   const parsed = JSON.parse(resultData.choices[0].message.content);
   console.log("CoT Extraction Result:", parsed.chain_of_thought);
-  return parsed.players || [];
+  
+  const rawPlayers = parsed.players || [];
+  const filteredPlayers = rawPlayers.filter(player => {
+    if (!player.name) return false;
+    const nameTrimmed = player.name.trim().replace(/\s+/g, ' ');
+    if (!nameTrimmed) return false;
+    
+    const nameLower = nameTrimmed.toLowerCase();
+    
+    // Ignore common placeholder terms and "unknown" variants
+    if (
+      nameLower === 'unknown' ||
+      nameLower === 'unknown player' ||
+      nameLower === 'placeholder' ||
+      nameLower === 'n/a' ||
+      nameLower === 'na' ||
+      nameLower === 'null' ||
+      nameLower === 'none' ||
+      nameLower.includes('add player') ||
+      nameLower.includes('invite') ||
+      nameLower === '+' ||
+      nameLower === 'empty'
+    ) {
+      return false;
+    }
+    
+    return true;
+  }).map(player => {
+    let finalDupr = 2.50;
+    if (typeof player.dupr === 'number' && !isNaN(player.dupr)) {
+      finalDupr = player.dupr;
+    } else if (typeof player.dupr === 'string') {
+      const parsedFloat = parseFloat(player.dupr);
+      if (!isNaN(parsedFloat)) {
+        finalDupr = parsedFloat;
+      }
+    }
+    return {
+      name: player.name.trim().replace(/\s+/g, ' '),
+      dupr: finalDupr
+    };
+  });
+
+  return filteredPlayers;
 }
 
 function assignBalancedPlayersToCourts(extractedPlayers) {
