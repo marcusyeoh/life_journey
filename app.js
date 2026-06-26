@@ -78,6 +78,10 @@ const appState = {
 let confirmCallback = null;
 let editingCourtNumber = null;
 let debounceTimer = null;
+let editingPlayerKey = null; // Format: "courtNumber-idx"
+let unsubscribeMixer = null;
+let reconnectTimeout = null;
+let lastSyncTime = 0;
 
 function showCourtNameModal(courtNumber) {
   editingCourtNumber = courtNumber;
@@ -208,7 +212,8 @@ function recalculateScoresForCourt(court) {
   // 2. Iterate through all completed matches and add the point differentials to players
   if (court.matches) {
     court.matches.forEach(match => {
-      if (match.isCompleted && match.team1Score !== null && match.team2Score !== null) {
+      if (match.isCompleted && match.team1Score !== null && match.team2Score !== null &&
+          match.team1Player1 && match.team1Player2 && match.team2Player1 && match.team2Player2) {
         const diff1 = match.team1Score - match.team2Score;
         const diff2 = match.team2Score - match.team1Score;
 
@@ -524,120 +529,143 @@ async function startApp() {
   setupEventListeners();
 
   // Load & Sync from Firebase in Real-Time
-  updateSyncStatus('connecting');
-
-  onSnapshot(mixerDocRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      console.log("Real-time cloud update received!");
-
-      // 1. Capture old state to dynamically advance the viewer
-      const oldStage = appState.currentStage;
-      const oldCourt = appState.courts ? appState.courts.find(c => c.courtNumber === appState.selectedCourtNumber) : null;
-      const oldActiveRound = oldCourt ? oldCourt.activeRound : null;
-      const wasViewingActive = oldActiveRound !== null && appState.viewingRound === oldActiveRound;
-
-      // 2. Overwrite current state with database data
-      appState.currentStage = data.currentStage || 1;
-      appState.stage1Courts = data.stage1Courts || null;
-      appState.draftingStyle = data.draftingStyle || 'snake';
-      appState.stage2ViewingQualifying = data.stage2ViewingQualifying || false;
-      appState.stage2PreviewTiers = data.stage2PreviewTiers || [];
-
-      if (data.courts) {
-        appState.courts = data.courts;
+  function subscribeToMixerUpdates() {
+    if (unsubscribeMixer) {
+      try {
+        unsubscribeMixer();
+      } catch (err) {
+        console.error("Error unsubscribing:", err);
       }
-      if (data.entryState) {
-        appState.entryState = data.entryState;
-      }
+    }
+    clearTimeout(reconnectTimeout);
 
-      // SELF-HEALING AUTOMATIC RE-SEED IN FINAL STAGE
-      if (appState.currentStage === 2) {
-        const activeStage1Courts = appState.stage1Courts ? appState.stage1Courts.filter(c => c.isActive) : [];
-        const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
-        const currentActiveCourtsCount = appState.courts.filter(c => c.isActive).length;
-        if (currentActiveCourtsCount > maxCourts) {
-          console.log("Self-healing: Seeding mismatch detected. Automatically re-seeding to exactly " + maxCourts + " courts...");
-          launchFinalStageAutomatically();
-          return;
+    updateSyncStatus('connecting');
+
+    unsubscribeMixer = onSnapshot(mixerDocRef, (docSnap) => {
+      lastSyncTime = Date.now();
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log("Real-time cloud update received!");
+
+        // 1. Capture old state to dynamically advance the viewer
+        const oldStage = appState.currentStage;
+        const oldCourt = appState.courts ? appState.courts.find(c => c && c.courtNumber === appState.selectedCourtNumber) : null;
+        const oldActiveRound = oldCourt ? oldCourt.activeRound : null;
+        const wasViewingActive = oldActiveRound !== null && appState.viewingRound === oldActiveRound;
+
+        // 2. Overwrite current state with database data
+        appState.currentStage = data.currentStage || 1;
+        appState.stage1Courts = data.stage1Courts || null;
+        appState.draftingStyle = data.draftingStyle || 'snake';
+        appState.stage2ViewingQualifying = data.stage2ViewingQualifying || false;
+        appState.stage2PreviewTiers = data.stage2PreviewTiers || [];
+
+        if (data.courts) {
+          appState.courts = data.courts;
         }
-      }
-
-      // Determine navigation dynamically based on role and mixer activity
-      const hasActiveMixer = appState.courts && appState.courts.some(c => c.isActive && c.matches && c.matches.length > 0);
-
-      let targetView = appState.currentView || 'user-landing';
-      if (appState.isAdmin) {
-        // Only force admin navigation if they are just loading, or if tournament was reset
-        if (!appState.currentView || appState.currentView === 'user-landing') {
-          targetView = 'court-setup';
-        } else if (!hasActiveMixer && appState.currentView !== 'court-setup' && appState.currentView !== 'player-entry') {
-          targetView = 'court-setup';
-        } else if (appState.currentView === 'dashboard') {
-          targetView = 'court-setup'; // Admins use the player link to view dashboard
+        if (data.entryState) {
+          appState.entryState = data.entryState;
         }
-      } else {
-        // Players (User Mode) are automatically locked to active screens
-        if (hasActiveMixer) {
-          targetView = 'dashboard';
+
+        // SELF-HEALING AUTOMATIC RE-SEED IN FINAL STAGE
+        if (appState.currentStage === 2) {
+          const activeStage1Courts = (appState.stage1Courts || []).filter(c => c && c.isActive);
+          const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
+          const currentActiveCourtsCount = appState.courts.filter(c => c && c.isActive).length;
+          if (currentActiveCourtsCount > maxCourts) {
+            console.log("Self-healing: Seeding mismatch detected. Automatically re-seeding to exactly " + maxCourts + " courts...");
+            launchFinalStageAutomatically();
+            return;
+          }
+        }
+
+        // Determine navigation dynamically based on role and mixer activity
+        const hasActiveMixer = appState.courts && appState.courts.some(c => c && c.isActive && c.matches && c.matches.length > 0);
+
+        let targetView = appState.currentView || 'user-landing';
+        if (appState.isAdmin) {
+          // Only force admin navigation if they are just loading, or if tournament was reset
+          if (!appState.currentView || appState.currentView === 'user-landing') {
+            targetView = 'court-setup';
+          } else if (!hasActiveMixer && appState.currentView !== 'court-setup' && appState.currentView !== 'player-entry') {
+            targetView = 'court-setup';
+          } else if (appState.currentView === 'dashboard') {
+            targetView = 'court-setup'; // Admins use the player link to view dashboard
+          }
         } else {
-          targetView = 'user-landing';
+          // Players (User Mode) are automatically locked to active screens
+          if (hasActiveMixer) {
+            targetView = 'dashboard';
+          } else {
+            targetView = 'user-landing';
+          }
         }
-      }
 
-      // 3. Ensure selections are valid inside the active courts list and match activeRound changes
-      const sourceCourts = (appState.currentStage === 2 && appState.stage2ViewingQualifying)
-        ? appState.stage1Courts
-        : appState.courts;
+        // 3. Ensure selections are valid inside the active courts list and match activeRound changes
+        const sourceCourts = (appState.currentStage === 2 && appState.stage2ViewingQualifying)
+          ? appState.stage1Courts
+          : appState.courts;
 
-      const activeCourts = sourceCourts ? sourceCourts.filter(c => c.isActive) : [];
-      if (activeCourts.length > 0) {
-        const stageChanged = oldStage !== appState.currentStage;
+        const activeCourts = sourceCourts ? sourceCourts.filter(c => c && c.isActive) : [];
+        if (activeCourts.length > 0) {
+          const stageChanged = oldStage !== appState.currentStage;
 
-        // If the selected court is no longer active, select the first active court and its activeRound
-        if (!activeCourts.some(c => c.courtNumber === appState.selectedCourtNumber)) {
-          appState.selectedCourtNumber = activeCourts[0].courtNumber;
-          appState.viewingRound = activeCourts[0].activeRound;
-        } else {
-          // If the selected court is still active, sync viewingRound if:
-          // 1. The tournament stage changed
-          // 2. The user has never loaded the database (oldActiveRound was null)
-          // 3. The user was viewing the active round and it has advanced in Firestore
-          // 4. The current viewingRound is out of bounds for the matches (e.g. stage changed/regenerated)
-          const currentCourt = activeCourts.find(c => c.courtNumber === appState.selectedCourtNumber);
-          if (currentCourt) {
-            if (stageChanged ||
-                oldActiveRound === null ||
-                wasViewingActive ||
-                appState.viewingRound > currentCourt.matches.length) {
-              appState.viewingRound = currentCourt.activeRound;
+          // If the selected court is no longer active, select the first active court and its activeRound
+          if (!activeCourts.some(c => c && c.courtNumber === appState.selectedCourtNumber)) {
+            appState.selectedCourtNumber = activeCourts[0].courtNumber;
+            appState.viewingRound = activeCourts[0].activeRound;
+          } else {
+            const currentCourt = activeCourts.find(c => c && c.courtNumber === appState.selectedCourtNumber);
+            if (currentCourt) {
+              if (stageChanged ||
+                  oldActiveRound === null ||
+                  wasViewingActive ||
+                  (currentCourt.matches && appState.viewingRound > currentCourt.matches.length)) {
+                appState.viewingRound = currentCourt.activeRound;
+              }
             }
           }
         }
+
+        if (appState.currentView !== targetView) {
+          navigateTo(targetView);
+        }
+
+        updateSyncStatus('saved');
+      } else {
+        console.log("No existing mixer in Cloud. Ready for new setup.");
+        updateSyncStatus('new');
+        const targetView = appState.isAdmin ? 'court-setup' : 'user-landing';
+        if (appState.currentView !== targetView) {
+          navigateTo(targetView);
+        }
       }
 
-      if (appState.currentView !== targetView) {
-        navigateTo(targetView);
-      }
+      // Trigger render
+      render();
+    }, (error) => {
+      console.error("Firebase real-time sync failed, retrying in 5 seconds...", error);
+      updateSyncStatus('error');
+      render();
+      reconnectTimeout = setTimeout(subscribeToMixerUpdates, 5000);
+    });
+  }
 
-      updateSyncStatus('saved');
-    } else {
-      console.log("No existing mixer in Cloud. Ready for new setup.");
-      updateSyncStatus('new');
-      const targetView = appState.isAdmin ? 'court-setup' : 'user-landing';
-      if (appState.currentView !== targetView) {
-        navigateTo(targetView);
-      }
+  // Initial subscription
+  subscribeToMixerUpdates();
+
+  // Re-subscribe when returning online or switching back to the tab
+  window.addEventListener('online', () => {
+    console.log("Device back online, re-subscribing...");
+    subscribeToMixerUpdates();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    // Only force reconnect if visibility changes to visible, and we haven't synced in the last 3 seconds
+    if (document.visibilityState === 'visible' && Date.now() - lastSyncTime > 3000) {
+      console.log("App active/visible, refreshing Firestore subscription...");
+      subscribeToMixerUpdates();
     }
-
-    // Trigger render
-    render();
-  }, (error) => {
-    console.error("Firebase real-time sync failed:", error);
-    updateSyncStatus('error');
-
-    // Graceful fallback to local render
-    render();
   });
 }
 
@@ -655,6 +683,9 @@ function navigateTo(viewName) {
     saveStateToCloud();
   }
 
+  if (appState.currentView !== viewName) {
+    editingPlayerKey = null;
+  }
   appState.currentView = viewName;
 
   // Hide all screens
@@ -900,6 +931,80 @@ function renderCourtSetup() {
   }
 }
 
+// Helper to find the best player name match in a court (with fuzzy/DUPR fallback)
+function findBestPlayerMatch(court, searchName) {
+  if (!court.players || court.players.length === 0) return null;
+  
+  const target = searchName.trim().toLowerCase();
+  const stripDupr = (name) => name.replace(/\s*\(\d+(?:\.\d+)?\)/g, '').trim().toLowerCase();
+  const targetStripped = stripDupr(searchName);
+  
+  const getDuprString = (name) => {
+    const m = name.match(/\((\d+(?:\.\d+)?)\)/);
+    return m ? m[1] : null;
+  };
+  const targetDupr = getDuprString(searchName);
+  
+  // 1. Try exact match (case insensitive)
+  let match = court.players.find(p => p.name.trim().toLowerCase() === target);
+  if (match) return match;
+  
+  // 2. Try matching without DUPR rating exactly (e.g. "Chin Say Leong" vs "Chin Say Leong (2.529)")
+  match = court.players.find(p => stripDupr(p.name) === targetStripped);
+  if (match) return match;
+  
+  // 3. Try substring match but require DUPR rating match if both have it
+  match = court.players.find(p => {
+    const pStripped = stripDupr(p.name);
+    const pDupr = getDuprString(p.name);
+    
+    const isSubstring = pStripped.includes(targetStripped) || targetStripped.includes(pStripped);
+    if (isSubstring) {
+      if (targetDupr && pDupr) {
+        return targetDupr === pDupr; // Require DUPR to match if both specified it
+      }
+      return true;
+    }
+    return false;
+  });
+  if (match) return match;
+  
+  return null;
+}
+
+// Helper to propagate player name changes dynamically to live tournament players and matches
+function propagatePlayerNameChange(courtNumber, oldName, newName) {
+  if (!oldName || !newName) return;
+  const targetOld = oldName.trim();
+  const targetNew = newName.trim();
+  if (targetOld === targetNew || targetOld === '') return;
+
+  const updateList = (courtsList) => {
+    if (!courtsList) return;
+    courtsList.forEach(court => {
+      // Find the player in this court using fuzzy matching
+      const playerObj = findBestPlayerMatch(court, targetOld);
+      if (playerObj) {
+        const actualOldName = playerObj.name; // Keep the actual old name from the live game
+        playerObj.name = targetNew;
+        
+        // Update in matches using the actual old name
+        if (court.matches) {
+          court.matches.forEach(match => {
+            if (match.team1Player1 && match.team1Player1.name === actualOldName) match.team1Player1.name = targetNew;
+            if (match.team1Player2 && match.team1Player2.name === actualOldName) match.team1Player2.name = targetNew;
+            if (match.team2Player1 && match.team2Player1.name === actualOldName) match.team2Player1.name = targetNew;
+            if (match.team2Player2 && match.team2Player2.name === actualOldName) match.team2Player2.name = targetNew;
+          });
+        }
+      }
+    });
+  };
+
+  updateList(appState.courts);
+  updateList(appState.stage1Courts);
+}
+
 // --- SCREEN 2: PLAYER ENTRY RENDER ---
 let listToFocus = null;
 
@@ -968,83 +1073,103 @@ function renderPlayerEntry(activeCourts) {
       const item = document.createElement('div');
       item.className = 'player-drag-item';
       item.setAttribute('data-index', idx.toString());
-      item.innerHTML = `
-        <span class="material-symbols-outlined drag-handle">drag_indicator</span>
-        <input type="text" placeholder="Player Name" class="player-drag-input" value="${name || ''}" data-idx="${idx}">
-        <button class="delete-player-btn" aria-label="Delete player">
-          <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
-        </button>
-      `;
 
-      // Event listener for name change (without destructive rendering to prevent focus loss)
-      const input = item.querySelector('.player-drag-input');
-      if (input) {
-        input.addEventListener('input', (e) => {
-          const currentEntry = appState.entryState[courtNumber];
-          if (currentEntry && currentEntry.names) {
-            currentEntry.names[idx] = e.target.value;
+      const isEditing = editingPlayerKey === `${courtNumber}-${idx}`;
 
-            // Dynamically update count badge and bottom generate button state
-            const updatedFilled = currentEntry.names.filter(n => n && n.trim() !== '').length;
-            const badge = col.querySelector('.capacity-badge');
-            if (badge) {
-              if (updatedFilled < 4) {
-                badge.textContent = `Needs 4-7 Players`;
-                badge.className = 'capacity-badge invalid';
-              } else if (updatedFilled === 7) {
-                badge.textContent = `7/7 (Full)`;
-                badge.className = 'capacity-badge valid';
-              } else {
-                badge.textContent = `${updatedFilled}/7 Players`;
-                badge.className = 'capacity-badge valid';
-              }
+      if (isEditing) {
+        item.innerHTML = `
+          <span class="material-symbols-outlined drag-handle">drag_indicator</span>
+          <input type="text" placeholder="Player Name" class="player-drag-input" value="${name || ''}" data-idx="${idx}">
+          <button class="save-player-btn" aria-label="Save player">
+            <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
+          </button>
+          <button class="cancel-player-btn" aria-label="Cancel editing">
+            <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+          </button>
+        `;
+
+        const input = item.querySelector('.player-drag-input');
+        if (input) {
+          setTimeout(() => {
+            input.focus();
+            if (input.value) {
+              input.select();
             }
+          }, 50);
 
-            // Dynamically update average DUPR badge
-            const avgDupr = getCourtAverageDUPR(currentEntry.names);
-            let avgBadge = col.querySelector('.avg-dupr-badge');
-            const titleArea = col.querySelector('.board-column-title');
-            if (avgDupr > 0) {
-              if (!avgBadge && titleArea) {
-                avgBadge = document.createElement('span');
-                avgBadge.className = 'avg-dupr-badge';
-                avgBadge.style.cssText = "font-size: 11px; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; color: var(--neon); background: rgba(255, 214, 10, 0.1); border: 1px solid rgba(255, 214, 10, 0.35); padding: 2px 8px; border-radius: 6px; box-shadow: 0 0 10px rgba(255, 214, 10, 0.15); display: inline-flex; align-items: center; gap: 4px; margin-left: 8px;";
-                titleArea.appendChild(avgBadge);
-              }
-              if (avgBadge) {
-                avgBadge.textContent = `Avg: ${avgDupr.toFixed(2)}`;
-              }
-            } else {
-              if (avgBadge) {
-                avgBadge.remove();
-              }
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              saveEdit();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              cancelEdit();
             }
-          }
+          });
+        }
 
-          validateEntryGeneration(activeCourts);
-          debouncedSaveStateToCloud();
-        });
+        const saveEdit = () => {
+          const newName = input.value.trim();
+          const oldName = name;
 
-        input.addEventListener('blur', (e) => {
           const currentEntry = appState.entryState[courtNumber];
           if (currentEntry && currentEntry.names) {
-            currentEntry.names[idx] = e.target.value.trim();
+            currentEntry.names[idx] = newName;
+            propagatePlayerNameChange(courtNumber, oldName, newName);
           }
-          saveStateToCloud();
-        });
-      }
 
-      // Event listener for delete player
-      const deleteBtn = item.querySelector('.delete-player-btn');
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-          const currentEntry = appState.entryState[courtNumber];
-          if (currentEntry && currentEntry.names) {
-            currentEntry.names.splice(idx, 1);
-          }
+          editingPlayerKey = null;
           renderPlayerEntry(activeCourts);
           saveStateToCloud();
-        });
+        };
+
+        const cancelEdit = () => {
+          const currentEntry = appState.entryState[courtNumber];
+          if (currentEntry && currentEntry.names && !name) {
+            currentEntry.names.splice(idx, 1);
+          }
+          editingPlayerKey = null;
+          renderPlayerEntry(activeCourts);
+        };
+
+        const saveBtn = item.querySelector('.save-player-btn');
+        if (saveBtn) saveBtn.addEventListener('click', saveEdit);
+
+        const cancelBtn = item.querySelector('.cancel-player-btn');
+        if (cancelBtn) cancelBtn.addEventListener('click', cancelEdit);
+
+      } else {
+        item.innerHTML = `
+          <span class="material-symbols-outlined drag-handle">drag_indicator</span>
+          <span class="player-display-name">${name || 'New Player'}</span>
+          <button class="edit-player-btn" aria-label="Edit player">
+            <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+          </button>
+          <button class="delete-player-btn" aria-label="Delete player">
+            <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+          </button>
+        `;
+
+        const editBtn = item.querySelector('.edit-player-btn');
+        if (editBtn) {
+          editBtn.addEventListener('click', () => {
+            editingPlayerKey = `${courtNumber}-${idx}`;
+            renderPlayerEntry(activeCourts);
+          });
+        }
+
+        const deleteBtn = item.querySelector('.delete-player-btn');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', () => {
+            const currentEntry = appState.entryState[courtNumber];
+            if (currentEntry && currentEntry.names) {
+              currentEntry.names.splice(idx, 1);
+            }
+            editingPlayerKey = null;
+            renderPlayerEntry(activeCourts);
+            saveStateToCloud();
+          });
+        }
       }
 
       dragList.appendChild(item);
@@ -1062,8 +1187,8 @@ function renderPlayerEntry(activeCourts) {
         if (currentEntry) {
           if (!currentEntry.names) currentEntry.names = [];
           currentEntry.names.push('');
+          editingPlayerKey = `${courtNumber}-${currentEntry.names.length - 1}`;
         }
-        listToFocus = courtNumber.toString();
         renderPlayerEntry(activeCourts);
       });
       col.appendChild(addBtn);
@@ -1071,19 +1196,6 @@ function renderPlayerEntry(activeCourts) {
 
     container.appendChild(col);
   });
-
-  // 3. Keep newly added inputs in focus
-  if (listToFocus) {
-    const focusedCol = container.querySelector(`.board-column[data-list-id="${listToFocus}"]`);
-    if (focusedCol) {
-      const inputs = focusedCol.querySelectorAll('.player-drag-input');
-      if (inputs.length > 0) {
-        const lastInput = inputs[inputs.length - 1];
-        lastInput.focus();
-      }
-    }
-    listToFocus = null;
-  }
 
   // 4. Initialize PointerEvent Drag & Drop
   initDragAndDrop(activeCourts);
@@ -1287,6 +1399,9 @@ function initDragAndDrop(activeCourts) {
 
           // Insert into target list array
           targetArray.splice(adjustedIndex, 0, movedName);
+
+          // Reset editing key on drag and drop reordering
+          editingPlayerKey = null;
 
           // Trigger rendering update
           renderPlayerEntry(activeCourts);
@@ -1881,7 +1996,14 @@ function renderScoreModal() {
   }, 10);
 
   const court = appState.courts.find(c => c.courtNumber === appState.modal.courtNumber);
-  const match = court.matches[appState.modal.matchIndex];
+  const match = court && court.matches ? court.matches[appState.modal.matchIndex] : null;
+
+  if (!court || !match || !match.team1Player1 || !match.team1Player2 || !match.team2Player1 || !match.team2Player2) {
+    appState.modal.open = false;
+    modal.classList.add('view-hidden');
+    document.body.classList.remove('modal-open');
+    return;
+  }
 
   // Resolve custom court/tier label
   let courtLabel = court.courtName || `Court ${court.courtNumber}`;
@@ -2157,6 +2279,7 @@ function setupEventListeners() {
       // Auto-advancement hook during Group Stage (Stage 1) for both Admins and Players
       if (appState.currentStage === 1 && checkStage1Completion()) {
         launchFinalStageAutomatically();
+        saveStateToCloud(); // Save auto-advancement to Cloud!
         if (appState.isAdmin) {
           navigateTo('admin-success');
         } else {
@@ -2216,6 +2339,7 @@ function setupEventListeners() {
         if (confirm("Are you sure you want to re-seed the Final Stage? This will overwrite current Final Stage matches and scores, but your Group Stage scores are 100% safe.")) {
           launchFinalStageAutomatically();
           render();
+          saveStateToCloud(); // Save to cloud!
         }
         return;
       }
@@ -2226,6 +2350,7 @@ function setupEventListeners() {
         : "Group Stage matches are not all completed. Do you want to force-launch the Final Stage based on current scores?";
       if (confirm(msg)) {
         launchFinalStageAutomatically();
+        saveStateToCloud(); // Save to cloud!
         navigateTo('admin-success');
       }
     });
@@ -2338,6 +2463,7 @@ function setupEventListeners() {
         if (hasCompleted) {
           // Fail-safe: if all Group Stage matches are completed, clicking the tab auto-launches Stage 2!
           launchFinalStageAutomatically();
+          saveStateToCloud(); // Save to cloud!
           if (appState.isAdmin) {
             navigateTo('admin-success');
           } else {
@@ -2350,6 +2476,7 @@ function setupEventListeners() {
           const msg = "Group Stage matches are not all completed. Do you want to force-launch the Final Stage based on current scores?";
           if (confirm(msg)) {
             launchFinalStageAutomatically();
+            saveStateToCloud(); // Save to cloud!
             navigateTo('admin-success');
           }
         } else {
@@ -3203,7 +3330,7 @@ function renderGlobalLeaderboard(sourceCourts) {
         </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end;">
           <div style="font-weight: 800; color: var(--neon); font-size: 16px;">${p.totalScore >= 0 ? '+' : ''}${p.totalScore} pts</div>
-          <div style="font-size: 10px; color: var(--text-secondary);">${p.pointsPlayed} played</div>
+          <div style="font-size: 10px; color: var(--text-secondary);">${p.pointsPlayed} total pts</div>
         </div>
       </div>
     `;

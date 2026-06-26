@@ -1735,7 +1735,19 @@ input:checked + .slider:before {
   border-bottom: 1px solid var(--neon);
 }
 
-.delete-player-btn {
+.player-display-name {
+  flex: 1;
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-player-btn, .save-player-btn, .cancel-player-btn, .delete-player-btn {
   border: none;
   background: transparent;
   color: var(--text-secondary);
@@ -1747,6 +1759,21 @@ input:checked + .slider:before {
   height: 24px;
   border-radius: 50%;
   transition: all 0.2s ease;
+}
+
+.edit-player-btn:hover {
+  color: var(--neon);
+  background-color: rgba(255, 214, 10, 0.1);
+}
+
+.save-player-btn:hover {
+  color: var(--green);
+  background-color: var(--green-bg);
+}
+
+.cancel-player-btn:hover {
+  color: var(--red);
+  background-color: var(--red-bg);
 }
 
 .delete-player-btn:hover {
