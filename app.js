@@ -3833,7 +3833,9 @@ Respond ONLY with a JSON object in this format:
         }
         
         // Reconstruct crop coordinates mathematically
-        const xmin = (col + 0.5) * colWidth - cropSize / 2;
+        const relativeColumnCenters = [0.1609, 0.3750, 0.6111, 0.8343];
+        const colCenter = relativeColumnCenters[col] * canvas.width;
+        const xmin = colCenter - cropSize / 2;
         const ymin = correctedFirstRowYmin + row * rowHeight;
         
         const clipXmin = Math.max(0, Math.min(canvas.width - 1, xmin));
