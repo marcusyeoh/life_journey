@@ -247,11 +247,11 @@ body::after {
   }
 }
 
-/* Top App Bar - styled with brand logo and glassmorphism */
+/* Top App Bar - styled with glassmorphism */
 header.app-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   position: fixed;
   top: 0;
   left: 0;
@@ -265,40 +265,36 @@ header.app-bar {
   z-index: 999;
 }
 
-header.app-bar .app-bar-brand {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  pointer-events: none;
-}
-
-header.app-bar .app-bar-brand img {
-  height: 32px;
-  width: auto;
-  object-fit: contain;
-}
-
-header.app-bar .app-bar-brand span:empty {
-  display: none;
-}
-
-header.app-bar h1, header.app-bar span {
+header.app-bar h1 {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   color: var(--text-primary);
   font-size: 16px;
   font-weight: 800;
   letter-spacing: -0.5px;
   margin: 0;
+  text-align: center;
+}
+
+/* Position back buttons in header */
+#app-back-btn, #history-back-btn {
+  position: absolute !important;
+  left: 16px !important;
+  top: 10px !important;
 }
 
 /* Align theme toggle button with the new header */
 #theme-toggle {
   top: 10px !important;
   right: 16px !important;
+}
+
+/* Title Logo styles */
+.title-logo {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+  flex-shrink: 0;
 }
 
 .icon-btn {

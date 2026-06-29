@@ -110,10 +110,7 @@
     <button class="icon-btn" id="app-back-btn" aria-label="Go back">
       <span class="material-symbols-outlined">arrow_back</span>
     </button>
-    <div class="app-bar-brand">
-      <img src="logo.png" alt="Life Journey Pickleball Logo" fetchpriority="high">
-      <span id="app-bar-title">Life Journey Pickleball</span>
-    </div>
+    <h1 id="app-bar-title">Life Journey Pickleball</h1>
   </header>
 
   <!-- SCREEN 0: USER STANDBY LANDING -->
@@ -185,8 +182,9 @@
 
     <!-- Dynamic Header Area -->
     <div id="setup-header-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 16px;">
-        <h2 class="title-lg" id="setup-title" style="margin: 0; line-height: 1.2; word-break: break-word; padding-right: 50px;">New Mixer Setup</h2>
+      <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+        <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo" fetchpriority="high">
+        <h2 class="title-lg" id="setup-title" style="margin: 0; line-height: 1.2; word-break: break-word;">New Mixer Setup</h2>
       </div>
       <p class="subtitle-md" id="setup-subtitle" style="margin: 0;">Select the courts available for this tournament
         block. Add designated players if required.</p>
@@ -274,6 +272,7 @@
           style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
           <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
         </button>
+        <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
         <div>
           <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Add Players</h2>
           <p class="subtitle-md" style="margin: 4px 0 0 0;">Enter player names to generate matches.</p>
@@ -408,11 +407,12 @@
 
   <!-- SCREEN 4: STAGE 2 REVIEW SCREEN -->
   <main id="view-stage2-review" class="screen-view view-hidden">
-    <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
       <button class="icon-btn" id="inline-back-stage2"
-        style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 4px;">
+        style="background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
         <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
       </button>
+      <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
       <div class="flex-col">
         <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
         <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Final Stage Seeding</h2>
@@ -442,9 +442,10 @@
 
   <!-- SCREEN 3: TOURNAMENT DASHBOARD -->
   <main id="view-dashboard" class="screen-view view-hidden">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 16px;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; width: 100%;">
+      <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
       <div>
-        <h2 class="title-lg" id="dashboard-title">Group Stage Dashboard</h2>
+        <h2 class="title-lg" id="dashboard-title" style="margin: 0; line-height: 1.2;">Group Stage Dashboard</h2>
         <div id="dashboard-stage-badge" style="display: none; margin-top: 8px;">
           <span class="label-caps"
             style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">FINAL
@@ -878,11 +879,14 @@
 
   <!-- SCREEN 5: GLOBAL LEADERBOARD SCREEN -->
   <main id="view-global-leaderboard" class="screen-view view-hidden">
-    <div class="flex-col">
-      <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">GLOBAL STANDINGS</p>
-      <h2 class="title-lg">Global Leaderboard</h2>
-      <p class="subtitle-md" id="leaderboard-subtitle">All players sorted by total score.</p>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+      <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
+      <div class="flex-col">
+        <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">GLOBAL STANDINGS</p>
+        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Global Leaderboard</h2>
+      </div>
     </div>
+    <p class="subtitle-md" id="leaderboard-subtitle" style="margin: 0 0 16px 0;">All players sorted by total score.</p>
 
     <!-- Segmented Tab Switcher for Stage 2 Standings Toggling -->
     <div id="leaderboard-stage-toggle-container" style="display: none; margin-top: 16px; margin-bottom: 8px;">

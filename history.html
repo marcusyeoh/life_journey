@@ -101,18 +101,18 @@
     <button class="icon-btn" id="history-back-btn" aria-label="Go back" onclick="window.history.back()">
       <span class="material-symbols-outlined">arrow_back</span>
     </button>
-    <div class="app-bar-brand">
-      <img src="logo.png" alt="Life Journey Pickleball Logo" fetchpriority="high">
-      <span id="app-bar-title">Game History</span>
-    </div>
+    <h1 id="app-bar-title">Game History</h1>
   </header>
 
   <main class="screen-view" style="display: block; padding: 24px; max-width: 600px; margin: 0 auto; box-sizing: border-box;">
-    <div style="margin-bottom: 32px;">
-      <p class="label-caps" style="color: var(--neon); letter-spacing: 1.5px; font-size: 11px; margin-bottom: 8px;">ARCHIVE</p>
-      <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Saved Games</h2>
-      <p class="subtitle-md" style="margin: 8px 0 0 0; color: var(--text-secondary); font-size: 14px;">View, restore or modify previous tournaments.</p>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+      <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo" fetchpriority="high">
+      <div class="flex-col">
+        <p class="label-caps" style="color: var(--neon); letter-spacing: 1.5px; font-size: 11px; margin-bottom: 4px;">ARCHIVE</p>
+        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Saved Games</h2>
+      </div>
     </div>
+    <p class="subtitle-md" style="margin: 0 0 24px 0; color: var(--text-secondary); font-size: 14px;">View, restore or modify previous tournaments.</p>
 
     <div id="history-list-container">
       <!-- Injected by history.js -->
