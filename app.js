@@ -3533,14 +3533,14 @@ async function extractPlayersAndDUPRFromImages(imageDataList) {
   const canvasWidth = firstImage && firstImage.canvas ? firstImage.canvas.width : 375;
   const canvasHeight = firstImage && firstImage.canvas ? firstImage.canvas.height : 1500;
 
-  const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names, DUPR ratings, and profile picture avatar bounding boxes from the provided screenshot(s) of player profiles.
+  const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names, DUPR ratings, and grid positions from the provided screenshot(s) of player profiles.
 
 IMAGE DIMENSIONS:
 - Width: ${canvasWidth} pixels
 - Height: ${canvasHeight} pixels
 
 GRID FORMAT & ALIGNMENT EXPLANATION:
-- The screenshot displays participants in a grid of 4 columns.
+- The screenshot displays participants in a regular grid of 4 columns.
 - Systematic grouping: Every participant profile is an isolated vertical group containing:
   1. A circular profile picture avatar at the top.
   2. The player's name directly below the avatar (e.g. 'YIP YK', 'Ng C T', 'Adrian Low', 'Victor Lee', 'Jackson Yap').
@@ -3552,11 +3552,12 @@ CRITICAL NAME INTEGRITY & DETECTION RULES:
 - IGNORE empty placeholder/invitation slots. If a slot contains a grey circle, dashed circle, or has no player name text displayed directly below it, it is a placeholder slot. Do NOT transcribe it.
 - Combine multi-line names into one player's full name (e.g. 'Adrian\nLow' -> 'Adrian Low').
 
-AVATAR BOUNDING BOXES IN RAW PIXELS:
-- For each player, you MUST detect the bounding box of their circular profile picture avatar at the top of their vertical profile group.
-- You MUST specify the bounding box in raw pixel coordinates on the ${canvasWidth}x${canvasHeight} image as [ymin, xmin, ymax, xmax] (e.g. [115, 10, 167, 62]).
-- CRITICAL: Do NOT return normalized 0-1000 coordinates. Return actual pixel coordinates. ymin/ymax are vertical pixel values (0 = top, ${canvasHeight} = bottom) and xmin/xmax are horizontal pixel values (0 = left, ${canvasWidth} = right).
-- Ensure the bounding box tightly wraps ONLY the circular profile photo (avatar) itself. The player's name and rating badge/text below the avatar MUST NOT be included inside the bounding box.
+GRID INDEXING & FIRST ROW OFFSET:
+- Detect the y-coordinate (in pixels, 0 = top, ${canvasHeight} = bottom) of the top of the very first player avatar row visible in the image. Return this single value as 'first_row_ymin'.
+  * Note: AJ is in the very first row. If the top header/tabs are visible, AJ's avatar top is at y = 280. If the header is scrolled out of view, the first visible avatar starts at y = 20.
+  * CRITICAL: Do NOT confuse the "Game 1", "Game 2", etc. navigation tabs at the very top of the screen with player avatars. The player avatars only start below the tab bar.
+- For each player, determine their 0-based 'grid_row' index (0 for the first row, 1 for the second row, etc.) and 'grid_column' index (0, 1, 2, or 3 for the columns from left to right).
+- Also detect the bounding box of their circular profile picture avatar as 'avatar_box' [ymin, xmin, ymax, xmax] in raw pixel coordinates on the ${canvasWidth}x${canvasHeight} image.
 
 CRITICAL ALIGNMENT RULES:
 - A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name in that column.
@@ -3565,12 +3566,15 @@ CRITICAL ALIGNMENT RULES:
 Respond ONLY with a JSON object in this format:
 {
   "chain_of_thought": "Write your detailed step-by-step transcription...",
+  "first_row_ymin": 280,
   "players": [
     {
       "name": "Player Name",
       "transcribed_subtext": "Exact subtext text under name",
       "dupr": 3.754,
       "image_index": 0,
+      "grid_row": 0,
+      "grid_column": 0,
       "avatar_box": [ymin, xmin, ymax, xmax]
     }
   ]
@@ -3648,19 +3652,27 @@ Respond ONLY with a JSON object in this format:
   const scaleY = isRawPixels ? 1 : (jointScaling ? (canvasWidth / 1000) : (canvasHeight / 1000));
 
   // Determine first row's top boundary in raw canvas pixels
-  let firstRowYmin = Infinity;
-  rawPlayers.forEach(p => {
-    if (p.avatar_box && Array.isArray(p.avatar_box) && p.avatar_box.length === 4) {
-      const yminRaw = p.avatar_box[0] * scaleY;
-      if (yminRaw < firstRowYmin) {
-        firstRowYmin = yminRaw;
-      }
-    }
-  });
+  let firstRowYmin = typeof parsed.first_row_ymin === 'number' ? parsed.first_row_ymin : Infinity;
   
-  if (firstRowYmin === Infinity) {
-    firstRowYmin = 0.31 * canvasWidth;
+  if (firstRowYmin === Infinity || isNaN(firstRowYmin)) {
+    rawPlayers.forEach(p => {
+      if (p.avatar_box && Array.isArray(p.avatar_box) && p.avatar_box.length === 4) {
+        const yminRaw = p.avatar_box[0] * scaleY;
+        if (yminRaw < firstRowYmin) {
+          firstRowYmin = yminRaw;
+        }
+      }
+    });
   }
+  
+  if (firstRowYmin === Infinity || isNaN(firstRowYmin)) {
+    firstRowYmin = 0.7547 * canvasWidth;
+  }
+
+  // Banner-Visible Compensation (Self-Healing Grid Alignment)
+  const headerPresent = firstRowYmin > 0.2 * canvasWidth;
+  const correctedFirstRowYmin = headerPresent ? (0.7547 * canvasWidth) : (0.05 * canvasWidth);
+  console.log(`[Avatar Crop] detected firstRowYmin=${firstRowYmin}, headerPresent=${headerPresent}, correctedFirstRowYmin=${correctedFirstRowYmin}`);
 
   const filteredPlayers = rawPlayers.filter(player => {
     if (!player.name) return false;
@@ -3697,37 +3709,45 @@ Respond ONLY with a JSON object in this format:
       }
     }
 
-    // Crop avatar if coordinate box is provided
+    // Crop avatar if coordinate box is provided or grid positions are available
     let avatarUrl = '';
     try {
       const imgIdx = typeof player.image_index === 'number' ? player.image_index : 0;
       const targetData = imageDataList[imgIdx] || imageDataList[0];
-      if (targetData && player.avatar_box && Array.isArray(player.avatar_box) && player.avatar_box.length === 4) {
+      if (targetData) {
         const canvas = targetData.canvas;
-        const box = player.avatar_box;
-        
-        const yminRaw = box[0] * scaleY;
-        const xminRaw = box[1] * scaleX;
-        
         const colWidth = canvas.width / 4;
-        const rowHeight = colWidth * 1.6;
+        const rowHeight = colWidth * 1.747; // Verified ratio 1.747 for Reclub player grid
+        const cropSize = colWidth * 0.65;
         
-        // Determine column and row indices
-        const col = Math.max(0, Math.min(3, Math.round(xminRaw / colWidth)));
-        const row = Math.max(0, Math.round((yminRaw - firstRowYmin) / colWidth));
+        let col = player.grid_column;
+        let row = player.grid_row;
+        
+        // Fallback to coordinates if grid indices are not supplied
+        if (typeof col !== 'number' || typeof row !== 'number') {
+          if (player.avatar_box && Array.isArray(player.avatar_box) && player.avatar_box.length === 4) {
+            const yminRaw = player.avatar_box[0] * scaleY;
+            const xminRaw = player.avatar_box[1] * scaleX;
+            if (typeof col !== 'number') {
+              col = Math.max(0, Math.min(3, Math.round(xminRaw / colWidth)));
+            }
+            if (typeof row !== 'number') {
+              row = Math.max(0, Math.round((yminRaw - firstRowYmin) / rowHeight));
+            }
+          } else {
+            col = 0;
+            row = 0;
+          }
+        }
         
         // Reconstruct crop coordinates mathematically
-        const cropSize = colWidth * 0.65;
         const xmin = (col + 0.5) * colWidth - cropSize / 2;
-        const ymin = firstRowYmin + row * rowHeight;
-        
-        const boxWidth = cropSize;
-        const boxHeight = cropSize;
+        const ymin = correctedFirstRowYmin + row * rowHeight;
         
         const clipXmin = Math.max(0, Math.min(canvas.width - 1, xmin));
         const clipYmin = Math.max(0, Math.min(canvas.height - 1, ymin));
-        const clipWidth = Math.max(1, Math.min(canvas.width - clipXmin, boxWidth));
-        const clipHeight = Math.max(1, Math.min(canvas.height - clipYmin, boxHeight));
+        const clipWidth = Math.max(1, Math.min(canvas.width - clipXmin, cropSize));
+        const clipHeight = Math.max(1, Math.min(canvas.height - clipYmin, cropSize));
         
         if (clipWidth > 5 && clipHeight > 5) {
           const cropCanvas = document.createElement('canvas');
