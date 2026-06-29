@@ -719,6 +719,16 @@ function navigateTo(viewName) {
 // ----------------------------------------------------
 
 function render() {
+  // Hide Top Navigation App Bar on the dashboard screen to reclaim vertical space
+  const appBar = document.querySelector('header.app-bar');
+  if (appBar) {
+    if (appState.currentView === 'dashboard') {
+      appBar.style.display = 'none';
+    } else {
+      appBar.style.display = 'flex';
+    }
+  }
+
   // Recalculate scores for all courts dynamically to ensure 100% synchronization on render
   if (appState.courts) {
     appState.courts.forEach(recalculateScoresForCourt);
@@ -1537,6 +1547,12 @@ function renderDashboard(activeCourts) {
     appState.selectedCourtNumber = activeCourts[0].courtNumber;
   }
 
+  // Handle inline back button visibility on the dashboard (only visible for Admin)
+  const inlineBackDashboard = document.getElementById('inline-back-dashboard');
+  if (inlineBackDashboard) {
+    inlineBackDashboard.style.display = appState.isAdmin ? 'flex' : 'none';
+  }
+
   const court = activeCourts.find(c => c.courtNumber === appState.selectedCourtNumber) || activeCourts[0];
   const totalRounds = court ? court.matches.length : 0;
 
@@ -2262,6 +2278,21 @@ function setupEventListeners() {
     inlineBackStage2.addEventListener('click', () => {
       if (!appState.isAdmin) return;
       navigateTo('dashboard');
+    });
+  }
+
+  const inlineBackDashboard = document.getElementById('inline-back-dashboard');
+  if (inlineBackDashboard) {
+    inlineBackDashboard.addEventListener('click', () => {
+      if (!appState.isAdmin) return;
+      showCustomConfirm(
+        "Go back to Player Entry?",
+        "Returning to Player Entry lets you change players or invitees. Active game scores will be preserved.",
+        "settings",
+        () => {
+          navigateTo('player-entry');
+        }
+      );
     });
   }
 

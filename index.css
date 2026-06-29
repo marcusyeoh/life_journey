@@ -2505,3 +2505,8 @@ input:checked + .slider:before {
     gap: 4px;
   }
 }
+
+/* Reduce top padding on the dashboard screen since the top app bar is hidden */
+#view-dashboard {
+  padding-top: 20px !important;
+}
