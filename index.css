@@ -2470,4 +2470,35 @@ input:checked + .slider:before {
   .nav-item .material-symbols-outlined {
     font-size: 20px;
   }
+
+  /* 6. Overview Row Mobile Alignment */
+  .overview-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 0;
+  }
+
+  .overview-row-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    min-width: auto;
+    width: 100%;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px;
+  }
+
+  [data-theme="light"] .overview-row-header {
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+  }
+
+  .overview-row-body {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .overview-row-team {
+    gap: 4px;
+  }
 }
