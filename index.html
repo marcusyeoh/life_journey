@@ -939,8 +939,36 @@
     </button>
   </nav>
 
+  <!-- PLAYER PROFILE MODAL -->
+  <div class="modal-overlay view-hidden" id="profile-picture-modal">
+    <div class="modal-content" style="max-width: 360px; padding: 28px; border-radius: 28px; position: relative;">
+      
+      <!-- Close button on top right -->
+      <button class="icon-btn" id="profile-picture-modal-close" style="position: absolute; top: 16px; right: 16px;" aria-label="Close modal">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+
+      <!-- Profile content -->
+      <div class="flex-col" style="align-items: center; text-align: center; margin-top: 12px; width: 100%;">
+        <!-- Large avatar container -->
+        <div id="profile-picture-modal-avatar-container" style="margin-bottom: 20px; display: flex; justify-content: center; align-items: center;">
+          <!-- Dynamically populated: img or div.player-avatar-initials -->
+        </div>
+
+        <!-- Name -->
+        <h2 class="title-lg" id="profile-picture-modal-name" style="margin-bottom: 6px; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Player Name</h2>
+        
+        <!-- Rank info -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 6px; width: 100%;">
+          <span class="overview-row-status-text" id="profile-picture-modal-rank" style="background: rgba(255, 214, 10, 0.08); border: 1px solid rgba(255, 214, 10, 0.2); color: var(--neon); padding: 4px 12px; border-radius: 100px; font-weight: 600; font-size: 12px;">Overall Rank: #1</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Application Script -->
-  <script type="module" src="app.js?v=2.37"></script>
+  <script type="module" src="app.js?v=2.43"></script>
 </body>
 
 </html>

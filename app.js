@@ -1481,12 +1481,12 @@ function renderPlayerAvatar(player, size = 28) {
   const cleanName = getCleanPlayerName(player.name);
   const avatar = appState.avatars && appState.avatars[cleanName];
   if (avatar) {
-    return `<img src="${avatar}" class="player-avatar-circle" style="width: ${size}px; height: ${size}px;" alt="${cleanName}">`;
+    return `<img src="${avatar}" class="player-avatar-circle clickable-avatar" style="width: ${size}px; height: ${size}px;" alt="${cleanName}" data-player-name="${player.name}">`;
   }
   const initials = getPlayerInitials(cleanName);
   const gradient = getAvatarGradient(cleanName);
   return `
-    <div class="player-avatar-initials" style="width: ${size}px; height: ${size}px; font-size: ${size * 0.4}px; background: ${gradient}">
+    <div class="player-avatar-initials clickable-avatar" style="width: ${size}px; height: ${size}px; font-size: ${size * 0.4}px; background: ${gradient}" data-player-name="${player.name}">
       ${initials}
     </div>
   `;
@@ -1793,20 +1793,26 @@ function renderDashboard(activeCourts) {
     if (matchIndex + 1 < court.matches.length) {
       const nextMatch = court.matches[matchIndex + 1];
       deckNames.innerHTML = `
-        <div class="next-team" style="display: flex; align-items: center; gap: 6px;">
-          ${renderPlayerAvatar(nextMatch.team1Player1, 20)}
-          ${renderPlayerAvatar(nextMatch.team1Player2, 20)}
-          <span style="font-weight: 700; color: var(--text-primary); margin-left: 4px;">
-            ${formatPlayerName(nextMatch.team1Player1.name)} & ${formatPlayerName(nextMatch.team1Player2.name)}
-          </span>
+        <div class="next-team" style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${renderPlayerAvatar(nextMatch.team1Player1, 20)}
+            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${formatPlayerName(nextMatch.team1Player1.name)}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${renderPlayerAvatar(nextMatch.team1Player2, 20)}
+            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${formatPlayerName(nextMatch.team1Player2.name)}</span>
+          </div>
         </div>
         <div class="next-vs">VS</div>
-        <div class="next-team" style="display: flex; align-items: center; gap: 6px; justify-content: flex-end;">
-          <span style="font-weight: 700; color: var(--text-primary); margin-right: 4px;">
-            ${formatPlayerName(nextMatch.team2Player1.name)} & ${formatPlayerName(nextMatch.team2Player2.name)}
-          </span>
-          ${renderPlayerAvatar(nextMatch.team2Player1, 20)}
-          ${renderPlayerAvatar(nextMatch.team2Player2, 20)}
+        <div class="next-team" style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px; text-align: right;">${formatPlayerName(nextMatch.team2Player1.name)}</span>
+            ${renderPlayerAvatar(nextMatch.team2Player1, 20)}
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px; text-align: right;">${formatPlayerName(nextMatch.team2Player2.name)}</span>
+            ${renderPlayerAvatar(nextMatch.team2Player2, 20)}
+          </div>
         </div>
       `;
       document.getElementById('dashboard-on-deck-banner').style.display = 'flex';
@@ -1915,8 +1921,14 @@ function renderDashboard(activeCourts) {
           </div>
           <div class="overview-row-body">
             <div class="overview-row-team">
-              <span>${formatPlayerName(m.team1Player1.name)}</span>
-              <span>${formatPlayerName(m.team1Player2.name)}</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                ${renderPlayerAvatar(m.team1Player1, 18)}
+                <span>${formatPlayerName(m.team1Player1.name)}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                ${renderPlayerAvatar(m.team1Player2, 18)}
+                <span>${formatPlayerName(m.team1Player2.name)}</span>
+              </div>
               ${team1AvgHtml}
             </div>
             <div class="overview-row-score-cell"${showDuprParam ? ' style="flex-direction: column;"' : ''}>
@@ -1924,8 +1936,14 @@ function renderDashboard(activeCourts) {
               ${diffHtml}
             </div>
             <div class="overview-row-team team-2">
-              <span>${formatPlayerName(m.team2Player1.name)}</span>
-              <span>${formatPlayerName(m.team2Player2.name)}</span>
+              <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+                <span>${formatPlayerName(m.team2Player1.name)}</span>
+                ${renderPlayerAvatar(m.team2Player1, 18)}
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+                <span>${formatPlayerName(m.team2Player2.name)}</span>
+                ${renderPlayerAvatar(m.team2Player2, 18)}
+              </div>
               ${team2AvgHtml}
             </div>
           </div>
@@ -2026,6 +2044,7 @@ function renderDashboard(activeCourts) {
             <div class="grid-player-main">
               <div class="grid-player-left">
                 <div class="grid-group-rank-badge">#${groupRank}</div>
+                ${renderPlayerAvatar(player, 32)}
                 <div class="grid-player-details">
                   <span class="grid-player-name">${formatPlayerName(player.name).toUpperCase()}</span>
                   <span class="grid-player-tot-rank">Overall Rank: #${globalRank}</span>
@@ -2681,6 +2700,99 @@ function setupEventListeners() {
 
   // Set up AI magic auto fill
   setupMagicAutoFill();
+
+  // --- PROFILE PICTURE VIEWER MODAL LOGIC ---
+  const profilePictureModal = document.getElementById('profile-picture-modal');
+  const profilePictureModalClose = document.getElementById('profile-picture-modal-close');
+  
+  const hideProfilePictureModal = () => {
+    if (profilePictureModal) {
+      document.body.classList.remove('modal-open');
+      setTimeout(() => {
+        profilePictureModal.classList.add('view-hidden');
+      }, 350);
+    }
+  };
+
+  if (profilePictureModalClose) {
+    profilePictureModalClose.addEventListener('click', hideProfilePictureModal);
+  }
+
+  if (profilePictureModal) {
+    profilePictureModal.addEventListener('click', (e) => {
+      if (e.target === profilePictureModal) {
+        hideProfilePictureModal();
+      }
+    });
+  }
+
+  // Handle Escape key to close the modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && profilePictureModal && !profilePictureModal.classList.contains('view-hidden')) {
+      hideProfilePictureModal();
+    }
+  });
+
+  // Event delegation to catch clicks on any player avatar
+  document.body.addEventListener('click', (e) => {
+    const avatarEl = e.target.closest('.clickable-avatar');
+    if (!avatarEl) return;
+
+    const playerName = avatarEl.getAttribute('data-player-name');
+    if (!playerName) return;
+
+    const avatarContainer = document.getElementById('profile-picture-modal-avatar-container');
+    const nameEl = document.getElementById('profile-picture-modal-name');
+    const rankEl = document.getElementById('profile-picture-modal-rank');
+
+    if (avatarContainer) {
+      avatarContainer.innerHTML = renderPlayerAvatar({ name: playerName }, 160);
+      
+      // Remove clickable behavior from the modal preview copy
+      const previewAvatar = avatarContainer.querySelector('.clickable-avatar');
+      if (previewAvatar) {
+        previewAvatar.classList.remove('clickable-avatar');
+        previewAvatar.style.cursor = 'default';
+        previewAvatar.style.transform = 'none';
+        previewAvatar.style.boxShadow = 'none';
+      }
+
+      // Customize preview copy styling for high resolution presentation
+      const previewImg = avatarContainer.querySelector('img');
+      if (previewImg) {
+        previewImg.style.width = '160px';
+        previewImg.style.height = '160px';
+        previewImg.style.border = '3px solid var(--neon)';
+        previewImg.style.boxShadow = '0 8px 24px var(--neon-glow)';
+      } else {
+        const previewDiv = avatarContainer.querySelector('div');
+        if (previewDiv) {
+          previewDiv.style.width = '160px';
+          previewDiv.style.height = '160px';
+          previewDiv.style.fontSize = '64px';
+          previewDiv.style.border = '3px solid var(--border-gloss)';
+          previewDiv.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)';
+        }
+      }
+    }
+
+    if (nameEl) {
+      nameEl.textContent = formatPlayerName(playerName);
+    }
+
+    if (rankEl) {
+      const globalRanks = getGlobalRanksMap();
+      const rank = globalRanks.get(playerName) || '-';
+      rankEl.textContent = `Overall Rank: #${rank}`;
+    }
+
+    if (profilePictureModal) {
+      profilePictureModal.classList.remove('view-hidden');
+      setTimeout(() => {
+        document.body.classList.add('modal-open');
+      }, 10);
+    }
+  });
 }
 
 // ----------------------------------------------------
@@ -2915,6 +3027,7 @@ async function resetMixer() {
     names: [],
     count: 0
   };
+  appState.avatars = {}; // Clear avatars map locally
 
 
   try {
@@ -2928,7 +3041,8 @@ async function resetMixer() {
       courts: JSON.parse(JSON.stringify(appState.courts)),
       selectedCourtNumber: 1,
       viewingRound: 1,
-      entryState: JSON.parse(JSON.stringify(appState.entryState))
+      entryState: JSON.parse(JSON.stringify(appState.entryState)),
+      avatars: {} // Overwrite avatars in the database
     });
 
     resetBtn.disabled = false;
@@ -3525,6 +3639,7 @@ function convertFileToBase64(file) {
 }
 
 async function extractPlayersAndDUPRFromImages(imageDataList) {
+  appState.avatars = {}; // Clear old/stale avatar mappings before starting a fresh extraction
   const savedKey = localStorage.getItem('ai_api_key') || '';
   const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
   const base64Images = imageDataList.map(img => img.base64);
@@ -3543,7 +3658,7 @@ GRID FORMAT & ALIGNMENT EXPLANATION:
 - The screenshot displays participants in a regular grid of 4 columns.
 - Systematic grouping: Every participant profile is an isolated vertical group containing:
   1. A circular profile picture avatar at the top.
-  2. The player's name directly below the avatar (e.g. 'YIP YK', 'Ng C T', 'Adrian Low', 'Victor Lee', 'Jackson Yap').
+  2. The player's name directly below the avatar.
   3. Optional green text 'Friend' or yellow icon 'Reserved' below the name.
   4. Optional blue 'DUPR X.XXX' or 'DUPR X' badge at the bottom of the group.
 
@@ -3557,7 +3672,6 @@ GRID INDEXING & FIRST ROW OFFSET:
   * Note: AJ is in the very first row. If the top header/tabs are visible, AJ's avatar top is at y = 280. If the header is scrolled out of view, the first visible avatar starts at y = 20.
   * CRITICAL: Do NOT confuse the "Game 1", "Game 2", etc. navigation tabs at the very top of the screen with player avatars. The player avatars only start below the tab bar.
 - For each player, determine their 0-based 'grid_row' index (0 for the first row, 1 for the second row, etc.) and 'grid_column' index (0, 1, 2, or 3 for the columns from left to right).
-- Also detect the bounding box of their circular profile picture avatar as 'avatar_box' [ymin, xmin, ymax, xmax] in raw pixel coordinates on the ${canvasWidth}x${canvasHeight} image.
 
 CRITICAL ALIGNMENT RULES:
 - A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name in that column.
@@ -3565,17 +3679,14 @@ CRITICAL ALIGNMENT RULES:
 
 Respond ONLY with a JSON object in this format:
 {
-  "chain_of_thought": "Write your detailed step-by-step transcription...",
   "first_row_ymin": 280,
   "players": [
     {
       "name": "Player Name",
-      "transcribed_subtext": "Exact subtext text under name",
       "dupr": 3.754,
       "image_index": 0,
       "grid_row": 0,
-      "grid_column": 0,
-      "avatar_box": [ymin, xmin, ymax, xmax]
+      "grid_column": 0
     }
   ]
 }`;
@@ -3608,7 +3719,7 @@ Respond ONLY with a JSON object in this format:
           content: content
         }
       ],
-      max_tokens: 2000
+      max_tokens: 4000
     })
   });
 
@@ -3618,60 +3729,38 @@ Respond ONLY with a JSON object in this format:
   }
 
   const resultData = await response.json();
-  const parsed = JSON.parse(resultData.choices[0].message.content);
-  console.log("CoT Extraction Result:", parsed.chain_of_thought);
+  let parsed;
+  try {
+    const rawContent = resultData.choices[0].message.content;
+    const cleanedContent = rawContent.replace(/```json/g, '').replace(/```/g, '').trim();
+    parsed = JSON.parse(cleanedContent);
+  } catch (parseErr) {
+    console.error("Failed to parse AI response content:", resultData.choices[0].message.content, parseErr);
+    throw new Error("AI returned an invalid response. Please try again.");
+  }
   
   const rawPlayers = parsed.players || [];
 
-  // Determine if the coordinates returned are raw pixel values or normalized 0-1000 coordinates.
-  let maxVal = 0;
-  rawPlayers.forEach(p => {
-    if (p.avatar_box && Array.isArray(p.avatar_box)) {
-      p.avatar_box.forEach(v => { if (v > maxVal) maxVal = v; });
+  const scaleX = 1;
+  const scaleY = 1;
+
+  let firstRowYmin = Infinity;
+  if (typeof parsed.first_row_ymin === 'number') {
+    firstRowYmin = parsed.first_row_ymin;
+  } else if (typeof parsed.first_row_ymin === 'string') {
+    const parsedVal = parseFloat(parsed.first_row_ymin);
+    if (!isNaN(parsedVal)) {
+      firstRowYmin = parsedVal;
     }
-  });
-
-  const isRawPixels = maxVal > 1000 || (canvasHeight <= 1000);
-  
-  // Detect if joint 1:1 scaling was used for normalized coordinates
-  let jointScaling = false;
-  if (!isRawPixels) {
-    rawPlayers.forEach(p => {
-      if (p.avatar_box && Array.isArray(p.avatar_box) && p.avatar_box.length === 4) {
-        const box = p.avatar_box;
-        const boxW = box[3] - box[1];
-        const boxH = box[2] - box[0];
-        if (Math.abs(boxW - boxH) < 5 && Math.abs(canvasWidth - canvasHeight) > 50) {
-          jointScaling = true;
-        }
-      }
-    });
-  }
-
-  const scaleX = isRawPixels ? 1 : (canvasWidth / 1000);
-  const scaleY = isRawPixels ? 1 : (jointScaling ? (canvasWidth / 1000) : (canvasHeight / 1000));
-
-  // Determine first row's top boundary in raw canvas pixels
-  let firstRowYmin = typeof parsed.first_row_ymin === 'number' ? parsed.first_row_ymin : Infinity;
-  
-  if (firstRowYmin === Infinity || isNaN(firstRowYmin)) {
-    rawPlayers.forEach(p => {
-      if (p.avatar_box && Array.isArray(p.avatar_box) && p.avatar_box.length === 4) {
-        const yminRaw = p.avatar_box[0] * scaleY;
-        if (yminRaw < firstRowYmin) {
-          firstRowYmin = yminRaw;
-        }
-      }
-    });
   }
   
   if (firstRowYmin === Infinity || isNaN(firstRowYmin)) {
-    firstRowYmin = 0.7547 * canvasWidth;
+    firstRowYmin = 0.739 * canvasWidth;
   }
 
   // Banner-Visible Compensation (Self-Healing Grid Alignment)
   const headerPresent = firstRowYmin > 0.2 * canvasWidth;
-  const correctedFirstRowYmin = headerPresent ? (0.7547 * canvasWidth) : (0.05 * canvasWidth);
+  const correctedFirstRowYmin = headerPresent ? (0.739 * canvasWidth) : (0.05 * canvasWidth);
   console.log(`[Avatar Crop] detected firstRowYmin=${firstRowYmin}, headerPresent=${headerPresent}, correctedFirstRowYmin=${correctedFirstRowYmin}`);
 
   const filteredPlayers = rawPlayers.filter(player => {
@@ -3717,11 +3806,14 @@ Respond ONLY with a JSON object in this format:
       if (targetData) {
         const canvas = targetData.canvas;
         const colWidth = canvas.width / 4;
-        const rowHeight = colWidth * 1.747; // Verified ratio 1.747 for Reclub player grid
+        const rowHeight = colWidth * 1.831; // Verified ratio 1.831 for Reclub player grid
         const cropSize = colWidth * 0.65;
         
-        let col = player.grid_column;
-        let row = player.grid_row;
+        let col = typeof player.grid_column === 'number' ? player.grid_column : parseInt(player.grid_column);
+        let row = typeof player.grid_row === 'number' ? player.grid_row : parseInt(player.grid_row);
+        
+        if (isNaN(col)) col = undefined;
+        if (isNaN(row)) row = undefined;
         
         // Fallback to coordinates if grid indices are not supplied
         if (typeof col !== 'number' || typeof row !== 'number') {

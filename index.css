@@ -2375,6 +2375,16 @@ input:checked + .slider:before {
   letter-spacing: -0.2px;
 }
 
+/* Clickable Avatar hover transitions */
+.clickable-avatar {
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+}
+.clickable-avatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px var(--neon-glow-high) !important;
+}
+
 /* --- MOBILE RESPONSIVE OVERRIDES --- */
 @media (max-width: 500px) {
   /* 1. Court Setup Screen single-column collapse */
