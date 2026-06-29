@@ -3529,7 +3529,15 @@ async function extractPlayersAndDUPRFromImages(imageDataList) {
   const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
   const base64Images = imageDataList.map(img => img.base64);
 
+  const firstImage = imageDataList[0];
+  const canvasWidth = firstImage && firstImage.canvas ? firstImage.canvas.width : 375;
+  const canvasHeight = firstImage && firstImage.canvas ? firstImage.canvas.height : 1500;
+
   const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names, DUPR ratings, and profile picture avatar bounding boxes from the provided screenshot(s) of player profiles.
+
+IMAGE DIMENSIONS:
+- Width: ${canvasWidth} pixels
+- Height: ${canvasHeight} pixels
 
 GRID FORMAT & ALIGNMENT EXPLANATION:
 - The screenshot displays participants in a grid of 4 columns.
@@ -3544,11 +3552,11 @@ CRITICAL NAME INTEGRITY & DETECTION RULES:
 - IGNORE empty placeholder/invitation slots. If a slot contains a grey circle, dashed circle, or has no player name text displayed directly below it, it is a placeholder slot. Do NOT transcribe it.
 - Combine multi-line names into one player's full name (e.g. 'Adrian\nLow' -> 'Adrian Low').
 
-IMAGE INDEXING & AVATAR BOUNDING BOXES:
-- Since multiple screenshots can be uploaded, the API sees them as a sequence. For each player, you MUST specify the 0-based 'image_index' representing which screenshot the player was found in.
+AVATAR BOUNDING BOXES IN RAW PIXELS:
 - For each player, you MUST detect the bounding box of their circular profile picture avatar at the top of their vertical profile group.
-- CRITICAL: Do NOT return the bounding box of the entire player slot or grid cell. The bounding box MUST tightly wrap ONLY the circular profile photo (avatar) itself. The player's name and rating badge/text below the avatar MUST NOT be included inside the bounding box.
-- The bounding box must be specified as \`[ymin, xmin, ymax, xmax]\` normalized to a scale of \`0\` to \`1000\` (e.g. \`[112, 282, 218, 388]\`). ymin/ymax are vertical coordinates (0 = top, 1000 = bottom), and xmin/xmax are horizontal coordinates (0 = left, 1000 = right).
+- You MUST specify the bounding box in raw pixel coordinates on the ${canvasWidth}x${canvasHeight} image as [ymin, xmin, ymax, xmax] (e.g. [115, 10, 167, 62]).
+- CRITICAL: Do NOT return normalized 0-1000 coordinates. Return actual pixel coordinates. ymin/ymax are vertical pixel values (0 = top, ${canvasHeight} = bottom) and xmin/xmax are horizontal pixel values (0 = left, ${canvasWidth} = right).
+- Ensure the bounding box tightly wraps ONLY the circular profile photo (avatar) itself. The player's name and rating badge/text below the avatar MUST NOT be included inside the bounding box.
 
 CRITICAL ALIGNMENT RULES:
 - A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name in that column.
@@ -3610,6 +3618,50 @@ Respond ONLY with a JSON object in this format:
   console.log("CoT Extraction Result:", parsed.chain_of_thought);
   
   const rawPlayers = parsed.players || [];
+
+  // Determine if the coordinates returned are raw pixel values or normalized 0-1000 coordinates.
+  let maxVal = 0;
+  rawPlayers.forEach(p => {
+    if (p.avatar_box && Array.isArray(p.avatar_box)) {
+      p.avatar_box.forEach(v => { if (v > maxVal) maxVal = v; });
+    }
+  });
+
+  const isRawPixels = maxVal > 1000 || (canvasHeight <= 1000);
+  
+  // Detect if joint 1:1 scaling was used for normalized coordinates
+  let jointScaling = false;
+  if (!isRawPixels) {
+    rawPlayers.forEach(p => {
+      if (p.avatar_box && Array.isArray(p.avatar_box) && p.avatar_box.length === 4) {
+        const box = p.avatar_box;
+        const boxW = box[3] - box[1];
+        const boxH = box[2] - box[0];
+        if (Math.abs(boxW - boxH) < 5 && Math.abs(canvasWidth - canvasHeight) > 50) {
+          jointScaling = true;
+        }
+      }
+    });
+  }
+
+  const scaleX = isRawPixels ? 1 : (canvasWidth / 1000);
+  const scaleY = isRawPixels ? 1 : (jointScaling ? (canvasWidth / 1000) : (canvasHeight / 1000));
+
+  // Determine first row's top boundary in raw canvas pixels
+  let firstRowYmin = Infinity;
+  rawPlayers.forEach(p => {
+    if (p.avatar_box && Array.isArray(p.avatar_box) && p.avatar_box.length === 4) {
+      const yminRaw = p.avatar_box[0] * scaleY;
+      if (yminRaw < firstRowYmin) {
+        firstRowYmin = yminRaw;
+      }
+    }
+  });
+  
+  if (firstRowYmin === Infinity) {
+    firstRowYmin = 0.31 * canvasWidth;
+  }
+
   const filteredPlayers = rawPlayers.filter(player => {
     if (!player.name) return false;
     const nameTrimmed = player.name.trim().replace(/\s+/g, ' ');
@@ -3654,29 +3706,36 @@ Respond ONLY with a JSON object in this format:
         const canvas = targetData.canvas;
         const box = player.avatar_box;
         
-        // Determine if y-coordinates are scaled jointly (1:1 with x) or separately relative to height.
-        const boxW = box[3] - box[1];
-        const boxH = box[2] - box[0];
-        const jointScaling = (box[2] > 1000) || (Math.abs(boxW - boxH) < 5 && Math.abs(canvas.width - canvas.height) > 50);
-
-        const xScale = canvas.width / 1000;
-        const yScale = jointScaling ? (canvas.width / 1000) : (canvas.height / 1000);
-
-        const ymin = Math.max(0, Math.min(canvas.height, box[0] * yScale));
-        const xmin = Math.max(0, Math.min(canvas.width, box[1] * xScale));
-        const ymax = Math.max(0, Math.min(canvas.height, box[2] * yScale));
-        const xmax = Math.max(0, Math.min(canvas.width, box[3] * xScale));
+        const yminRaw = box[0] * scaleY;
+        const xminRaw = box[1] * scaleX;
         
-        const boxWidth = xmax - xmin;
-        const boxHeight = ymax - ymin;
+        const colWidth = canvas.width / 4;
+        const rowHeight = colWidth * 1.6;
         
-        if (boxWidth > 5 && boxHeight > 5) {
+        // Determine column and row indices
+        const col = Math.max(0, Math.min(3, Math.round(xminRaw / colWidth)));
+        const row = Math.max(0, Math.round((yminRaw - firstRowYmin) / colWidth));
+        
+        // Reconstruct crop coordinates mathematically
+        const cropSize = colWidth * 0.65;
+        const xmin = (col + 0.5) * colWidth - cropSize / 2;
+        const ymin = firstRowYmin + row * rowHeight;
+        
+        const boxWidth = cropSize;
+        const boxHeight = cropSize;
+        
+        const clipXmin = Math.max(0, Math.min(canvas.width - 1, xmin));
+        const clipYmin = Math.max(0, Math.min(canvas.height - 1, ymin));
+        const clipWidth = Math.max(1, Math.min(canvas.width - clipXmin, boxWidth));
+        const clipHeight = Math.max(1, Math.min(canvas.height - clipYmin, boxHeight));
+        
+        if (clipWidth > 5 && clipHeight > 5) {
           const cropCanvas = document.createElement('canvas');
           cropCanvas.width = 64;
           cropCanvas.height = 64;
           const cropCtx = cropCanvas.getContext('2d');
           
-          cropCtx.drawImage(canvas, xmin, ymin, boxWidth, boxHeight, 0, 0, 64, 64);
+          cropCtx.drawImage(canvas, clipXmin, clipYmin, clipWidth, clipHeight, 0, 0, 64, 64);
           avatarUrl = cropCanvas.toDataURL('image/jpeg', 0.75);
           
           // Store globally

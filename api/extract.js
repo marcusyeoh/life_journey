@@ -166,6 +166,7 @@ function proxyGemini(apiKey, clientPayload, clientRes) {
             type: "OBJECT",
             properties: {
               chain_of_thought: { type: "STRING" },
+              first_row_ymin: { type: "INTEGER" },
               players: {
                 type: "ARRAY",
                 items: {
@@ -175,16 +176,18 @@ function proxyGemini(apiKey, clientPayload, clientRes) {
                     transcribed_subtext: { type: "STRING" },
                     dupr: { type: "NUMBER" },
                     image_index: { type: "INTEGER" },
+                    grid_row: { type: "INTEGER" },
+                    grid_column: { type: "INTEGER" },
                     avatar_box: {
                       type: "ARRAY",
                       items: { type: "NUMBER" }
                     }
                   },
-                  required: ["name", "transcribed_subtext", "dupr", "image_index", "avatar_box"]
+                  required: ["name", "transcribed_subtext", "dupr", "image_index", "grid_row", "grid_column", "avatar_box"]
                 }
               }
             },
-            required: ["chain_of_thought", "players"]
+            required: ["chain_of_thought", "first_row_ymin", "players"]
           }
         }
       });
