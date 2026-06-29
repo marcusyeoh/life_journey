@@ -65,6 +65,8 @@ const appState = {
     // courtNumber -> { names: ['...', '...'], count: 4|5|6 }
   },
 
+  avatars: {}, // Global player name -> base64Avatar map
+
   // Modal Scoring State
   modal: {
     open: false,
@@ -566,6 +568,7 @@ async function startApp() {
         if (data.entryState) {
           appState.entryState = data.entryState;
         }
+        appState.avatars = data.avatars || {};
 
         // SELF-HEALING AUTOMATIC RE-SEED IN FINAL STAGE
         if (appState.currentStage === 2) {
@@ -1440,6 +1443,55 @@ function getPlayerDupr(name) {
   return 2.50;
 }
 
+// Helper to clean rating suffix for matching
+function getCleanPlayerName(name) {
+  if (!name) return '';
+  return name.replace(/\s*\(\d+(?:\.\d+)?\)/, '').trim();
+}
+
+// Get initials (up to 2 characters)
+function getPlayerInitials(name) {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2);
+  return (parts[0][0] + parts[parts.length - 1][0]).substring(0, 2);
+}
+
+// Pick a beautiful color gradient based on player name hash
+function getAvatarGradient(name) {
+  const colors = [
+    'linear-gradient(135deg, #FF5E3A 0%, #FF2A68 100%)', // red/pink
+    'linear-gradient(135deg, #FF9500 0%, #FF5E3A 100%)', // orange
+    'linear-gradient(135deg, #5AC8FA 0%, #34AADC 100%)', // light blue
+    'linear-gradient(135deg, #4CD964 0%, #5AD8A6 100%)', // green
+    'linear-gradient(135deg, #5856D6 0%, #C86DD7 100%)', // purple
+    'linear-gradient(135deg, #1D62F0 0%, #1AD6FD 100%)', // cyan
+  ];
+  if (!name) return colors[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+}
+
+// Render dynamic avatar or fallback initials
+function renderPlayerAvatar(player, size = 28) {
+  const cleanName = getCleanPlayerName(player.name);
+  const avatar = appState.avatars && appState.avatars[cleanName];
+  if (avatar) {
+    return `<img src="${avatar}" class="player-avatar-circle" style="width: ${size}px; height: ${size}px;" alt="${cleanName}">`;
+  }
+  const initials = getPlayerInitials(cleanName);
+  const gradient = getAvatarGradient(cleanName);
+  return `
+    <div class="player-avatar-initials" style="width: ${size}px; height: ${size}px; font-size: ${size * 0.4}px; background: ${gradient}">
+      ${initials}
+    </div>
+  `;
+}
+
 // Helper to compute overall ranks map (playerName -> rank)
 function getGlobalRanksMap() {
   const ranksMap = new Map();
@@ -1688,12 +1740,26 @@ function renderDashboard(activeCourts) {
         ` : ''}
       </div>
       <div class="match-teams-row">
-        <div class="match-team">
-          <h4 style="margin: 0; line-height: 1.4;">${formatPlayerName(match.team1Player1.name)}<br>${formatPlayerName(match.team1Player2.name)}</h4>
+        <div class="match-team" style="gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${renderPlayerAvatar(match.team1Player1, 24)}
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: left;">${formatPlayerName(match.team1Player1.name)}</h4>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${renderPlayerAvatar(match.team1Player2, 24)}
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: left;">${formatPlayerName(match.team1Player2.name)}</h4>
+          </div>
         </div>
         <div class="vs-badge">VS</div>
-        <div class="match-team team-2">
-          <h4 style="margin: 0; line-height: 1.4;">${formatPlayerName(match.team2Player1.name)}<br>${formatPlayerName(match.team2Player2.name)}</h4>
+        <div class="match-team team-2" style="gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: right;">${formatPlayerName(match.team2Player1.name)}</h4>
+            ${renderPlayerAvatar(match.team2Player1, 24)}
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: right;">${formatPlayerName(match.team2Player2.name)}</h4>
+            ${renderPlayerAvatar(match.team2Player2, 24)}
+          </div>
         </div>
       </div>
       <button class="match-action-btn neon-glow-active">
@@ -1727,16 +1793,20 @@ function renderDashboard(activeCourts) {
     if (matchIndex + 1 < court.matches.length) {
       const nextMatch = court.matches[matchIndex + 1];
       deckNames.innerHTML = `
-        <div class="next-team">
-          <span>${formatPlayerName(nextMatch.team1Player1.name)}</span>
-          <span class="next-amp">&</span>
-          <span>${formatPlayerName(nextMatch.team1Player2.name)}</span>
+        <div class="next-team" style="display: flex; align-items: center; gap: 6px;">
+          ${renderPlayerAvatar(nextMatch.team1Player1, 20)}
+          ${renderPlayerAvatar(nextMatch.team1Player2, 20)}
+          <span style="font-weight: 700; color: var(--text-primary); margin-left: 4px;">
+            ${formatPlayerName(nextMatch.team1Player1.name)} & ${formatPlayerName(nextMatch.team1Player2.name)}
+          </span>
         </div>
         <div class="next-vs">VS</div>
-        <div class="next-team">
-          <span>${formatPlayerName(nextMatch.team2Player1.name)}</span>
-          <span class="next-amp">&</span>
-          <span>${formatPlayerName(nextMatch.team2Player2.name)}</span>
+        <div class="next-team" style="display: flex; align-items: center; gap: 6px; justify-content: flex-end;">
+          <span style="font-weight: 700; color: var(--text-primary); margin-right: 4px;">
+            ${formatPlayerName(nextMatch.team2Player1.name)} & ${formatPlayerName(nextMatch.team2Player2.name)}
+          </span>
+          ${renderPlayerAvatar(nextMatch.team2Player1, 20)}
+          ${renderPlayerAvatar(nextMatch.team2Player2, 20)}
         </div>
       `;
       document.getElementById('dashboard-on-deck-banner').style.display = 'flex';
@@ -1783,7 +1853,10 @@ function renderDashboard(activeCourts) {
     item.className = `leaderboard-item ${isFirst ? 'first-place' : ''}`;
     item.innerHTML = `
       <span class="leaderboard-rank">${rank}</span>
-      <span class="leaderboard-name">${formatPlayerName(player.name)}</span>
+      <div style="display: flex; align-items: center; gap: 10px; flex-grow: 1; min-width: 0;">
+        ${renderPlayerAvatar(player, 28)}
+        <span class="leaderboard-name" style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${formatPlayerName(player.name)}</span>
+      </div>
       <span class="leaderboard-score-chip ${scoreClass}">${prefix}${score}</span>
     `;
     leaderboardContainer.appendChild(item);
@@ -2680,7 +2753,8 @@ async function saveStateToCloud() {
       courts: JSON.parse(JSON.stringify(appState.courts)),
       selectedCourtNumber: appState.selectedCourtNumber,
       viewingRound: appState.viewingRound,
-      entryState: JSON.parse(JSON.stringify(appState.entryState))
+      entryState: JSON.parse(JSON.stringify(appState.entryState)),
+      avatars: appState.avatars || {}
     };
 
     await setDoc(mixerDocRef, serializedState);
@@ -3231,7 +3305,8 @@ function renderGlobalLeaderboard(sourceCourts) {
               name: p.name,
               totalScore: p.totalScore || 0,
               pointsPlayed: p.pointsPlayed || 0,
-              qualifyingCourt: court.courtNumber
+              qualifyingCourt: court.courtNumber,
+              avatar: p.avatar
             });
           });
         }
@@ -3243,14 +3318,15 @@ function renderGlobalLeaderboard(sourceCourts) {
       appState.courts.forEach(court => {
         if (court.isActive && court.players) {
           court.players.forEach(p => {
-            const s1 = stage1Map.get(p.name) || { totalScore: 0, pointsPlayed: 0, qualifyingCourt: null };
+            const s1 = stage1Map.get(p.name) || { totalScore: 0, pointsPlayed: 0, qualifyingCourt: null, avatar: '' };
             allPlayers.push({
               name: p.name,
               totalScore: s1.totalScore + (p.totalScore || 0),
               pointsPlayed: s1.pointsPlayed + (p.pointsPlayed || 0),
               courtNumber: court.courtNumber, // current Stage 2 court for tier display
               qualifyingCourt: s1.qualifyingCourt,
-              isCumulative: true
+              isCumulative: true,
+              avatar: p.avatar || s1.avatar
             });
           });
         }
@@ -3272,7 +3348,8 @@ function renderGlobalLeaderboard(sourceCourts) {
                 totalScore: p.totalScore || 0,
                 courtNumber: court.courtNumber,
                 pointsPlayed: p.pointsPlayed || 0,
-                isCumulative: false
+                isCumulative: false,
+                avatar: p.avatar
               });
             }
           });
@@ -3315,20 +3392,21 @@ function renderGlobalLeaderboard(sourceCourts) {
 
     return `
       <div class="leaderboard-item" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 28px; text-align: center; font-weight: 800; color: ${rankColor}; font-size: 16px;">
+        <div style="display: flex; align-items: center; gap: 14px; min-width: 0; flex-grow: 1; padding-right: 12px;">
+          <div style="width: 28px; text-align: center; font-weight: 800; color: ${rankColor}; font-size: 16px; flex-shrink: 0;">
             ${index + 1}
           </div>
-          <div style="display: flex; flex-direction: column;">
-            <div style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px;">
+          ${renderPlayerAvatar(p, 32)}
+          <div style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1;">
+            <div style="font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               ${formatPlayerName(p.name)} ${trophyIcon}
             </div>
-            <div style="font-size: 11px; color: var(--text-secondary);">
+            <div style="font-size: 11px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               ${subtitleHtml}
             </div>
           </div>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0;">
           <div style="font-weight: 800; color: var(--neon); font-size: 16px;">${p.totalScore >= 0 ? '+' : ''}${p.totalScore} pts</div>
           <div style="font-size: 10px; color: var(--text-secondary);">${p.pointsPlayed} total pts</div>
         </div>
@@ -3433,7 +3511,10 @@ function convertFileToBase64(file) {
 
         // Compress as JPEG
         const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        resolve(dataUrl.split(',')[1]);
+        resolve({
+          base64: dataUrl.split(',')[1],
+          canvas: canvas
+        });
       };
       img.onerror = reject;
       img.src = e.target.result;
@@ -3443,11 +3524,12 @@ function convertFileToBase64(file) {
   });
 }
 
-async function extractPlayersAndDUPRFromImages(base64Images) {
+async function extractPlayersAndDUPRFromImages(imageDataList) {
   const savedKey = localStorage.getItem('ai_api_key') || '';
   const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
+  const base64Images = imageDataList.map(img => img.base64);
 
-  const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names and DUPR ratings from the provided screenshot(s) of player profiles.
+  const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names, DUPR ratings, and profile picture avatar bounding boxes from the provided screenshot(s) of player profiles.
 
 GRID FORMAT & ALIGNMENT EXPLANATION:
 - The screenshot displays participants in a grid of 4 columns.
@@ -3458,45 +3540,30 @@ GRID FORMAT & ALIGNMENT EXPLANATION:
   4. Optional blue 'DUPR X.XXX' or 'DUPR X' badge at the bottom of the group.
 
 CRITICAL NAME INTEGRITY & DETECTION RULES:
-- Count the player profiles dynamically. A screenshot can contain any number of players (e.g., 23 players, 16 players, etc.). Do NOT assume a fixed or hardcoded number of players.
-- IGNORE empty placeholder/invitation slots. If a slot contains a grey circle, dashed circle, or has no player name text displayed directly below it (or just says '+', 'Add Player', 'Invite', 'Unconfirmed', 'unknown', or is empty), it is a placeholder slot. Do NOT transcribe it and do NOT include it in the 'players' array.
-- The text directly below a single circular avatar, even if it spans multiple lines (e.g., 'Adrian\nLow', 'Pui Yee\nLeong', 'HOCK\nSOON HO'), is the full name of a single player. Combine these lines into one player's full name (e.g., "Pui Yee Leong", "Adrian Low", "Hock Soon Ho").
-- NEVER split a single player's name into multiple players (e.g., do NOT output one player named 'Pui Yee' and another named 'Leong').
+- Count the player profiles dynamically. A screenshot can contain any number of players. Do NOT assume a fixed or hardcoded number of players.
+- IGNORE empty placeholder/invitation slots. If a slot contains a grey circle, dashed circle, or has no player name text displayed directly below it, it is a placeholder slot. Do NOT transcribe it.
+- Combine multi-line names into one player's full name (e.g. 'Adrian\nLow' -> 'Adrian Low').
+
+IMAGE INDEXING & AVATAR BOUNDING BOXES:
+- Since multiple screenshots can be uploaded, the API sees them as a sequence. For each player, you MUST specify the 0-based 'image_index' representing which screenshot the player was found in.
+- For each player, you MUST detect the bounding box of their circular profile picture avatar at the top of their vertical profile group.
+- CRITICAL: Do NOT return the bounding box of the entire player slot or grid cell. The bounding box MUST tightly wrap ONLY the circular profile photo (avatar) itself. The player's name and rating badge/text below the avatar MUST NOT be included inside the bounding box.
+- The bounding box must be specified as \`[ymin, xmin, ymax, xmax]\` normalized to a scale of \`0\` to \`1000\` (e.g. \`[112, 282, 218, 388]\`). ymin/ymax are vertical coordinates (0 = top, 1000 = bottom), and xmin/xmax are horizontal coordinates (0 = left, 1000 = right).
 
 CRITICAL ALIGNMENT RULES:
-- Never mix elements from different columns.
-- Each circular avatar marks a separate player. Count them carefully to ensure no player is skipped!
-- For each column, map the name and the DUPR badge directly aligned under it vertically in that column.
 - A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name in that column.
-- If a player has a green 'Friend' label, look further down in that same column to see if a blue DUPR badge exists. For example, 'Adrian Low' has a green 'Friend' label AND a blue 'DUPR 3.218' badge below it, so his rating is 3.218. 'Yen' has a green 'Friend' label but NO blue DUPR badge below it, so her rating is 2.50.
-- DUPR badges can contain integer values as well (e.g. 'DUPR 2'). If the badge says 'DUPR 2', the rating is 2.00.
-- If the badge contains 'NR' or 'DUPR NR' or 'Unrated', it means the player has no rating and must default to 2.50.
-- If there is NO blue DUPR badge in the vertical group for a player, they have NO rating and must be assigned 2.50. Do NOT borrow ratings from adjacent columns or rows!
-
-EACH DUPR BADGE IS UNIQUE:
-- Each blue DUPR badge on the screen belongs to exactly ONE player profile.
-- NEVER assign a single blue DUPR badge to more than one player (e.g. if Ahh Yik has 'DUPR 2.587', do NOT assign '2.587' to Marcus Yeoh as well; Marcus Yeoh has no badge and must be 2.50. If HOCK SOON HO has 'DUPR 2.169', do NOT assign '2.169' to Jackson Yap as well).
-- If a player has no blue DUPR badge directly aligned under their name in their vertical slot, they MUST default to 2.50. Never reuse or borrow a rating from an adjacent player.
-
-OCR NUMBER PRECISION:
-- Be extremely precise when transcribing the digits of DUPR badges.
-- Read every digit carefully (e.g., distinguish between '3' and '4' to prevent reading '2.312' as '2.412'). Check the pixels twice to ensure zero transcription errors.
-
-To prevent lazy scanning and ensure extreme accuracy for small numbers or decimal parts, you MUST follow a strict Chain-of-Thought:
-1. Scan the image grid systematically row by row, from left to right.
-2. For each participant profile card, transcribe the EXACT name of the player. Do not shorten or alter the name.
-3. Explicitly transcribe the exact subtext/label/badge content below the player's name (e.g. "DUPR 3.754", "DUPR 3.842", "Friend / DUPR 3.218", "Reserved", "Unrated", "DUPR NR", or empty).
-4. Parse the numeric rating from that subtext with FULL 3-decimal digit precision (e.g. "3.754", "3.842", "2.836", "2.312", "2.148"). DO NOT round or truncate this number to 2 decimals under any circumstances! For example, "3.172" must remain "3.172" and "2.836" must remain "2.836".
-5. If no valid numeric DUPR badge or rating exists (e.g. labeled "Friend" with no rating, "Reserved", "Unrated", "NR", "DUPR NR", or empty), assign a default rating of 2.50.
+- If no valid numeric DUPR badge or rating exists, assign a default rating of 2.50.
 
 Respond ONLY with a JSON object in this format:
 {
-  "chain_of_thought": "Write your detailed step-by-step transcription of each player's name and the exact subtext below their name before parsing the rating.",
+  "chain_of_thought": "Write your detailed step-by-step transcription...",
   "players": [
     {
       "name": "Player Name",
       "transcribed_subtext": "Exact subtext text under name",
-      "dupr": 3.754
+      "dupr": 3.754,
+      "image_index": 0,
+      "avatar_box": [ymin, xmin, ymax, xmax]
     }
   ]
 }`;
@@ -3550,7 +3617,6 @@ Respond ONLY with a JSON object in this format:
     
     const nameLower = nameTrimmed.toLowerCase();
     
-    // Ignore common placeholder terms and "unknown" variants
     if (
       nameLower === 'unknown' ||
       nameLower === 'unknown player' ||
@@ -3578,9 +3644,55 @@ Respond ONLY with a JSON object in this format:
         finalDupr = parsedFloat;
       }
     }
+
+    // Crop avatar if coordinate box is provided
+    let avatarUrl = '';
+    try {
+      const imgIdx = typeof player.image_index === 'number' ? player.image_index : 0;
+      const targetData = imageDataList[imgIdx] || imageDataList[0];
+      if (targetData && player.avatar_box && Array.isArray(player.avatar_box) && player.avatar_box.length === 4) {
+        const canvas = targetData.canvas;
+        const box = player.avatar_box;
+        
+        // Determine if y-coordinates are scaled jointly (1:1 with x) or separately relative to height.
+        const boxW = box[3] - box[1];
+        const boxH = box[2] - box[0];
+        const jointScaling = (box[2] > 1000) || (Math.abs(boxW - boxH) < 5 && Math.abs(canvas.width - canvas.height) > 50);
+
+        const xScale = canvas.width / 1000;
+        const yScale = jointScaling ? (canvas.width / 1000) : (canvas.height / 1000);
+
+        const ymin = Math.max(0, Math.min(canvas.height, box[0] * yScale));
+        const xmin = Math.max(0, Math.min(canvas.width, box[1] * xScale));
+        const ymax = Math.max(0, Math.min(canvas.height, box[2] * yScale));
+        const xmax = Math.max(0, Math.min(canvas.width, box[3] * xScale));
+        
+        const boxWidth = xmax - xmin;
+        const boxHeight = ymax - ymin;
+        
+        if (boxWidth > 5 && boxHeight > 5) {
+          const cropCanvas = document.createElement('canvas');
+          cropCanvas.width = 64;
+          cropCanvas.height = 64;
+          const cropCtx = cropCanvas.getContext('2d');
+          
+          cropCtx.drawImage(canvas, xmin, ymin, boxWidth, boxHeight, 0, 0, 64, 64);
+          avatarUrl = cropCanvas.toDataURL('image/jpeg', 0.75);
+          
+          // Store globally
+          const cleanName = player.name.trim().replace(/\s+/g, ' ');
+          if (!appState.avatars) appState.avatars = {};
+          appState.avatars[cleanName] = avatarUrl;
+        }
+      }
+    } catch (cropErr) {
+      console.error("Avatar cropping failed for", player.name, cropErr);
+    }
+
     return {
       name: player.name.trim().replace(/\s+/g, ' '),
-      dupr: finalDupr
+      dupr: finalDupr,
+      avatar: avatarUrl
     };
   });
 
@@ -3781,10 +3893,10 @@ function setupMagicAutoFill() {
       if (processingState) processingState.style.display = 'flex';
 
       try {
-        const base64Promises = Array.from(files).map(file => convertFileToBase64(file));
-        const base64Images = await Promise.all(base64Promises);
+        const promises = Array.from(files).map(file => convertFileToBase64(file));
+        const imageDataList = await Promise.all(promises);
         
-        const extractedPlayers = await extractPlayersAndDUPRFromImages(base64Images);
+        const extractedPlayers = await extractPlayersAndDUPRFromImages(imageDataList);
         
         if (extractedPlayers && extractedPlayers.length > 0) {
           assignBalancedPlayersToCourts(extractedPlayers);

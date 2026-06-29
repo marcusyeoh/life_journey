@@ -173,9 +173,14 @@ function proxyGemini(apiKey, clientPayload, clientRes) {
                   properties: {
                     name: { type: "STRING" },
                     transcribed_subtext: { type: "STRING" },
-                    dupr: { type: "NUMBER" }
+                    dupr: { type: "NUMBER" },
+                    image_index: { type: "INTEGER" },
+                    avatar_box: {
+                      type: "ARRAY",
+                      items: { type: "NUMBER" }
+                    }
                   },
-                  required: ["name", "transcribed_subtext", "dupr"]
+                  required: ["name", "transcribed_subtext", "dupr", "image_index", "avatar_box"]
                 }
               }
             },
