@@ -110,34 +110,23 @@
     <button class="icon-btn" id="app-back-btn" aria-label="Go back">
       <span class="material-symbols-outlined">arrow_back</span>
     </button>
-    <h1 id="app-bar-title">Life Journey Pickleball</h1>
-
+    <div class="app-bar-brand">
+      <img src="logo.png" alt="Life Journey Pickleball Logo" fetchpriority="high">
+      <span id="app-bar-title">Life Journey Pickleball</span>
+    </div>
   </header>
 
   <!-- SCREEN 0: USER STANDBY LANDING -->
   <main id="view-user-landing" class="screen-view"
     style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); text-align: center; gap: 24px; box-sizing: border-box;">
     <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-      <!-- Glowing Animated Pulsating Pickleball Icon Container -->
+      <!-- Glowing Animated Pulsating Logo Container -->
       <div class="neon-glow"
-        style="width: 96px; height: 96px; border-radius: 50%; background-color: var(--surface-high); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; position: relative;">
-        <span class="material-symbols-outlined"
-          style="font-size: 48px; color: var(--neon); animation: pulse 2s infinite ease-in-out;"><svg
-            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round" style="width: 1em; height: 1em;">
-            <g transform="rotate(45 12 12)">
-              <rect x="7" y="2" width="10" height="13" rx="4"></rect>
-              <rect x="8.5" y="3.5" width="7" height="10" rx="2.5" stroke-width="1" stroke-opacity="0.6"></rect>
-              <path d="M12 15v6" stroke-width="3"></path>
-              <path d="M10.5 16.5l3 -1 M10.5 18.5l3 -1 M10.5 20.5l3 -1" stroke-width="1"></path>
-              <path d="M10.5 21h3" stroke-width="2"></path>
-            </g>
-            <circle cx="18" cy="18" r="4" stroke-width="1.5"></circle>
-            <path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path>
-          </svg></span>
+        style="width: 140px; height: 140px; border-radius: 50%; background-color: var(--surface-high); border: 2px solid var(--neon); display: flex; align-items: center; justify-content: center; position: relative; padding: 16px; box-sizing: border-box; z-index: 2;">
+        <img src="logo.png" alt="Life Journey Pickleball Logo" style="width: 100%; height: 100%; object-fit: contain; animation: pulse 2.5s infinite ease-in-out;" fetchpriority="high">
       </div>
       <div
-        style="position: absolute; width: 114px; height: 114px; border-radius: 50%; border: 1px dashed var(--neon); opacity: 0.3; animation: spin 15s linear infinite;">
+        style="position: absolute; width: 164px; height: 164px; border-radius: 50%; border: 1.5px dashed var(--neon); opacity: 0.35; animation: spin 20s linear infinite; z-index: 1;">
       </div>
     </div>
 
