@@ -1540,6 +1540,13 @@ function renderDashboard(activeCourts) {
   const court = activeCourts.find(c => c.courtNumber === appState.selectedCourtNumber) || activeCourts[0];
   const totalRounds = court ? court.matches.length : 0;
 
+  const completedMatches = court && court.matches ? court.matches.filter(m => m.isCompleted).length : 0;
+  const totalMatches = court && court.matches ? court.matches.length : 0;
+  const progressTextEl = document.getElementById('dashboard-header-progress-text');
+  if (progressTextEl) {
+    progressTextEl.textContent = `${completedMatches} / ${totalMatches}`;
+  }
+
   const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
 
   // Update Stage 2 UI layout and text
