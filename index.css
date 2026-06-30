@@ -346,7 +346,7 @@ header.app-bar h1 {
 }
 
 #dashboard-title {
-  font-size: clamp(20px, 6vw, 28px);
+  font-size: clamp(18px, 5.5vw, 26px);
   font-weight: 800;
   line-height: 1.2;
   margin: 0;
@@ -358,7 +358,7 @@ header.app-bar h1 {
 
 @media (max-width: 480px) {
   .dashboard-header {
-    padding-right: 56px; /* Avoid overlapping with fixed theme toggle */
+    padding-right: 36px; /* Optimized to maximize space while avoiding theme toggle overlap */
     margin-bottom: 16px;
     gap: 12px;
   }
