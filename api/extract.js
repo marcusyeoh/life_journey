@@ -166,6 +166,7 @@ function proxyGemini(apiKey, clientPayload, clientRes) {
             type: "OBJECT",
             properties: {
               chain_of_thought: { type: "STRING" },
+              layout_type: { type: "STRING" },
               first_row_ymin: { type: "INTEGER" },
               players: {
                 type: "ARRAY",
@@ -187,7 +188,7 @@ function proxyGemini(apiKey, clientPayload, clientRes) {
                 }
               }
             },
-            required: ["chain_of_thought", "first_row_ymin", "players"]
+            required: ["chain_of_thought", "layout_type", "first_row_ymin", "players"]
           }
         }
       });

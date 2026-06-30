@@ -86,7 +86,7 @@
     rel="stylesheet">
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="index.css?v=2.5">
+  <link rel="stylesheet" href="index.css?v=2.56">
   <script>
     // Initialize theme based on preference, defaulting to light mode (daylight)
     (function () {
@@ -442,15 +442,15 @@
 
   <!-- SCREEN 3: TOURNAMENT DASHBOARD -->
   <main id="view-dashboard" class="screen-view view-hidden">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; width: 100%; gap: 16px;">
-      <div style="display: flex; align-items: center; gap: 14px; min-width: 0;">
+    <div class="dashboard-header">
+      <div class="dashboard-header-left">
         <button class="icon-btn" id="inline-back-dashboard"
           style="display: none; background: var(--surface); border: 1px solid var(--surface-high); border-radius: 50%; width: 40px; height: 40px; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
           <span class="material-symbols-outlined" style="font-size: 20px; color: var(--text-primary);">arrow_back</span>
         </button>
         <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
-        <div style="min-width: 0;">
-          <h2 class="title-lg" id="dashboard-title" style="margin: 0; line-height: 1.2;">Group Stage Dashboard</h2>
+        <div class="dashboard-title-container">
+          <h2 class="title-lg" id="dashboard-title">Group Stage Dashboard</h2>
           <div id="dashboard-stage-badge" style="display: none; margin-top: 6px;">
             <span class="label-caps"
               style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">FINAL
@@ -460,7 +460,7 @@
       </div>
       
       <!-- Real-time Court Match Progress Badge -->
-      <div id="dashboard-header-progress" style="display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; padding: 6px 12px; background: var(--surface-high); border: 1px solid var(--border-gloss); border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin-right: 52px;">
+      <div id="dashboard-header-progress" style="display: none; flex-direction: column; align-items: flex-end; gap: 3px; flex-shrink: 0; padding: 6px 12px; background: var(--surface-high); border: 1px solid var(--border-gloss); border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin-right: 52px;">
         <span style="font-size: 9px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;">Matches</span>
         <span style="font-size: 15px; font-weight: 800; color: var(--neon); line-height: 1.1;" id="dashboard-header-progress-text">0 / 0</span>
       </div>
@@ -525,16 +525,7 @@
       -->
     </div>
 
-    <!-- On Deck Banner (Next Round list) -->
-    <div class="next-round-banner neon-glow" id="dashboard-on-deck-banner">
-      <div class="next-round-header">
-        <span class="material-symbols-outlined">schedule</span>
-        <span class="next-round-label">NEXT GAME</span>
-      </div>
-      <div class="next-round-matchup" id="dashboard-on-deck-names">
-        <!-- Injected via JS -->
-      </div>
-    </div>
+
     <!-- Live Leaderboard Section (Hidden) -->
     <div class="leaderboard-title-row" style="display: none;">
       <span class="material-symbols-outlined">leaderboard</span>
@@ -980,7 +971,7 @@
   </div>
 
   <!-- Application Script -->
-  <script type="module" src="app.js?v=2.48"></script>
+  <script type="module" src="app.js?v=2.56"></script>
 </body>
 
 </html>

@@ -1462,20 +1462,26 @@ function getCleanPlayerName(name) {
 // Get initials (up to 2 characters)
 function getPlayerInitials(name) {
   if (!name) return '';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].substring(0, 2);
-  return (parts[0][0] + parts[parts.length - 1][0]).substring(0, 2);
+  let clean = name.replace(/\+\s*\d+/g, '').replace(/\(.*\)/g, '').trim();
+  const parts = clean.split(/\s+/).filter(p => p.length > 0);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) {
+    return parts[0][0].toUpperCase();
+  }
+  const firstLetter = parts[0][0];
+  const lastLetter = parts[parts.length - 1][0];
+  return (firstLetter + lastLetter).toUpperCase();
 }
 
-// Pick a beautiful color gradient based on player name hash
+// Pick a beautiful color gradient based on player name hash (using CSS variables for dynamic themes)
 function getAvatarGradient(name) {
   const colors = [
-    'linear-gradient(135deg, #FF5E3A 0%, #FF2A68 100%)', // red/pink
-    'linear-gradient(135deg, #FF9500 0%, #FF5E3A 100%)', // orange
-    'linear-gradient(135deg, #5AC8FA 0%, #34AADC 100%)', // light blue
-    'linear-gradient(135deg, #4CD964 0%, #5AD8A6 100%)', // green
-    'linear-gradient(135deg, #5856D6 0%, #C86DD7 100%)', // purple
-    'linear-gradient(135deg, #1D62F0 0%, #1AD6FD 100%)', // cyan
+    'var(--avatar-grad-0)', // red/pink glass
+    'var(--avatar-grad-1)', // orange/gold glass
+    'var(--avatar-grad-2)', // blue glass
+    'var(--avatar-grad-3)', // green glass
+    'var(--avatar-grad-4)', // purple glass
+    'var(--avatar-grad-5)', // cyan glass
   ];
   if (!name) return colors[0];
   let hash = 0;
@@ -1811,40 +1817,8 @@ function renderDashboard(activeCourts) {
       });
     }
 
-    // 4. Render Next Round info
-    const deckNames = document.getElementById('dashboard-on-deck-names');
-    if (matchIndex + 1 < court.matches.length) {
-      const nextMatch = court.matches[matchIndex + 1];
-      deckNames.innerHTML = `
-        <div class="next-team" style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            ${renderPlayerAvatar(nextMatch.team1Player1, 20)}
-            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${formatPlayerName(nextMatch.team1Player1.name)}</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            ${renderPlayerAvatar(nextMatch.team1Player2, 20)}
-            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px;">${formatPlayerName(nextMatch.team1Player2.name)}</span>
-          </div>
-        </div>
-        <div class="next-vs">VS</div>
-        <div class="next-team" style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
-            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px; text-align: right;">${formatPlayerName(nextMatch.team2Player1.name)}</span>
-            ${renderPlayerAvatar(nextMatch.team2Player1, 20)}
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
-            <span style="font-weight: 700; color: var(--text-primary); font-size: 14px; text-align: right;">${formatPlayerName(nextMatch.team2Player2.name)}</span>
-            ${renderPlayerAvatar(nextMatch.team2Player2, 20)}
-          </div>
-        </div>
-      `;
-      document.getElementById('dashboard-on-deck-banner').style.display = 'flex';
-    } else {
-      document.getElementById('dashboard-on-deck-banner').style.display = 'none';
-    }
   } else {
     matchCard.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No matches generated for this game.</p>';
-    document.getElementById('dashboard-on-deck-banner').style.display = 'none';
   }
 
   // 5. Render Leaderboard Items sorted descending
@@ -3676,55 +3650,32 @@ function convertFileToBase64(file) {
   });
 }
 
+
 async function extractPlayersAndDUPRFromImages(imageDataList) {
-  appState.avatars = {}; // Clear old/stale avatar mappings before starting a fresh extraction
+  appState.avatars = {};
   const savedKey = localStorage.getItem('ai_api_key') || '';
   const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
   const base64Images = imageDataList.map(img => img.base64);
 
-  const firstImage = imageDataList[0];
-  const canvasWidth = firstImage && firstImage.canvas ? firstImage.canvas.width : 375;
-  const canvasHeight = firstImage && firstImage.canvas ? firstImage.canvas.height : 1500;
+  const promptText = `You are a highly accurate pickleball registration and leaderboard transcription AI. Your task is to analyze the screenshot(s) and extract player names and DUPR ratings.
 
-  const promptText = `You are a highly accurate pickleball registration AI. Your task is to extract player names, DUPR ratings, and grid positions from the provided screenshot(s) of player profiles.
-
-IMAGE DIMENSIONS:
-- Width: ${canvasWidth} pixels
-- Height: ${canvasHeight} pixels
-
-GRID FORMAT & ALIGNMENT EXPLANATION:
-- The screenshot displays participants in a regular grid of 4 columns.
-- Systematic grouping: Every participant profile is an isolated vertical group containing:
-  1. A circular profile picture avatar at the top.
-  2. The player's name directly below the avatar.
-  3. Optional green text 'Friend' or yellow icon 'Reserved' below the name.
-  4. Optional blue 'DUPR X.XXX' or 'DUPR X' badge at the bottom of the group.
-
-CRITICAL NAME INTEGRITY & DETECTION RULES:
+CRITICAL TRANSCRIPTION RULES:
 - Count the player profiles dynamically. A screenshot can contain any number of players. Do NOT assume a fixed or hardcoded number of players.
-- IGNORE empty placeholder/invitation slots. If a slot contains a grey circle, dashed circle, or has no player name text displayed directly below it, it is a placeholder slot. Do NOT transcribe it.
-- Combine multi-line names into one player's full name (e.g. 'Adrian\nLow' -> 'Adrian Low').
+- DO NOT ignore guest players or "+1" players. Guest players have a real profile photo or name text, and are active participants. You must transcribe them.
+- IGNORE empty placeholder/invitation slots (grey circles/dashed circles with no player name text below).
+- Combine multi-line names into one player's full name.
 
-GRID INDEXING & FIRST ROW OFFSET:
-- Detect the y-coordinate (in pixels, 0 = top, ${canvasHeight} = bottom) of the top of the very first player avatar row visible in the image. Return this single value as 'first_row_ymin'.
-  * Note: AJ is in the very first row. If the top header/tabs are visible, AJ's avatar top is at y = 280. If the header is scrolled out of view, the first visible avatar starts at y = 20.
-  * CRITICAL: Do NOT confuse the "Game 1", "Game 2", etc. navigation tabs at the very top of the screen with player avatars. The player avatars only start below the tab bar.
-- For each player, determine their 0-based 'grid_row' index (0 for the first row, 1 for the second row, etc.) and 'grid_column' index (0, 1, 2, or 3 for the columns from left to right).
-
-CRITICAL ALIGNMENT RULES:
-- A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name in that column.
+CRITICAL DUPR ALIGNMENT RULES:
+- A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name.
 - If no valid numeric DUPR badge or rating exists, assign a default rating of 2.50.
 
 Respond ONLY with a JSON object in this format:
 {
-  "first_row_ymin": 280,
+  "chain_of_thought": "Write your detailed step-by-step transcription logic...",
   "players": [
     {
       "name": "Player Name",
-      "dupr": 3.754,
-      "image_index": 0,
-      "grid_row": 0,
-      "grid_column": 0
+      "dupr": 3.754
     }
   ]
 }`;
@@ -3779,28 +3730,6 @@ Respond ONLY with a JSON object in this format:
   
   const rawPlayers = parsed.players || [];
 
-  const scaleX = 1;
-  const scaleY = 1;
-
-  let firstRowYmin = Infinity;
-  if (typeof parsed.first_row_ymin === 'number') {
-    firstRowYmin = parsed.first_row_ymin;
-  } else if (typeof parsed.first_row_ymin === 'string') {
-    const parsedVal = parseFloat(parsed.first_row_ymin);
-    if (!isNaN(parsedVal)) {
-      firstRowYmin = parsedVal;
-    }
-  }
-  
-  if (firstRowYmin === Infinity || isNaN(firstRowYmin)) {
-    firstRowYmin = 0.739 * canvasWidth;
-  }
-
-  // Banner-Visible Compensation (Self-Healing Grid Alignment)
-  const headerPresent = firstRowYmin > 0.2 * canvasWidth;
-  const correctedFirstRowYmin = headerPresent ? (0.739 * canvasWidth) : (0.05 * canvasWidth);
-  console.log(`[Avatar Crop] detected firstRowYmin=${firstRowYmin}, headerPresent=${headerPresent}, correctedFirstRowYmin=${correctedFirstRowYmin}`);
-
   const filteredPlayers = rawPlayers.filter(player => {
     if (!player.name) return false;
     const nameTrimmed = player.name.trim().replace(/\s+/g, ' ');
@@ -3836,74 +3765,10 @@ Respond ONLY with a JSON object in this format:
       }
     }
 
-    // Crop avatar if coordinate box is provided or grid positions are available
-    let avatarUrl = '';
-    try {
-      const imgIdx = typeof player.image_index === 'number' ? player.image_index : 0;
-      const targetData = imageDataList[imgIdx] || imageDataList[0];
-      if (targetData) {
-        const canvas = targetData.canvas;
-        const colWidth = canvas.width / 4;
-        const rowHeight = colWidth * 1.831; // Verified ratio 1.831 for Reclub player grid
-        const cropSize = colWidth * 0.65;
-        
-        let col = typeof player.grid_column === 'number' ? player.grid_column : parseInt(player.grid_column);
-        let row = typeof player.grid_row === 'number' ? player.grid_row : parseInt(player.grid_row);
-        
-        if (isNaN(col)) col = undefined;
-        if (isNaN(row)) row = undefined;
-        
-        // Fallback to coordinates if grid indices are not supplied
-        if (typeof col !== 'number' || typeof row !== 'number') {
-          if (player.avatar_box && Array.isArray(player.avatar_box) && player.avatar_box.length === 4) {
-            const yminRaw = player.avatar_box[0] * scaleY;
-            const xminRaw = player.avatar_box[1] * scaleX;
-            if (typeof col !== 'number') {
-              col = Math.max(0, Math.min(3, Math.round(xminRaw / colWidth)));
-            }
-            if (typeof row !== 'number') {
-              row = Math.max(0, Math.round((yminRaw - firstRowYmin) / rowHeight));
-            }
-          } else {
-            col = 0;
-            row = 0;
-          }
-        }
-        
-        // Reconstruct crop coordinates mathematically
-        const relativeColumnCenters = [0.1609, 0.3750, 0.6111, 0.8343];
-        const colCenter = relativeColumnCenters[col] * canvas.width;
-        const xmin = colCenter - cropSize / 2;
-        const ymin = correctedFirstRowYmin + row * rowHeight;
-        
-        const clipXmin = Math.max(0, Math.min(canvas.width - 1, xmin));
-        const clipYmin = Math.max(0, Math.min(canvas.height - 1, ymin));
-        const clipWidth = Math.max(1, Math.min(canvas.width - clipXmin, cropSize));
-        const clipHeight = Math.max(1, Math.min(canvas.height - clipYmin, cropSize));
-        
-        if (clipWidth > 5 && clipHeight > 5) {
-          const cropCanvas = document.createElement('canvas');
-          cropCanvas.width = 64;
-          cropCanvas.height = 64;
-          const cropCtx = cropCanvas.getContext('2d');
-          
-          cropCtx.drawImage(canvas, clipXmin, clipYmin, clipWidth, clipHeight, 0, 0, 64, 64);
-          avatarUrl = cropCanvas.toDataURL('image/jpeg', 0.75);
-          
-          // Store globally
-          const cleanName = player.name.trim().replace(/\s+/g, ' ');
-          if (!appState.avatars) appState.avatars = {};
-          appState.avatars[cleanName] = avatarUrl;
-        }
-      }
-    } catch (cropErr) {
-      console.error("Avatar cropping failed for", player.name, cropErr);
-    }
-
     return {
       name: player.name.trim().replace(/\s+/g, ' '),
       dupr: finalDupr,
-      avatar: avatarUrl
+      avatar: ''
     };
   });
 

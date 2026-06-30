@@ -29,6 +29,21 @@
   --shadow-glass-hover: inset 0 1px 2px rgba(255, 255, 255, 0.25), 
                          0 12px 48px rgba(0, 0, 0, 0.5);
   --modal-loading-text: var(--neon);
+
+  /* Apple Glassmorphism Initial Avatar variables (Dark Mode defaults) */
+  --glass-op: 0.28;
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-text: #ffffff;
+  --glass-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.25), 
+                   0 4px 10px rgba(0, 0, 0, 0.25);
+  
+  /* Dynamic themed translucent glass gradients */
+  --avatar-grad-0: linear-gradient(135deg, rgba(255, 69, 58, var(--glass-op)) 0%, rgba(255, 42, 104, var(--glass-op)) 100%);
+  --avatar-grad-1: linear-gradient(135deg, rgba(255, 149, 0, var(--glass-op)) 0%, rgba(255, 214, 10, var(--glass-op)) 100%);
+  --avatar-grad-2: linear-gradient(135deg, rgba(10, 132, 255, var(--glass-op)) 0%, rgba(90, 200, 250, var(--glass-op)) 100%);
+  --avatar-grad-3: linear-gradient(135deg, rgba(50, 215, 75, var(--glass-op)) 0%, rgba(52, 199, 89, var(--glass-op)) 100%);
+  --avatar-grad-4: linear-gradient(135deg, rgba(94, 92, 230, var(--glass-op)) 0%, rgba(191, 90, 242, var(--glass-op)) 100%);
+  --avatar-grad-5: linear-gradient(135deg, rgba(0, 199, 190, var(--glass-op)) 0%, rgba(100, 210, 255, var(--glass-op)) 100%);
 }
 
 [data-theme="light"] {
@@ -61,6 +76,13 @@
   --shadow-glass-hover: inset 0 1px 2px rgba(255, 255, 255, 1), 
                          0 12px 48px rgba(0, 0, 0, 0.12);
   --modal-loading-text: var(--text-primary);
+
+  /* Apple Glassmorphism Initial Avatar variables (Light Mode overrides) */
+  --glass-op: 0.65;
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-text: #ffffff;
+  --glass-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.65), 
+                   0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 /* Global Reset & Base Styles */
@@ -298,6 +320,62 @@ header.app-bar h1 {
   border: 1.5px solid var(--border-gloss);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+}
+
+/* Dashboard header & title styles */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  width: 100%;
+  gap: 16px;
+}
+
+.dashboard-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dashboard-title-container {
+  min-width: 0;
+  flex: 1;
+}
+
+#dashboard-title {
+  font-size: clamp(20px, 6vw, 28px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  word-break: break-word;
+  transition: font-size 0.2s ease;
+}
+
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding-right: 56px; /* Avoid overlapping with fixed theme toggle */
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+  
+  .dashboard-header-left {
+    gap: 10px;
+  }
+  
+  #view-dashboard .title-logo {
+    width: 44px;
+    height: 44px;
+  }
+  
+  #inline-back-dashboard {
+    width: 36px !important;
+    height: 36px !important;
+  }
 }
 
 .icon-btn {
@@ -606,28 +684,44 @@ input:checked + .slider:before {
 /* Player Entry Screen 2 */
 .horizontal-tabs {
   display: flex;
-  overflow-x: auto;
-  gap: 12px;
-  padding-bottom: 4px;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-top: 16px;
   margin-bottom: 16px;
 }
 
 .tab-chip {
-  flex-shrink: 0;
+  flex: 0 0 calc(50% - 5px); /* 2 columns on mobile by default */
+  min-width: 120px;
   height: 44px;
-  padding: 0 24px;
+  padding: 0 16px;
   border-radius: 22px;
   background-color: var(--surface);
   border: 1px solid var(--surface-high);
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .tab-chip {
+    height: 38px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+}
+
+@media (min-width: 480px) {
+  .tab-chip {
+    flex: 0 0 calc(33.333% - 7px); /* 3 columns on tablet/desktop */
+  }
 }
 
 .tab-chip.active {
@@ -745,16 +839,16 @@ input:checked + .slider:before {
   margin-top: 8px;
   margin-bottom: 20px;
   display: flex;
-  overflow-x: auto;
-  gap: 8px;
-  padding-bottom: 4px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .round-chip {
-  flex-shrink: 0;
-  height: 38px;
-  padding: 0 16px;
-  border-radius: 19px;
+  flex: 0 0 calc(25% - 5px); /* 4 columns on mobile by default */
+  min-width: 70px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 18px;
   background-color: var(--surface);
   color: var(--text-primary);
   font-size: 12px;
@@ -764,6 +858,19 @@ input:checked + .slider:before {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .round-chip {
+    flex: 0 0 calc(33.333% - 4px); /* 3 columns on very small mobile screens */
+  }
+}
+
+@media (min-width: 480px) {
+  .round-chip {
+    flex: 0 0 calc(16.666% - 5px); /* 6 columns on tablet/desktop */
+  }
 }
 
 .round-chip.viewing {
@@ -2368,14 +2475,17 @@ input:checked + .slider:before {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--glass-text);
   font-size: 11px;
-  font-weight: 700;
-  border: 1.5px solid var(--border-gloss);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  font-weight: 800; /* Extra bold for visibility */
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(10px) saturate(190%);
+  -webkit-backdrop-filter: blur(10px) saturate(190%);
   text-transform: uppercase;
   flex-shrink: 0;
-  letter-spacing: -0.2px;
+  letter-spacing: -0.5px; /* Tighter letter spacing for initials */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 /* Clickable Avatar hover transitions */
