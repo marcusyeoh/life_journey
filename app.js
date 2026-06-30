@@ -77,6 +77,9 @@ const appState = {
   }
 };
 
+window.appState = appState;
+window.navigateTo = navigateTo;
+
 let confirmCallback = null;
 let editingCourtNumber = null;
 let debounceTimer = null;
@@ -3650,7 +3653,6 @@ function convertFileToBase64(file) {
   });
 }
 
-
 async function extractPlayersAndDUPRFromImages(imageDataList) {
   appState.avatars = {};
   const savedKey = localStorage.getItem('ai_api_key') || '';
@@ -3659,15 +3661,36 @@ async function extractPlayersAndDUPRFromImages(imageDataList) {
 
   const promptText = `You are a highly accurate pickleball registration and leaderboard transcription AI. Your task is to analyze the screenshot(s) and extract player names and DUPR ratings.
 
+CRITICAL COLUMN ALIGNMENT RULE (DO NOT IGNORE):
+1. The page has 4 distinct vertical columns:
+   - Column 1 (x-range: 0% to 25% of image width)
+   - Column 2 (x-range: 25% to 50% of image width)
+   - Column 3 (x-range: 50% to 75% of image width)
+   - Column 4 (x-range: 75% to 100% of image width)
+2. Every player profile (Avatar, Name, and DUPR badge) is strictly contained within ONE column.
+3. You must verify that the DUPR badge is in the SAME column as the player's name:
+   - "Kris Cherlynn's +1" is in Column 3. The badge "DUPR 3.544" is in Column 4 (under "Ad Lim"). Thus, "Kris Cherlynn's +1" has NO badge in Column 3 and must be assigned 2.50.
+   - "Sana Sean's +1" is in Column 1. The badge "DUPR 3.529" is in Column 2 (under "adam"). Thus, "Sana Sean's +1" has NO badge in Column 1 and must be assigned 2.50.
+4. In your chain of thought, explicitly write down the column index (1, 2, 3, or 4) for every name and every badge to ensure they match before compiling the final players array.
+
+CRITICAL NAME CLEANUP RULES:
+- Remove status labels: Strip out words like "Friend", "Paid", "Going", "Guest", "Invited", "Checked in", "Member" or similar registration/membership status labels from the player's name. For example:
+  * "Yen Friend" should be transcribed as "Yen".
+  * "Kai Xuan Friend" should be transcribed as "Kai Xuan".
+  * "Wen Yueh Friend" should be transcribed as "Wen Yueh".
+- Note: Guest indicators like "+1" (e.g., "Kris Cherlynn's +1" or "Sana Sean's +1") are guest identifiers and MUST be kept as part of the name.
+
 CRITICAL TRANSCRIPTION RULES:
 - Count the player profiles dynamically. A screenshot can contain any number of players. Do NOT assume a fixed or hardcoded number of players.
-- DO NOT ignore guest players or "+1" players. Guest players have a real profile photo or name text, and are active participants. You must transcribe them.
+- DO NOT ignore guest players or "+1" players (e.g., "Kris Cherlynn's +1"). Guest players are active participants and must be transcribed.
 - IGNORE empty placeholder/invitation slots (grey circles/dashed circles with no player name text below).
 - Combine multi-line names into one player's full name.
+- COMPLETE LIST VERIFICATION: Verify that EVERY player profile you identified in the grid is included in the final "players" array. Count the number of players in the final list and make sure it matches the count of unique players you transcribed.
 
-CRITICAL DUPR ALIGNMENT RULES:
+CRITICAL DUPR ALIGNMENT & PREVENTING OFFSET RULES:
 - A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name.
-- If no valid numeric DUPR badge or rating exists, assign a default rating of 2.50.
+- If no valid numeric DUPR badge or rating exists directly below a player's name (e.g., they have no badge, or the badge says "DUPR NR"), assign a default rating of 2.50.
+- AVOID SHIFTING OFFSET ERROR: Do not assign a DUPR rating from an adjacent player's column/card. When scanning by columns, verify vertical alignment of the name and the DUPR badge. If Player A has no badge, and Player B (in the column to the right of Player A) has a DUPR badge of 3.544, then Player A gets 2.50 and Player B gets 3.544. Under no circumstances should Player A get 3.544.
 
 Respond ONLY with a JSON object in this format:
 {
@@ -3692,6 +3715,9 @@ Respond ONLY with a JSON object in this format:
       }
     }))
   ];
+
+  console.log(`[AI Auto-Fill] Calling /api/extract with provider: ${savedProvider}`);
+  console.log(`[AI Auto-Fill] Active prompt sent to API:\n`, promptText);
 
   const response = await fetch("/api/extract", {
     method: "POST",

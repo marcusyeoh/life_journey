@@ -121,7 +121,13 @@ function handleStaticFiles(pathname, res) {
     const ext = path.extname(absolutePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    res.writeHead(200, { 'Content-Type': contentType });
+    // Disable caching for local development to ensure modified app.js is always loaded instantly
+    res.writeHead(200, { 
+      'Content-Type': contentType,
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     const stream = fs.createReadStream(absolutePath);
     stream.pipe(res);
   });
@@ -285,30 +291,21 @@ function proxyGemini(apiKey, clientPayload, clientRes) {
         responseMimeType: 'application/json',
         responseSchema: {
           type: "OBJECT",
-            properties: {
-              chain_of_thought: { type: "STRING" },
-              first_row_ymin: { type: "INTEGER" },
-              players: {
-                type: "ARRAY",
-                items: {
-                  type: "OBJECT",
-                  properties: {
-                    name: { type: "STRING" },
-                    transcribed_subtext: { type: "STRING" },
-                    dupr: { type: "NUMBER" },
-                    image_index: { type: "INTEGER" },
-                    grid_row: { type: "INTEGER" },
-                    grid_column: { type: "INTEGER" },
-                    avatar_box: {
-                      type: "ARRAY",
-                      items: { type: "NUMBER" }
-                    }
-                  },
-                  required: ["name", "transcribed_subtext", "dupr", "image_index", "grid_row", "grid_column", "avatar_box"]
-                }
+          properties: {
+            chain_of_thought: { type: "STRING" },
+            players: {
+              type: "ARRAY",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  name: { type: "STRING" },
+                  dupr: { type: "NUMBER" }
+                },
+                required: ["name", "dupr"]
               }
-            },
-            required: ["chain_of_thought", "first_row_ymin", "players"]
+            }
+          },
+          required: ["chain_of_thought", "players"]
         }
       }
     });

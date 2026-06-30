@@ -166,29 +166,19 @@ function proxyGemini(apiKey, clientPayload, clientRes) {
             type: "OBJECT",
             properties: {
               chain_of_thought: { type: "STRING" },
-              layout_type: { type: "STRING" },
-              first_row_ymin: { type: "INTEGER" },
               players: {
                 type: "ARRAY",
                 items: {
                   type: "OBJECT",
                   properties: {
                     name: { type: "STRING" },
-                    transcribed_subtext: { type: "STRING" },
-                    dupr: { type: "NUMBER" },
-                    image_index: { type: "INTEGER" },
-                    grid_row: { type: "INTEGER" },
-                    grid_column: { type: "INTEGER" },
-                    avatar_box: {
-                      type: "ARRAY",
-                      items: { type: "NUMBER" }
-                    }
+                    dupr: { type: "NUMBER" }
                   },
-                  required: ["name", "transcribed_subtext", "dupr", "image_index", "grid_row", "grid_column", "avatar_box"]
+                  required: ["name", "dupr"]
                 }
               }
             },
-            required: ["chain_of_thought", "layout_type", "first_row_ymin", "players"]
+            required: ["chain_of_thought", "players"]
           }
         }
       });
