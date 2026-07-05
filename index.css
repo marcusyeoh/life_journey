@@ -1500,8 +1500,45 @@ input:checked + .slider:before {
 }
 
 .stepper-btn:active {
-  transform: scale(0.95);
-  background-color: var(--surface-highest);
+  transform: scale(0.92);
+}
+
+.winner-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 214, 10, 0.3);
+  background: linear-gradient(135deg, rgba(255, 214, 10, 0.1) 0%, rgba(255, 149, 0, 0.2) 100%);
+  color: var(--neon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.winner-btn .material-symbols-outlined {
+  font-size: 20px;
+  font-variation-settings: 'FILL' 0, 'wght' 400;
+  transition: all 0.3s ease;
+}
+
+.winner-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 214, 10, 0.2) 0%, rgba(255, 149, 0, 0.3) 100%);
+  border-color: var(--neon);
+  box-shadow: 0 0 15px rgba(255, 214, 10, 0.2);
+  transform: translateY(-2px);
+}
+
+.winner-btn:hover .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1, 'wght' 500;
+  transform: scale(1.1);
+}
+
+.winner-btn:active {
+  transform: scale(0.92);
 }
 
 .stepper-value {
@@ -2545,6 +2582,11 @@ input:checked + .slider:before {
   }
 
   .stepper-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .winner-btn {
     width: 40px;
     height: 40px;
   }

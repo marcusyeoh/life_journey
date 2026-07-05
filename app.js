@@ -2317,6 +2317,14 @@ function setupEventListeners() {
     });
   }
 
+  const winnerBtn1 = document.getElementById('winner-btn-1');
+  if (winnerBtn1) {
+    winnerBtn1.addEventListener('click', () => {
+      appState.modal.score1 = 15;
+      render();
+    });
+  }
+
   const stepperMinus1 = document.getElementById('stepper-minus-1');
   if (stepperMinus1) {
     stepperMinus1.addEventListener('click', () => {
@@ -2334,6 +2342,14 @@ function setupEventListeners() {
         appState.modal.score2++;
         render();
       }
+    });
+  }
+
+  const winnerBtn2 = document.getElementById('winner-btn-2');
+  if (winnerBtn2) {
+    winnerBtn2.addEventListener('click', () => {
+      appState.modal.score2 = 15;
+      render();
     });
   }
 
@@ -3112,19 +3128,23 @@ function launchFinalStageAutomatically() {
         name: p.name,
         stage1Score: p.totalScore,
         courtNumber: court.courtNumber,
-        courtRank: idx + 1
+        courtRank: idx + 1,
+        pointsPlayed: p.pointsPlayed,
+        initialIndex: p.initialIndex
       });
     });
   });
 
-  // Seeding sort order:
-  // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
-  // 2. Higher qualifying score differential breaks ties
+  // Seeding sort order (EXCEL METHOD):
+  // 1. Higher qualifying score (totalScore) first
+  // 2. Lower court rank as tie-breaker
+  // 3. Higher points played as 2nd tie-breaker
+  // 4. Lower initial index as 3rd tie-breaker
   allPlayers.sort((a, b) => {
-    if (a.courtRank !== b.courtRank) {
-      return a.courtRank - b.courtRank;
-    }
-    return b.stage1Score - a.stage1Score;
+    if (b.stage1Score !== a.stage1Score) return b.stage1Score - a.stage1Score;
+    if (a.courtRank !== b.courtRank) return a.courtRank - b.courtRank;
+    if (b.pointsPlayed !== a.pointsPlayed) return b.pointsPlayed - a.pointsPlayed;
+    return a.initialIndex - b.initialIndex;
   });
 
   // Partition into optimal tier sizes for Stage 2
@@ -3209,19 +3229,23 @@ function advanceToStage2() {
         name: p.name,
         stage1Score: p.totalScore,
         courtNumber: court.courtNumber,
-        courtRank: idx + 1
+        courtRank: idx + 1,
+        pointsPlayed: p.pointsPlayed,
+        initialIndex: p.initialIndex
       });
     });
   });
 
-  // Seeding sort order:
-  // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
-  // 2. Higher qualifying score differential breaks ties
+  // Seeding sort order (EXCEL METHOD):
+  // 1. Higher qualifying score (totalScore) first
+  // 2. Lower court rank as tie-breaker
+  // 3. Higher points played as 2nd tie-breaker
+  // 4. Lower initial index as 3rd tie-breaker
   allPlayers.sort((a, b) => {
-    if (a.courtRank !== b.courtRank) {
-      return a.courtRank - b.courtRank;
-    }
-    return b.stage1Score - a.stage1Score;
+    if (b.stage1Score !== a.stage1Score) return b.stage1Score - a.stage1Score;
+    if (a.courtRank !== b.courtRank) return a.courtRank - b.courtRank;
+    if (b.pointsPlayed !== a.pointsPlayed) return b.pointsPlayed - a.pointsPlayed;
+    return a.initialIndex - b.initialIndex;
   });
 
   // Partition into optimal tier sizes for Stage 2
@@ -3661,36 +3685,24 @@ async function extractPlayersAndDUPRFromImages(imageDataList) {
 
   const promptText = `You are a highly accurate pickleball registration and leaderboard transcription AI. Your task is to analyze the screenshot(s) and extract player names and DUPR ratings.
 
-CRITICAL COLUMN ALIGNMENT RULE (DO NOT IGNORE):
-1. The page has 4 distinct vertical columns:
-   - Column 1 (x-range: 0% to 25% of image width)
-   - Column 2 (x-range: 25% to 50% of image width)
-   - Column 3 (x-range: 50% to 75% of image width)
-   - Column 4 (x-range: 75% to 100% of image width)
-2. Every player profile (Avatar, Name, and DUPR badge) is strictly contained within ONE column.
-3. You must verify that the DUPR badge is in the SAME column as the player's name:
-   - "Kris Cherlynn's +1" is in Column 3. The badge "DUPR 3.544" is in Column 4 (under "Ad Lim"). Thus, "Kris Cherlynn's +1" has NO badge in Column 3 and must be assigned 2.50.
-   - "Sana Sean's +1" is in Column 1. The badge "DUPR 3.529" is in Column 2 (under "adam"). Thus, "Sana Sean's +1" has NO badge in Column 1 and must be assigned 2.50.
-4. In your chain of thought, explicitly write down the column index (1, 2, 3, or 4) for every name and every badge to ensure they match before compiling the final players array.
+CRITICAL TRACK-MAPPING LOGIC:
+1. **Calibrate Tracks**: Use the first row to define 4 vertical tracks:
+   - Track 1: Below "Sean"
+   - Track 2: Below "Andy C."
+   - Track 3: Below "Neve"
+   - Track 4: Below "Tang lien"
+2. **Track Isolation**: A player's Name and their DUPR Badge MUST be in the same vertical Track. 
+3. **LANE-JUMPING IS FORBIDDEN**: You are strictly forbidden from assigning a badge found in Track 4 (e.g., the 3.544 badge) to a player in Track 3 (e.g., "Kris Cherlynn's +1").
+4. **Mandatory Logic Step**: In your chain of thought, for every player, you MUST explicitly state: "Name [X] is in Track [N]. Badge found in Track [N]? [Yes/No]". If No, assign **2.50**.
 
-CRITICAL NAME CLEANUP RULES:
-- Remove status labels: Strip out words like "Friend", "Paid", "Going", "Guest", "Invited", "Checked in", "Member" or similar registration/membership status labels from the player's name. For example:
-  * "Yen Friend" should be transcribed as "Yen".
-  * "Kai Xuan Friend" should be transcribed as "Kai Xuan".
-  * "Wen Yueh Friend" should be transcribed as "Wen Yueh".
-- Note: Guest indicators like "+1" (e.g., "Kris Cherlynn's +1" or "Sana Sean's +1") are guest identifiers and MUST be kept as part of the name.
+NAME RULES:
+- **Merge Multi-line**: Join "Kris" + "Cherlynn's +1" -> "Kris Cherlynn's +1".
+- **Preserve Guests**: KEEP identifiers like "+1" and possessive names (e.g., "Sana Sean's +1").
+- **Strip Labels**: Remove "Friend", "Paid", "Going", "Invited".
 
-CRITICAL TRANSCRIPTION RULES:
-- Count the player profiles dynamically. A screenshot can contain any number of players. Do NOT assume a fixed or hardcoded number of players.
-- DO NOT ignore guest players or "+1" players (e.g., "Kris Cherlynn's +1"). Guest players are active participants and must be transcribed.
-- IGNORE empty placeholder/invitation slots (grey circles/dashed circles with no player name text below).
-- Combine multi-line names into one player's full name.
-- COMPLETE LIST VERIFICATION: Verify that EVERY player profile you identified in the grid is included in the final "players" array. Count the number of players in the final list and make sure it matches the count of unique players you transcribed.
-
-CRITICAL DUPR ALIGNMENT & PREVENTING OFFSET RULES:
-- A player has a DUPR rating ONLY if there is a blue DUPR badge directly underneath their name.
-- If no valid numeric DUPR badge or rating exists directly below a player's name (e.g., they have no badge, or the badge says "DUPR NR"), assign a default rating of 2.50.
-- AVOID SHIFTING OFFSET ERROR: Do not assign a DUPR rating from an adjacent player's column/card. When scanning by columns, verify vertical alignment of the name and the DUPR badge. If Player A has no badge, and Player B (in the column to the right of Player A) has a DUPR badge of 3.544, then Player A gets 2.50 and Player B gets 3.544. Under no circumstances should Player A get 3.544.
+VERIFICATION:
+- Check Row 2: "Kris Cherlynn's +1" is in Track 3. The 3.544 badge is in Track 4. Therefore, Kris gets 2.50. "Ad Lim" is in Track 4. He gets the 3.544 badge.
+- Check Row 5: "Sana Sean's +1" is in Track 1. The 3.529 badge is in Track 2. Therefore, Sana gets 2.50.
 
 Respond ONLY with a JSON object in this format:
 {
@@ -3727,7 +3739,7 @@ Respond ONLY with a JSON object in this format:
       "X-AI-Provider": savedProvider
     },
     body: JSON.stringify({
-      model: savedProvider === 'openai' ? 'gpt-4o' : 'gemini-2.5-flash',
+      model: savedProvider === 'openai' ? 'gpt-4o' : 'gemini-3.5-flash',
       messages: [
         {
           role: "user",
