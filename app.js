@@ -3683,30 +3683,50 @@ async function extractPlayersAndDUPRFromImages(imageDataList) {
   const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
   const base64Images = imageDataList.map(img => img.base64);
 
-  const promptText = `You are a highly accurate pickleball registration and leaderboard transcription AI. Your task is to analyze the screenshot(s) and extract player names and DUPR ratings.
+  const promptText = `You are a highly accurate pickleball registration and leaderboard transcription AI. Your task is to extract player names and DUPR ratings from the provided screenshot of player profiles.
 
-CRITICAL TRACK-MAPPING LOGIC:
-1. **Calibrate Tracks**: Use the first row to define 4 vertical tracks:
-   - Track 1: Below "Sean"
-   - Track 2: Below "Andy C."
-   - Track 3: Below "Neve"
-   - Track 4: Below "Tang lien"
-2. **Track Isolation**: A player's Name and their DUPR Badge MUST be in the same vertical Track. 
-3. **LANE-JUMPING IS FORBIDDEN**: You are strictly forbidden from assigning a badge found in Track 4 (e.g., the 3.544 badge) to a player in Track 3 (e.g., "Kris Cherlynn's +1").
-4. **Mandatory Logic Step**: In your chain of thought, for every player, you MUST explicitly state: "Name [X] is in Track [N]. Badge found in Track [N]? [Yes/No]". If No, assign **2.50**.
+To ensure 100% accuracy and prevent vertical shifting or column alignment errors, you MUST follow this programmatic execution loop:
 
-NAME RULES:
-- **Merge Multi-line**: Join "Kris" + "Cherlynn's +1" -> "Kris Cherlynn's +1".
-- **Preserve Guests**: KEEP identifiers like "+1" and possessive names (e.g., "Sana Sean's +1").
-- **Strip Labels**: Remove "Friend", "Paid", "Going", "Invited".
+=========================================
+LOOP STEP 1: COLUMN/TRACK CALIBRATION
+=========================================
+1. Locate the very first row of players at the top of the grid.
+2. Identify the names of these 4 players from left to right.
+3. Define the 4 vertical tracks/columns based on these 4 player positions:
+   - Track 1: Below the 1st player (leftmost column)
+   - Track 2: Below the 2nd player
+   - Track 3: Below the 3rd player
+   - Track 4: Below the 4th player (rightmost column)
 
-VERIFICATION:
-- Check Row 2: "Kris Cherlynn's +1" is in Track 3. The 3.544 badge is in Track 4. Therefore, Kris gets 2.50. "Ad Lim" is in Track 4. He gets the 3.544 badge.
-- Check Row 5: "Sana Sean's +1" is in Track 1. The 3.529 badge is in Track 2. Therefore, Sana gets 2.50.
+=========================================
+LOOP STEP 2: SYSTEMATIC TRANSCRIPTION LOOP
+=========================================
+Iterate through the grid systematically row-by-row (from top to bottom), and for each row, loop through columns 1 to 4 (from left to right).
+
+For each grid slot [Row R, Column C]:
+1. **Identify**: Check if there is an active player profile card.
+   - Ignore empty placeholder/invitation slots (e.g. slots showing a grey/dashed circle, '+', 'Add Player', or 'Invite').
+2. **Extract Name**: Read the player's name.
+   - Join names spanning multiple lines (e.g. "Kris" + "Cherlynn's +1" -> "Kris Cherlynn's +1").
+   - Strip status labels like "Friend", "Paid", "Going", "Invited", "Co-host".
+   - Keep guest indicators like "+1".
+3. **Isolate Track & Find DUPR Badge**:
+   - Locate the blue DUPR badge for the player.
+   - CRITICAL ALIGNMENT RULE: The DUPR badge MUST be directly underneath the player's name within the same vertical Track C.
+   - LANE-JUMPING IS STRICTLY FORBIDDEN: If a player is in Track 3 and has no badge, and there is a badge (e.g., 3.544) in Track 4 under a player in Track 4, the Track 3 player gets the default 2.50. You must never assign a badge from an adjacent column.
+   - Default: If no valid blue DUPR rating badge exists directly below the player's name in their track, assign a default rating of 2.50.
+
+=========================================
+LOOP STEP 3: SELF-VERIFICATION LOOP
+=========================================
+Before outputting, loop through your transcribed players list and verify:
+1. Did you skip any active player profile visible in the grid?
+2. Did you duplicate any player?
+3. For every player assigned a non-2.50 DUPR rating, is that rating badge vertically aligned with their name in the screenshot?
 
 Respond ONLY with a JSON object in this format:
 {
-  "chain_of_thought": "Write your detailed step-by-step transcription logic...",
+  "chain_of_thought": "Write your detailed step-by-step transcription and alignment verification logic for each row/column...",
   "players": [
     {
       "name": "Player Name",
