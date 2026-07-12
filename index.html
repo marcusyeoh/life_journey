@@ -414,9 +414,9 @@
       </button>
       <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
       <div class="flex-col">
-        <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">STAGE 2 ALIGNMENT</p>
-        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Final Stage Seeding</h2>
-        <p class="subtitle-md" style="margin: 4px 0 0 0;">Review how players have been seeded based on Group Stage court
+        <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">ROUND 2 ALIGNMENT</p>
+        <h2 class="title-lg" style="margin: 0; line-height: 1.2;">Round 2 Seeding</h2>
+        <p class="subtitle-md" style="margin: 4px 0 0 0;">Review how players have been seeded based on Round 1 court
           rank and scores. Players are partitioned into Gold, Silver, and Bronze tiers.</p>
       </div>
     </div>
@@ -433,7 +433,7 @@
     <div class="sticky-bottom-bar">
       <div class="sticky-bottom-bar-content">
         <button class="btn-primary neon-glow neon-glow-active" id="btn-confirm-stage2" style="border-radius: 32px;">
-          Confirm & Start Final Stage
+          Confirm & Start Round 2
           <span class="material-symbols-outlined">military_tech</span>
         </button>
       </div>
@@ -450,11 +450,10 @@
         </button>
         <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
         <div class="dashboard-title-container">
-          <h2 class="title-lg" id="dashboard-title">Group Stage Dashboard</h2>
+          <h2 class="title-lg" id="dashboard-title">Round 1 Dashboard</h2>
           <div id="dashboard-stage-badge" style="display: none; margin-top: 6px;">
             <span class="label-caps"
-              style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">FINAL
-              STAGE</span>
+              style="background-color: var(--neon); color: var(--bg); padding: 4px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; border: 1px solid var(--neon);">ROUND 2</span>
           </div>
         </div>
       </div>
@@ -472,15 +471,14 @@
       <div style="display: flex; align-items: center; gap: 12px;">
         <span class="material-symbols-outlined" id="dashboard-advance-icon"
           style="color: var(--neon); animation: pulse 1s infinite;">celebration</span>
-        <h4 id="dashboard-advance-title" style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Group
-          Stage Completed!</h4>
+        <h4 id="dashboard-advance-title" style="color: var(--neon); font-size: 16px; font-weight: 800; margin: 0;">Round 1 Completed!</h4>
       </div>
       <p class="subtitle-md" id="dashboard-advance-desc" style="margin: 0;">All qualifying matches across all courts
         have been completed. Seeding tiers are ready!</p>
       <button class="add-players-btn neon-glow-active" id="btn-dashboard-advance"
         style="border-radius: 12px; width: 100%;">
         <span class="material-symbols-outlined">double_arrow</span>
-        <span id="btn-dashboard-advance-text">Advance to Final Stage</span>
+        <span id="btn-dashboard-advance-text">Advance to Round 2</span>
       </button>
     </div>
 
@@ -529,7 +527,7 @@
     <!-- Live Leaderboard Section (Hidden) -->
     <div class="leaderboard-title-row" style="display: none;">
       <span class="material-symbols-outlined">leaderboard</span>
-      <h3 id="old-leaderboard-title-text">Live Leaderboard (Group Stage)</h3>
+      <h3 id="old-leaderboard-title-text">Live Leaderboard (Round 1)</h3>
     </div>
 
     <!-- Leaderboard rankings card (Hidden) -->
@@ -559,7 +557,7 @@
     <!-- Standings Grid Section (Now Leaderboard) -->
     <div class="leaderboard-title-row" style="margin-top: 32px;" id="standings-grid-title">
       <span class="material-symbols-outlined">leaderboard</span>
-      <h3 id="leaderboard-title-text">Live Leaderboard (Group Stage)</h3>
+      <h3 id="leaderboard-title-text">Live Leaderboard (Round 1)</h3>
     </div>
 
     <div class="card standings-grid-card" style="margin-top: 16px; padding: 16px 20px; margin-bottom: 24px;">
@@ -865,14 +863,14 @@
           </p>
         </div>
 
-        <!-- Section 5: Final Stage Seedings -->
+        <!-- Section 5: Round 2 Seedings -->
         <div class="card" style="padding: 16px; background: rgba(255, 214, 10, 0.02); border-color: rgba(255, 214, 10, 0.15);">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
             <span class="material-symbols-outlined" style="color: var(--neon); font-size: 20px;">military_tech</span>
-            <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary);">Final Stage Tier Seeding</h3>
+            <h3 style="font-size: 16px; font-weight: 700; margin: 0; color: var(--text-primary);">Round 2 Tier Seeding</h3>
           </div>
           <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
-            Once all qualifying rounds in the Group Stage are finished, players are seeded into competitive tiers based on their individual ranks (Gold, Silver, Bronze). Tiers play a final stage block where players are matched against opponents of a similar skill level!
+            Once all qualifying rounds in Round 1 are finished, players are seeded into competitive tiers based on their individual ranks (Gold, Silver, Bronze). Tiers play a Round 2 block where players are matched against opponents of a similar skill level!
           </p>
         </div>
 
@@ -903,17 +901,43 @@
         style="display: flex; background-color: var(--surface); border: 1px solid var(--surface-high); padding: 4px; border-radius: 12px; width: 100%; gap: 4px;">
         <button id="btn-leaderboard-cumulative" class="leaderboard-toggle-btn active"
           style="flex: 1; border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Overall
-          (Stage 1+2)</button>
+          (Round 1+2)</button>
         <button id="btn-leaderboard-stage2" class="leaderboard-toggle-btn"
-          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Final Stage</button>
+          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Round 2</button>
         <button id="btn-leaderboard-stage1" class="leaderboard-toggle-btn"
-          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Group
-          Stage</button>
+          style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Round 1</button>
       </div>
     </div>
 
     <div id="global-leaderboard-container" class="card" style="margin-top: 16px;">
       <!-- Leaderboard items will be injected here -->
+    </div>
+  </main>
+
+  <!-- SCREEN 6: OVERVIEW SCREEN -->
+  <main id="view-overview" class="screen-view view-hidden" style="max-width: none; width: 100%; box-sizing: border-box; padding-left: 24px; padding-right: 24px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img src="logo.png" alt="Life Journey Pickleball Logo" class="title-logo">
+        <div class="flex-col">
+          <p class="label-caps" style="color: var(--neon); margin-bottom: 2px;">ALL COURTS OVERVIEW</p>
+          <h2 class="title-lg" id="overview-title" style="margin: 0; line-height: 1.2;">Live Courts Summary</h2>
+        </div>
+      </div>
+      
+      <!-- Segmented Tab Switcher for Overview Stage Toggling -->
+      <div id="overview-stage-toggle-container" style="display: none; max-width: 320px;">
+        <div style="display: flex; background-color: var(--surface); border: 1px solid var(--surface-high); padding: 4px; border-radius: 12px; width: 100%; gap: 4px;">
+          <button id="btn-overview-stage1" class="leaderboard-toggle-btn active"
+            style="flex: 1; border: none; background: transparent; color: var(--text-primary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Round 1</button>
+          <button id="btn-overview-stage2" class="leaderboard-toggle-btn"
+            style="flex: 1; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 11px; font-weight: 700; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">Round 2</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="overview-grid-container" id="overview-grid-container">
+      <!-- Generated dynamically by JS -->
     </div>
   </main>
 
@@ -932,15 +956,19 @@
           <circle cx="18" cy="18" r="4" stroke-width="1.5"></circle>
           <path d="M18 18h.01 M15.5 18h.01 M20.5 18h.01 M18 15.5h.01 M18 20.5h.01" stroke-width="1.5"></path>
         </svg></span>
-      <span class="nav-text">Group Stage</span>
+      <span class="nav-text">Round 1</span>
     </button>
     <button class="nav-item" id="nav-round2">
       <span class="material-symbols-outlined">emoji_events</span>
-      <span class="nav-text">Final Stage</span>
+      <span class="nav-text">Round 2</span>
     </button>
     <button class="nav-item" id="nav-leaderboard">
       <span class="material-symbols-outlined">leaderboard</span>
       <span class="nav-text">Leaderboard</span>
+    </button>
+    <button class="nav-item" id="nav-overview">
+      <span class="material-symbols-outlined">grid_view</span>
+      <span class="nav-text">Overview</span>
     </button>
     <button class="nav-item" id="nav-setup" style="display: none;">
       <span class="material-symbols-outlined">settings</span>

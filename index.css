@@ -2662,3 +2662,115 @@ input:checked + .slider:before {
 #view-dashboard {
   padding-top: 20px !important;
 }
+
+/* Overview Screen Widescreen layout and styling */
+.overview-grid-container {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 10px 4px 20px 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Beautiful custom scrollbar for horizontal columns scroll */
+.overview-grid-container::-webkit-scrollbar {
+  height: 8px;
+}
+.overview-grid-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+.overview-grid-container::-webkit-scrollbar-thumb {
+  background: var(--surface-highest);
+  border-radius: 10px;
+  border: 1px solid var(--border-gloss);
+}
+.overview-grid-container::-webkit-scrollbar-thumb:hover {
+  background: var(--neon);
+}
+
+.overview-court-column {
+  flex: 0 0 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border-gloss);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: var(--shadow-glass);
+}
+
+.overview-court-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-gloss);
+  padding-bottom: 12px;
+}
+
+.overview-court-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--neon);
+  margin: 0;
+}
+
+.overview-court-tier {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.overview-matches-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.overview-match-card {
+  background: var(--surface-high);
+  border: 1px solid var(--border-gloss);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overview-match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.overview-match-game-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.overview-standings-section {
+  border-top: 1px solid var(--border-gloss);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.overview-standings-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+/* Override top padding for overview screen */
+#view-overview {
+  padding-top: 24px !important;
+}

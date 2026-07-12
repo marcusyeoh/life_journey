@@ -45,6 +45,7 @@ const appState = {
   stage2ViewingQualifying: false,
   stage2PreviewTiers: [],
   leaderboardViewMode: 'cumulative', // 'cumulative' | 'stage2' | 'stage1'
+  overviewViewStage: null,
 
   // List of 6 Courts
   courts: Array.from({ length: 6 }, (_, i) => ({
@@ -601,7 +602,11 @@ async function startApp() {
         } else {
           // Players (User Mode) are automatically locked to active screens
           if (hasActiveMixer) {
-            targetView = 'dashboard';
+            if (appState.currentView === 'global-leaderboard' || appState.currentView === 'overview') {
+              targetView = appState.currentView;
+            } else {
+              targetView = 'dashboard';
+            }
           } else {
             targetView = 'user-landing';
           }
@@ -695,7 +700,7 @@ function navigateTo(viewName) {
   appState.currentView = viewName;
 
   // Hide all screens
-  const screens = ['view-user-landing', 'view-court-setup', 'view-player-entry', 'view-dashboard', 'view-stage2-review', 'view-admin-success', 'view-global-leaderboard'];
+  const screens = ['view-user-landing', 'view-court-setup', 'view-player-entry', 'view-dashboard', 'view-stage2-review', 'view-admin-success', 'view-global-leaderboard', 'view-overview'];
   screens.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('view-hidden');
@@ -710,6 +715,7 @@ function navigateTo(viewName) {
   else if (viewName === 'stage2-review') activeId = 'view-stage2-review';
   else if (viewName === 'admin-success') activeId = 'view-admin-success';
   else if (viewName === 'global-leaderboard') activeId = 'view-global-leaderboard';
+  else if (viewName === 'overview') activeId = 'view-overview';
 
   const activeEl = document.getElementById(activeId);
   if (activeEl) activeEl.classList.remove('view-hidden');
@@ -806,6 +812,8 @@ function render() {
     renderAdminSuccess();
   } else if (appState.currentView === 'global-leaderboard') {
     renderGlobalLeaderboard(sourceCourts);
+  } else if (appState.currentView === 'overview') {
+    renderOverview();
   }
 
   // 3. Render Modal if open
@@ -814,22 +822,25 @@ function render() {
   // 4. Toggle premium bottom navigation visibility & active tab states
   const bottomNav = document.querySelector('.bottom-nav');
   if (bottomNav) {
-    const shouldShow = (appState.currentView === 'dashboard' || appState.currentView === 'global-leaderboard') && !appState.modal.open;
+    const shouldShow = (appState.currentView === 'dashboard' || appState.currentView === 'global-leaderboard' || appState.currentView === 'overview') && !appState.modal.open;
     bottomNav.style.display = shouldShow ? 'flex' : 'none';
 
     if (shouldShow) {
       const btnRound1 = document.getElementById('nav-round1');
       const btnRound2 = document.getElementById('nav-round2');
       const btnLeaderboard = document.getElementById('nav-leaderboard');
+      const btnOverview = document.getElementById('nav-overview');
       const btnSetup = document.getElementById('nav-setup');
 
       const isLeaderboardActive = appState.currentView === 'global-leaderboard';
-      const isRound1Active = !isLeaderboardActive && (appState.currentStage === 1 || (appState.currentStage === 2 && appState.stage2ViewingQualifying));
-      const isRound2Active = !isLeaderboardActive && !isRound1Active;
+      const isOverviewActive = appState.currentView === 'overview';
+      const isRound1Active = !isLeaderboardActive && !isOverviewActive && (appState.currentStage === 1 || (appState.currentStage === 2 && appState.stage2ViewingQualifying));
+      const isRound2Active = !isLeaderboardActive && !isOverviewActive && !isRound1Active;
 
       if (btnRound1) btnRound1.classList.toggle('active', isRound1Active);
       if (btnRound2) btnRound2.classList.toggle('active', isRound2Active);
       if (btnLeaderboard) btnLeaderboard.classList.toggle('active', isLeaderboardActive);
+      if (btnOverview) btnOverview.classList.toggle('active', isOverviewActive);
 
       if (btnSetup) {
         btnSetup.style.display = appState.isAdmin ? 'flex' : 'none';
@@ -1599,8 +1610,8 @@ function renderDashboard(activeCourts) {
 
         if (advanceIcon) advanceIcon.textContent = 'build';
         if (advanceTitle) advanceTitle.textContent = 'Seeding Mismatch Detected';
-        if (advanceDesc) advanceDesc.textContent = `Final Stage is running on ${currentActiveCourtsCount} courts, but you set up only ${maxCourts} courts in Group Stage. Click below to instantly re-seed into exactly ${maxCourts} tiers.`;
-        if (advanceBtnText) advanceBtnText.textContent = 'Re-Seed Final Stage';
+        if (advanceDesc) advanceDesc.textContent = `Round 2 is running on ${currentActiveCourtsCount} courts, but you set up only ${maxCourts} courts in Round 1. Click below to instantly re-seed into exactly ${maxCourts} tiers.`;
+        if (advanceBtnText) advanceBtnText.textContent = 'Re-Seed Round 2';
       }
     } else {
       if (advanceCard) advanceCard.style.display = 'none';
@@ -1608,23 +1619,23 @@ function renderDashboard(activeCourts) {
 
     if (backLinkContainer) backLinkContainer.style.display = 'flex';
 
-    const toggleText = appState.stage2ViewingQualifying ? 'Back to Final Stage Standings' : 'View Group Stage Standings';
+    const toggleText = appState.stage2ViewingQualifying ? 'Back to Round 2 Standings' : 'View Round 1 Standings';
     const btnToggleText = document.getElementById('btn-toggle-stage-text');
     if (btnToggleText) btnToggleText.textContent = toggleText;
 
     if (dashboardTitle) {
-      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Group Stage Dashboard' : 'Final Stage Dashboard';
+      dashboardTitle.textContent = appState.stage2ViewingQualifying ? 'Round 1 Dashboard' : 'Round 2 Dashboard';
     }
     if (leaderboardTitleText) {
-      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Group Stage)' : 'Live Leaderboard (Final Stage)';
+      leaderboardTitleText.textContent = appState.stage2ViewingQualifying ? 'Live Leaderboard (Round 1)' : 'Live Leaderboard (Round 2)';
     }
   } else {
     if (stageBadge) stageBadge.style.display = 'none';
     if (backLinkContainer) backLinkContainer.style.display = 'none';
-    if (dashboardTitle) dashboardTitle.textContent = 'Group Stage Dashboard';
-    if (leaderboardTitleText) leaderboardTitleText.textContent = 'Live Leaderboard (Group Stage)';
+    if (dashboardTitle) dashboardTitle.textContent = 'Round 1 Dashboard';
+    if (leaderboardTitleText) leaderboardTitleText.textContent = 'Live Leaderboard (Round 1)';
 
-    // Always show advancement options during Group Stage (Stage 1) for Admins
+    // Always show advancement options during Round 1 (Stage 1) for Admins
     if (appState.currentStage === 1 && appState.isAdmin) {
       if (advanceCard) {
         advanceCard.style.display = 'flex';
@@ -1635,14 +1646,14 @@ function renderDashboard(activeCourts) {
 
         if (checkStage1Completion()) {
           if (advanceIcon) advanceIcon.textContent = 'celebration';
-          if (advanceTitle) advanceTitle.textContent = 'Group Stage Completed!';
+          if (advanceTitle) advanceTitle.textContent = 'Round 1 Completed!';
           if (advanceDesc) advanceDesc.textContent = 'All qualifying matches across all courts have been completed. Seeding tiers are ready!';
-          if (advanceBtnText) advanceBtnText.textContent = 'Advance to Final Stage';
+          if (advanceBtnText) advanceBtnText.textContent = 'Advance to Round 2';
         } else {
           if (advanceIcon) advanceIcon.textContent = 'warning';
-          if (advanceTitle) advanceTitle.textContent = 'Final Stage Transition';
-          if (advanceDesc) advanceDesc.textContent = 'Group Stage qualifying matches are still in progress. You can manually force-advance to Final Stage based on current scores.';
-          if (advanceBtnText) advanceBtnText.textContent = 'Force-Start Final Stage';
+          if (advanceTitle) advanceTitle.textContent = 'Round 2 Transition';
+          if (advanceDesc) advanceDesc.textContent = 'Round 1 matches are still in progress. You can manually force-advance to Round 2 based on current scores.';
+          if (advanceBtnText) advanceBtnText.textContent = 'Force-Start Round 2';
         }
       }
     } else {
@@ -2459,7 +2470,7 @@ function setupEventListeners() {
   if (dashboardAdvanceBtn) {
     dashboardAdvanceBtn.addEventListener('click', () => {
       if (appState.currentStage === 2) {
-        if (confirm("Are you sure you want to re-seed the Final Stage? This will overwrite current Final Stage matches and scores, but your Group Stage scores are 100% safe.")) {
+        if (confirm("Are you sure you want to re-seed Round 2? This will overwrite current Round 2 matches and scores, but your Round 1 scores are 100% safe.")) {
           launchFinalStageAutomatically();
           render();
           saveStateToCloud(); // Save to cloud!
@@ -2469,8 +2480,8 @@ function setupEventListeners() {
 
       const hasCompleted = checkStage1Completion();
       const msg = hasCompleted
-        ? "All Group Stage matches are completed! Do you want to automatically launch the Final Stage?"
-        : "Group Stage matches are not all completed. Do you want to force-launch the Final Stage based on current scores?";
+        ? "All Round 1 matches are completed! Do you want to automatically launch Round 2?"
+        : "Round 1 matches are not all completed. Do you want to force-launch Round 2 based on current scores?";
       if (confirm(msg)) {
         launchFinalStageAutomatically();
         saveStateToCloud(); // Save to cloud!
@@ -2584,7 +2595,7 @@ function setupEventListeners() {
       if (appState.currentStage === 1) {
         const hasCompleted = checkStage1Completion();
         if (hasCompleted) {
-          // Fail-safe: if all Group Stage matches are completed, clicking the tab auto-launches Stage 2!
+          // Fail-safe: if all Round 1 matches are completed, clicking the tab auto-launches Round 2!
           launchFinalStageAutomatically();
           saveStateToCloud(); // Save to cloud!
           if (appState.isAdmin) {
@@ -2596,14 +2607,14 @@ function setupEventListeners() {
         }
 
         if (appState.isAdmin) {
-          const msg = "Group Stage matches are not all completed. Do you want to force-launch the Final Stage based on current scores?";
+          const msg = "Round 1 matches are not all completed. Do you want to force-launch Round 2 based on current scores?";
           if (confirm(msg)) {
             launchFinalStageAutomatically();
             saveStateToCloud(); // Save to cloud!
             navigateTo('admin-success');
           }
         } else {
-          showPremiumToast("Final Stage will begin automatically once all Group Stage matches are completed!");
+          showPremiumToast("Round 2 will begin automatically once all Round 1 matches are completed!");
         }
         return;
       }
@@ -2626,6 +2637,13 @@ function setupEventListeners() {
   if (navLeaderboard) {
     navLeaderboard.addEventListener('click', () => {
       navigateTo('global-leaderboard');
+    });
+  }
+
+  const navOverview = document.getElementById('nav-overview');
+  if (navOverview) {
+    navOverview.addEventListener('click', () => {
+      navigateTo('overview');
     });
   }
 
@@ -3205,6 +3223,7 @@ function launchFinalStageAutomatically() {
   appState.stage2ViewingQualifying = false;
   appState.selectedCourtNumber = 1;
   appState.viewingRound = 1;
+  appState.overviewViewStage = 2;
 
   // Save new Final Stage to Cloud!
   saveStateToCloud();
@@ -3349,6 +3368,7 @@ function confirmStage2() {
   appState.stage2ViewingQualifying = false;
   appState.selectedCourtNumber = 1;
   appState.viewingRound = 1;
+  appState.overviewViewStage = 2;
 
   // Save new Final Stage to Cloud!
   saveStateToCloud();
@@ -3369,8 +3389,8 @@ function renderAdminSuccess() {
   const subtitleContainer = document.getElementById('success-header-subtitle');
   if (headerContainer && subtitleContainer) {
     if (appState.currentStage === 2) {
-      headerContainer.textContent = "Final Stage Launched!";
-      subtitleContainer.textContent = "Seeding tiers and real-time scoreboards for the Final Stage are now active. Player dashboards are synced!";
+      headerContainer.textContent = "Round 2 Launched!";
+      subtitleContainer.textContent = "Seeding tiers and real-time scoreboards for Round 2 are now active. Player dashboards are synced!";
     } else {
       headerContainer.textContent = "Tournament Launched!";
       subtitleContainer.textContent = "Court pairings and real-time scoreboards are now active. All player dashboards are synced and running!";
@@ -3412,11 +3432,11 @@ function renderGlobalLeaderboard(sourceCourts) {
 
     if (subtitle) {
       if (mode === 'cumulative') {
-        subtitle.textContent = "All players sorted by cumulative total score (Stage 1 + Stage 2).";
+        subtitle.textContent = "All players sorted by cumulative total score (Round 1 + Round 2).";
       } else if (mode === 'stage2') {
-        subtitle.textContent = "All players sorted by Final Stage total score.";
+        subtitle.textContent = "All players sorted by Round 2 total score.";
       } else {
-        subtitle.textContent = "All players sorted by Group Stage total score.";
+        subtitle.textContent = "All players sorted by Round 1 total score.";
       }
     }
 
@@ -3566,6 +3586,223 @@ function renderGlobalLeaderboard(sourceCourts) {
       </div>
     `;
   }).join('');
+}
+
+// --- ALL COURTS OVERVIEW LOGIC ---
+function renderOverview() {
+  const container = document.getElementById('overview-grid-container');
+  if (!container) return;
+
+  const toggleContainer = document.getElementById('overview-stage-toggle-container');
+  const btnOverviewStage1 = document.getElementById('btn-overview-stage1');
+  const btnOverviewStage2 = document.getElementById('btn-overview-stage2');
+  const overviewTitle = document.getElementById('overview-title');
+
+  // Determine stage to view
+  if (appState.overviewViewStage === null) {
+    appState.overviewViewStage = appState.currentStage;
+  }
+
+  const viewingStage = appState.overviewViewStage;
+
+  if (appState.currentStage === 2) {
+    if (toggleContainer) toggleContainer.style.display = 'flex';
+    if (btnOverviewStage1) {
+      btnOverviewStage1.classList.toggle('active', viewingStage === 1);
+      btnOverviewStage1.style.color = viewingStage === 1 ? 'var(--neon)' : 'var(--text-secondary)';
+    }
+    if (btnOverviewStage2) {
+      btnOverviewStage2.classList.toggle('active', viewingStage === 2);
+      btnOverviewStage2.style.color = viewingStage === 2 ? 'var(--neon)' : 'var(--text-secondary)';
+    }
+
+    if (btnOverviewStage1 && !btnOverviewStage1.onclick) {
+      btnOverviewStage1.onclick = () => {
+        appState.overviewViewStage = 1;
+        render();
+      };
+    }
+    if (btnOverviewStage2 && !btnOverviewStage2.onclick) {
+      btnOverviewStage2.onclick = () => {
+        appState.overviewViewStage = 2;
+        render();
+      };
+    }
+  } else {
+    if (toggleContainer) toggleContainer.style.display = 'none';
+    appState.overviewViewStage = 1;
+  }
+
+  if (overviewTitle) {
+    overviewTitle.textContent = viewingStage === 2 ? 'Live Courts Summary (Round 2)' : 'Live Courts Summary (Round 1)';
+  }
+
+  const sourceCourts = (viewingStage === 1 && appState.currentStage === 2)
+    ? appState.stage1Courts
+    : appState.courts;
+
+  const activeCourts = sourceCourts ? sourceCourts.filter(c => c && c.isActive) : [];
+
+  if (activeCourts.length === 0) {
+    container.innerHTML = `<div style="text-align: center; color: var(--text-secondary); width: 100%; padding: 40px 0;">No active courts found for Round ${viewingStage}.</div>`;
+    return;
+  }
+
+  const TIER_NAMES = ["Gold Tier", "Silver Tier", "Bronze Tier", "Copper Tier", "Iron Tier", "Slate Tier"];
+
+  container.innerHTML = '';
+
+  activeCourts.forEach(court => {
+    const courtNumber = court.courtNumber;
+    const courtDisplayName = court.courtName || `Court ${courtNumber}`;
+    
+    let subtitleHtml = '';
+    if (viewingStage === 2) {
+      const tierName = TIER_NAMES[courtNumber - 1] || `Tier ${courtNumber}`;
+      subtitleHtml = `<span class="overview-court-tier">${tierName}</span>`;
+    } else {
+      subtitleHtml = `<span class="overview-court-tier">Round 1</span>`;
+    }
+
+    // 1. Render Court Matches
+    let matchesHtml = '';
+    if (court.matches && court.matches.length > 0) {
+      court.matches.forEach((m, idx) => {
+        const gameNum = idx + 1;
+        const isActive = gameNum === court.activeRound;
+        
+        let statusHtml = '';
+        if (m.isCompleted) {
+          statusHtml = `<span style="font-size: 10px; font-weight: 700; color: var(--green); background: var(--green-bg); padding: 2px 8px; border-radius: 4px;">Completed</span>`;
+        } else if (isActive) {
+          statusHtml = `<span style="font-size: 10px; font-weight: 700; color: var(--neon); background: var(--neon-glow); padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><span class="pulse-dot" style="width: 5px; height: 5px;"></span>In Progress</span>`;
+        } else {
+          statusHtml = `<span style="font-size: 10px; font-weight: 700; color: var(--text-secondary); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px;">Pending</span>`;
+        }
+
+        const team1Bold = m.isCompleted && (m.team1Score > m.team2Score);
+        const team2Bold = m.isCompleted && (m.team2Score > m.team1Score);
+
+        matchesHtml += `
+          <div class="overview-match-card">
+            <div class="overview-match-header">
+              <span class="overview-match-game-num">Game ${gameNum}</span>
+              ${statusHtml}
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+              <!-- Team 1 -->
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex-grow: 1;">
+                  <div style="display: flex; gap: 2px; flex-shrink: 0;">
+                    ${renderPlayerAvatar(m.team1Player1, 18)}
+                    ${renderPlayerAvatar(m.team1Player2, 18)}
+                  </div>
+                  <span style="font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: ${team1Bold ? '800' : '500'}; color: ${team1Bold ? 'var(--text-primary)' : 'var(--text-secondary)'};">
+                    ${formatPlayerName(m.team1Player1.name)} / ${formatPlayerName(m.team1Player2.name)}
+                  </span>
+                </div>
+                ${m.isCompleted ? `<span style="font-size: 13px; font-weight: 800; font-family: monospace; color: ${team1Bold ? 'var(--neon)' : 'var(--text-secondary)'};">${m.team1Score}</span>` : ''}
+              </div>
+
+              <!-- Team 2 -->
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 0; flex-grow: 1;">
+                  <div style="display: flex; gap: 2px; flex-shrink: 0;">
+                    ${renderPlayerAvatar(m.team2Player1, 18)}
+                    ${renderPlayerAvatar(m.team2Player2, 18)}
+                  </div>
+                  <span style="font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: ${team2Bold ? '800' : '500'}; color: ${team2Bold ? 'var(--text-primary)' : 'var(--text-secondary)'};">
+                    ${formatPlayerName(m.team2Player1.name)} / ${formatPlayerName(m.team2Player2.name)}
+                  </span>
+                </div>
+                ${m.isCompleted ? `<span style="font-size: 13px; font-weight: 800; font-family: monospace; color: ${team2Bold ? 'var(--neon)' : 'var(--text-secondary)'};">${m.team2Score}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      matchesHtml = `<p style="color: var(--text-secondary); text-align: center; font-size: 12px; padding: 12px 0;">No matches scheduled.</p>`;
+    }
+
+    // 2. Render Court Standings
+    let standingsHtml = '';
+    if (court.players && court.players.length > 0) {
+      const sortedPlayers = [...court.players];
+      sortedPlayers.sort((a, b) => {
+        if (b.totalScore !== a.totalScore) {
+          return b.totalScore - a.totalScore;
+        }
+        return a.initialIndex - b.initialIndex;
+      });
+
+      const globalRanks = getGlobalRanksMap();
+
+      sortedPlayers.forEach((player, idx) => {
+        const globalRank = globalRanks.get(player.name) || '-';
+        const hasPlayedAny = (court.matches || []).some(m => 
+          m.isCompleted && (
+            m.team1Player1.name === player.name || 
+            m.team1Player2.name === player.name || 
+            m.team2Player1.name === player.name || 
+            m.team2Player2.name === player.name
+          )
+        );
+        const groupRank = hasPlayedAny ? (idx + 1) : '-';
+
+        let totalClass = 'neutral';
+        let totalVal = player.totalScore;
+        if (player.totalScore > 0) {
+          totalClass = 'positive';
+          totalVal = `+${player.totalScore}`;
+        } else if (player.totalScore < 0) {
+          totalClass = 'negative';
+        } else {
+          totalVal = `+0`;
+        }
+
+        standingsHtml += `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex-grow: 1;">
+              <span style="font-size: 11px; font-weight: 800; color: var(--text-secondary); width: 16px;">#${groupRank}</span>
+              ${renderPlayerAvatar(player, 20)}
+              <div style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1;">
+                <span style="font-size: 12px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;">${formatPlayerName(player.name)}</span>
+                <span style="font-size: 9px; color: var(--text-secondary);">Rank: #${globalRank}</span>
+              </div>
+            </div>
+            <span class="grid-player-total-badge ${totalClass}" style="font-size: 10px; padding: 2px 6px; border-radius: 6px; white-space: nowrap;">${totalVal} pts</span>
+          </div>
+        `;
+      });
+    } else {
+      standingsHtml = `<p style="color: var(--text-secondary); text-align: center; font-size: 12px; padding: 12px 0;">No standings available.</p>`;
+    }
+
+    const column = document.createElement('div');
+    column.className = 'overview-court-column';
+    column.innerHTML = `
+      <div class="overview-court-header">
+        <h3 class="overview-court-title">${courtDisplayName}</h3>
+        ${subtitleHtml}
+      </div>
+      
+      <div class="overview-matches-section">
+        <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Matches</div>
+        ${matchesHtml}
+      </div>
+      
+      <div class="overview-standings-section">
+        <div class="overview-standings-title">Standings</div>
+        <div style="display: flex; flex-direction: column;">
+          ${standingsHtml}
+        </div>
+      </div>
+    `;
+
+    container.appendChild(column);
+  });
 }
 
 // --- PREMIUM TOAST HELPER ---
