@@ -731,7 +731,7 @@ function render() {
   // Hide Top Navigation App Bar on the dashboard screen to reclaim vertical space
   const appBar = document.querySelector('header.app-bar');
   if (appBar) {
-    if (appState.currentView === 'dashboard') {
+    if (appState.currentView === 'dashboard' || appState.currentView === 'overview') {
       appBar.style.display = 'none';
     } else {
       appBar.style.display = 'flex';
