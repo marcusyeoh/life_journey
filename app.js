@@ -1713,127 +1713,7 @@ function renderDashboard(activeCourts) {
     courtTabs.appendChild(tab);
   });
 
-  // 2. Render Round Selector chips
-  const roundChips = document.getElementById('dashboard-round-chips');
-  roundChips.innerHTML = '';
 
-  for (let i = 1; i <= totalRounds; i++) {
-    const isViewing = i === appState.viewingRound;
-    const isActiveRound = i === court.activeRound;
-    const isCompleted = court.matches[i - 1] && court.matches[i - 1].isCompleted;
-
-    const chip = document.createElement('div');
-    chip.className = `round-chip ${isViewing ? 'viewing' : ''} ${isActiveRound ? 'active-round' : ''} ${isCompleted ? 'completed' : ''}`;
-
-    if (isCompleted) {
-      chip.innerHTML = `<span class="material-symbols-outlined" style="font-size: 15px; font-weight: 800; color: var(--green); margin-right: 6px;">check_circle</span>Game ${i}`;
-    } else {
-      chip.textContent = `Game ${i}`;
-    }
-
-    chip.addEventListener('click', () => {
-      appState.viewingRound = i;
-      render();
-    });
-    roundChips.appendChild(chip);
-  }
-
-  // 3. Render Match Card
-  const matchCard = document.getElementById('dashboard-match-card');
-  const matchIndex = appState.viewingRound - 1;
-  const match = court.matches[matchIndex];
-
-  if (match) {
-    let courtLabel = court.courtName || `Court ${court.courtNumber}`;
-    if (appState.currentStage === 2 && !appState.stage2ViewingQualifying) {
-      const tierName = (TIER_NAMES[court.courtNumber - 1] || `Tier ${court.courtNumber}`).replace(/\s*tier/gi, '');
-      const courtDisplayName = court.courtName || `Court ${court.courtNumber}`;
-      courtLabel = `
-        <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2;">
-          <span style="font-size: 13px; font-weight: 700; color: var(--text-primary);">${courtDisplayName}</span>
-          <span style="font-size: 8px; font-weight: 800; color: var(--text-secondary); opacity: 0.7; letter-spacing: 0.8px; text-transform: uppercase; margin-top: 1px;">${tierName}</span>
-        </div>
-      `;
-    }
-
-    // Render Card Contents
-    matchCard.innerHTML = `
-      <div class="match-card-status-row" style="flex-wrap: wrap; gap: 12px;">
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <div class="status-chip">
-            ${match.isCompleted ? `
-              <span class="material-symbols-outlined" style="color: var(--green); font-size: 14px;">check_circle</span>
-              <span>COMPLETED</span>
-            ` : `
-              <span class="pulse-dot"></span>
-              <span>IN PROGRESS</span>
-            `}
-          </div>
-          <div style="font-size: 13px; font-weight: 700; color: var(--text-secondary); background: var(--surface-highest); padding: 4px 10px; border-radius: 6px;">
-            ${courtLabel}
-          </div>
-        </div>
-        ${match.isCompleted ? `
-          <div class="match-card-score-container" style="margin-left: auto;">
-            <div class="match-card-score">${match.team1Score} - ${match.team2Score}</div>
-            <div class="match-card-score-diff">
-              Diff: ${Math.abs(match.team1Score - match.team2Score)}
-            </div>
-          </div>
-        ` : ''}
-      </div>
-      <div class="match-teams-row">
-        <div class="match-team" style="gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            ${renderPlayerAvatar(match.team1Player1, 24)}
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: left;">${formatPlayerName(match.team1Player1.name)}</h4>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            ${renderPlayerAvatar(match.team1Player2, 24)}
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: left;">${formatPlayerName(match.team1Player2.name)}</h4>
-          </div>
-        </div>
-        <div class="vs-badge">VS</div>
-        <div class="match-team team-2" style="gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: right;">${formatPlayerName(match.team2Player1.name)}</h4>
-            ${renderPlayerAvatar(match.team2Player1, 24)}
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; justify-content: flex-end;">
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--text-primary); text-align: right;">${formatPlayerName(match.team2Player2.name)}</h4>
-            ${renderPlayerAvatar(match.team2Player2, 24)}
-          </div>
-        </div>
-      </div>
-      <button class="match-action-btn neon-glow-active">
-        <span class="material-symbols-outlined">${match.isCompleted ? 'edit_square' : 'add_circle'}</span>
-        ${match.isCompleted ? 'Edit Score' : 'Input Score'}
-      </button>
-    `;
-
-    // Action button opens Modal Stepper
-    const actionBtn = matchCard.querySelector('.match-action-btn');
-    if (actionBtn) {
-      actionBtn.addEventListener('click', () => {
-        appState.modal.open = true;
-        appState.modal.courtNumber = court.courtNumber;
-        appState.modal.matchIndex = matchIndex;
-
-        if (match.isCompleted) {
-          appState.modal.score1 = match.team1Score;
-          appState.modal.score2 = match.team2Score;
-        } else {
-          appState.modal.score1 = 0;
-          appState.modal.score2 = 0;
-        }
-
-        render();
-      });
-    }
-
-  } else {
-    matchCard.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No matches generated for this game.</p>';
-  }
 
   // 5. Render Leaderboard Items sorted descending
   const leaderboardContainer = document.getElementById('leaderboard-items-container');
@@ -1924,7 +1804,22 @@ function renderDashboard(activeCourts) {
         }
 
         const gameRow = document.createElement('div');
-        gameRow.className = 'overview-row';
+        gameRow.className = 'overview-row clickable';
+        gameRow.addEventListener('click', () => {
+          appState.modal.open = true;
+          appState.modal.courtNumber = court.courtNumber;
+          appState.modal.matchIndex = idx;
+
+          if (m.isCompleted) {
+            appState.modal.score1 = m.team1Score;
+            appState.modal.score2 = m.team2Score;
+          } else {
+            appState.modal.score1 = 0;
+            appState.modal.score2 = 0;
+          }
+
+          render();
+        });
         gameRow.innerHTML = `
           <div class="overview-row-header">
             <span class="overview-row-game-label">Game ${gameNum}</span>
@@ -1956,6 +1851,9 @@ function renderDashboard(activeCourts) {
                 ${renderPlayerAvatar(m.team2Player2, 18)}
               </div>
               ${team2AvgHtml}
+            </div>
+            <div class="overview-row-action">
+              <span class="material-symbols-outlined" style="font-size: 18px;">${m.isCompleted ? 'edit_square' : 'add_circle'}</span>
             </div>
           </div>
         `;
@@ -2098,7 +1996,10 @@ function renderScoreModal() {
     document.body.classList.add('modal-open');
   }, 10);
 
-  const court = appState.courts.find(c => c.courtNumber === appState.modal.courtNumber);
+  const sourceCourts = (appState.modal && appState.modal.isStage1Archive)
+    ? appState.stage1Courts
+    : appState.courts;
+  const court = sourceCourts.find(c => c.courtNumber === appState.modal.courtNumber);
   const match = court && court.matches ? court.matches[appState.modal.matchIndex] : null;
 
   if (!court || !match || !match.team1Player1 || !match.team1Player2 || !match.team2Player1 || !match.team2Player2) {
@@ -2148,7 +2049,10 @@ function renderScoreModal() {
 // ----------------------------------------------------
 
 function submitScore(courtNumber, matchIndex, score1, score2) {
-  const court = appState.courts.find(c => c.courtNumber === courtNumber);
+  const sourceCourts = (appState.modal && appState.modal.isStage1Archive)
+    ? appState.stage1Courts
+    : appState.courts;
+  const court = sourceCourts.find(c => c.courtNumber === courtNumber);
   if (!court) return;
   const match = court.matches[matchIndex];
   if (!match) return;
@@ -3153,16 +3057,14 @@ function launchFinalStageAutomatically() {
     });
   });
 
-  // Seeding sort order (EXCEL METHOD):
-  // 1. Higher qualifying score (totalScore) first
-  // 2. Lower court rank as tie-breaker
-  // 3. Higher points played as 2nd tie-breaker
-  // 4. Lower initial index as 3rd tie-breaker
+  // Seeding sort order:
+  // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
+  // 2. Higher qualifying score differential breaks ties
   allPlayers.sort((a, b) => {
-    if (b.stage1Score !== a.stage1Score) return b.stage1Score - a.stage1Score;
-    if (a.courtRank !== b.courtRank) return a.courtRank - b.courtRank;
-    if (b.pointsPlayed !== a.pointsPlayed) return b.pointsPlayed - a.pointsPlayed;
-    return a.initialIndex - b.initialIndex;
+    if (a.courtRank !== b.courtRank) {
+      return a.courtRank - b.courtRank;
+    }
+    return b.stage1Score - a.stage1Score;
   });
 
   // Partition into optimal tier sizes for Stage 2
@@ -3255,16 +3157,14 @@ function advanceToStage2() {
     });
   });
 
-  // Seeding sort order (EXCEL METHOD):
-  // 1. Higher qualifying score (totalScore) first
-  // 2. Lower court rank as tie-breaker
-  // 3. Higher points played as 2nd tie-breaker
-  // 4. Lower initial index as 3rd tie-breaker
+  // Seeding sort order:
+  // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
+  // 2. Higher qualifying score differential breaks ties
   allPlayers.sort((a, b) => {
-    if (b.stage1Score !== a.stage1Score) return b.stage1Score - a.stage1Score;
-    if (a.courtRank !== b.courtRank) return a.courtRank - b.courtRank;
-    if (b.pointsPlayed !== a.pointsPlayed) return b.pointsPlayed - a.pointsPlayed;
-    return a.initialIndex - b.initialIndex;
+    if (a.courtRank !== b.courtRank) {
+      return a.courtRank - b.courtRank;
+    }
+    return b.stage1Score - a.stage1Score;
   });
 
   // Partition into optimal tier sizes for Stage 2
@@ -3684,10 +3584,15 @@ function renderOverview() {
         const team2Bold = m.isCompleted && (m.team2Score > m.team1Score);
 
         matchesHtml += `
-          <div class="overview-match-card">
+          <div class="overview-match-card clickable" data-court-number="${courtNumber}" data-match-index="${idx}">
             <div class="overview-match-header">
-              <span class="overview-match-game-num">Game ${gameNum}</span>
-              ${statusHtml}
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="overview-match-game-num">Game ${gameNum}</span>
+                ${statusHtml}
+              </div>
+              <div class="overview-match-action">
+                <span class="material-symbols-outlined" style="font-size: 16px;">${m.isCompleted ? 'edit_square' : 'add_circle'}</span>
+              </div>
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
@@ -3802,6 +3707,32 @@ function renderOverview() {
     `;
 
     container.appendChild(column);
+  });
+
+  // Attach click listeners to match cards in Overview
+  container.querySelectorAll('.overview-match-card.clickable').forEach(card => {
+    card.addEventListener('click', () => {
+      const cNum = parseInt(card.dataset.courtNumber, 10);
+      const mIdx = parseInt(card.dataset.matchIndex, 10);
+      const targetCourt = sourceCourts.find(c => c.courtNumber === cNum);
+      const match = targetCourt && targetCourt.matches ? targetCourt.matches[mIdx] : null;
+      if (!match) return;
+
+      appState.modal.open = true;
+      appState.modal.courtNumber = cNum;
+      appState.modal.matchIndex = mIdx;
+      appState.modal.isStage1Archive = (viewingStage === 1 && appState.currentStage === 2);
+
+      if (match.isCompleted) {
+        appState.modal.score1 = match.team1Score;
+        appState.modal.score2 = match.team2Score;
+      } else {
+        appState.modal.score1 = 0;
+        appState.modal.score2 = 0;
+      }
+
+      render();
+    });
   });
 }
 

@@ -2207,6 +2207,43 @@ input:checked + .slider:before {
   gap: 12px;
 }
 
+.overview-row.clickable {
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-left: 12px;
+  padding-right: 12px;
+  margin-left: -12px;
+  margin-right: -12px;
+  border-radius: 12px;
+}
+
+.overview-row.clickable:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .overview-row.clickable:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.overview-row-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  opacity: 0.25;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.overview-row.clickable:hover .overview-row-action {
+  opacity: 0.95;
+  color: var(--neon);
+  transform: scale(1.1);
+}
+
+
 .overview-row:last-child {
   border-bottom: none;
   padding-bottom: 0;
@@ -2739,6 +2776,38 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.overview-match-card.clickable {
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overview-match-card.clickable:hover {
+  background: var(--surface-highest);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .overview-match-card.clickable:hover {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.overview-match-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  opacity: 0.25;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.overview-match-card.clickable:hover .overview-match-action {
+  opacity: 0.95;
+  color: var(--neon);
+  transform: scale(1.1);
 }
 
 .overview-match-header {
