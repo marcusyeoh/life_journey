@@ -3646,15 +3646,48 @@ function renderOverview() {
 
       sortedPlayers.forEach((player, idx) => {
         const globalRank = globalRanks.get(player.name) || '-';
-        const hasPlayedAny = (court.matches || []).some(m => 
-          m.isCompleted && (
-            m.team1Player1.name === player.name || 
-            m.team1Player2.name === player.name || 
-            m.team2Player1.name === player.name || 
-            m.team2Player2.name === player.name
-          )
+        
+        // Find matches player played on this court
+        const playerMatches = (court.matches || []).filter(m => 
+          m.team1Player1.name === player.name || 
+          m.team1Player2.name === player.name || 
+          m.team2Player1.name === player.name || 
+          m.team2Player2.name === player.name
         );
+
+        const diffs = [];
+        const maxGames = 4;
+        for (let i = 0; i < maxGames; i++) {
+          if (i < playerMatches.length) {
+            const match = playerMatches[i];
+            if (match.isCompleted) {
+              const isTeam1 = (match.team1Player1.name === player.name || match.team1Player2.name === player.name);
+              const diff = isTeam1 ? (match.team1Score - match.team2Score) : (match.team2Score - match.team1Score);
+              diffs.push(diff);
+            } else {
+              diffs.push('-');
+            }
+          } else {
+            diffs.push('-');
+          }
+        }
+
+        const hasPlayedAny = playerMatches.some(m => m.isCompleted);
         const groupRank = hasPlayedAny ? (idx + 1) : '-';
+
+        // Format game pills HTML
+        let pillsHtml = '';
+        diffs.forEach(diff => {
+          if (diff === '-') {
+            pillsHtml += `<div class="game-pill neutral">-</div>`;
+          } else if (diff > 0) {
+            pillsHtml += `<div class="game-pill positive">+${diff}</div>`;
+          } else if (diff < 0) {
+            pillsHtml += `<div class="game-pill negative">${diff}</div>`;
+          } else {
+            pillsHtml += `<div class="game-pill neutral">0</div>`;
+          }
+        });
 
         let totalClass = 'neutral';
         let totalVal = player.totalScore;
@@ -3668,16 +3701,24 @@ function renderOverview() {
         }
 
         standingsHtml += `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex-grow: 1;">
-              <span style="font-size: 11px; font-weight: 800; color: var(--text-secondary); width: 16px;">#${groupRank}</span>
-              ${renderPlayerAvatar(player, 20)}
-              <div style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1;">
-                <span style="font-size: 12px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;">${formatPlayerName(player.name)}</span>
-                <span style="font-size: 9px; color: var(--text-secondary);">Rank: #${globalRank}</span>
+          <div style="display: flex; flex-direction: column; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <div style="display: flex; align-items: center; justify-content: space-between; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex-grow: 1;">
+                <span style="font-size: 11px; font-weight: 800; color: var(--text-secondary); width: 16px;">#${groupRank}</span>
+                ${renderPlayerAvatar(player, 20)}
+                <div style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1;">
+                  <span style="font-size: 12px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;">${formatPlayerName(player.name)}</span>
+                  <span style="font-size: 9px; color: var(--text-secondary);">Rank: #${globalRank}</span>
+                </div>
+              </div>
+              <span class="grid-player-total-badge ${totalClass}" style="font-size: 10px; padding: 2px 6px; border-radius: 6px; white-space: nowrap;">${totalVal} pts</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; margin-left: 24px;">
+              <span style="font-size: 9px; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.5px;">GAMES:</span>
+              <div style="display: flex; gap: 4px; align-items: center;">
+                ${pillsHtml}
               </div>
             </div>
-            <span class="grid-player-total-badge ${totalClass}" style="font-size: 10px; padding: 2px 6px; border-radius: 6px; white-space: nowrap;">${totalVal} pts</span>
           </div>
         `;
       });
