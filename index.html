@@ -566,22 +566,43 @@
 
       <!-- Steppers Card -->
       <div class="modal-steppers-card">
-        <!-- Team 1 score stepper -->
-        <div class="modal-stepper-row">
-          <div class="modal-stepper-team-info">
-            <h3 id="modal-team1-names">Sarah & Mike</h3>
+        <!-- Team 1 score card -->
+        <div class="modal-team-score-card">
+          <div class="modal-stepper-row">
+            <div class="modal-stepper-team-info">
+              <h3 id="modal-team1-names">Sarah & Mike</h3>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" id="stepper-minus-1">
+                <span class="material-symbols-outlined">remove</span>
+              </button>
+              <div class="stepper-value-badge" id="stepper-val-1">0</div>
+              <button class="stepper-btn" id="stepper-plus-1">
+                <span class="material-symbols-outlined">add</span>
+              </button>
+              <button class="winner-btn" id="winner-btn-1" title="Set to 15 (Winner)">
+                <span class="material-symbols-outlined">emoji_events</span>
+              </button>
+            </div>
           </div>
-          <div class="stepper-controls">
-            <button class="stepper-btn" id="stepper-minus-1">
-              <span class="material-symbols-outlined">remove</span>
-            </button>
-            <input type="number" class="stepper-value" id="stepper-val-1" min="0" value="0" style="text-align: center; -moz-appearance: textfield;" />
-            <button class="stepper-btn" id="stepper-plus-1">
-              <span class="material-symbols-outlined">add</span>
-            </button>
-            <button class="winner-btn" id="winner-btn-1" title="Set to 15 (Winner)">
-              <span class="material-symbols-outlined">emoji_events</span>
-            </button>
+          <!-- 0-15 Quick Score Grid for Team 1 -->
+          <div class="score-grid-selector" id="score-grid-team1">
+            <button class="score-pill" data-team="1" data-val="0">0</button>
+            <button class="score-pill" data-team="1" data-val="1">1</button>
+            <button class="score-pill" data-team="1" data-val="2">2</button>
+            <button class="score-pill" data-team="1" data-val="3">3</button>
+            <button class="score-pill" data-team="1" data-val="4">4</button>
+            <button class="score-pill" data-team="1" data-val="5">5</button>
+            <button class="score-pill" data-team="1" data-val="6">6</button>
+            <button class="score-pill" data-team="1" data-val="7">7</button>
+            <button class="score-pill" data-team="1" data-val="8">8</button>
+            <button class="score-pill" data-team="1" data-val="9">9</button>
+            <button class="score-pill" data-team="1" data-val="10">10</button>
+            <button class="score-pill" data-team="1" data-val="11">11</button>
+            <button class="score-pill" data-team="1" data-val="12">12</button>
+            <button class="score-pill" data-team="1" data-val="13">13</button>
+            <button class="score-pill" data-team="1" data-val="14">14</button>
+            <button class="score-pill winner-pill" data-team="1" data-val="15">15</button>
           </div>
         </div>
 
@@ -592,22 +613,43 @@
           <div class="modal-vs-divider-line"></div>
         </div>
 
-        <!-- Team 2 score stepper -->
-        <div class="modal-stepper-row">
-          <div class="modal-stepper-team-info">
-            <h3 id="modal-team2-names">Emma & David</h3>
+        <!-- Team 2 score card -->
+        <div class="modal-team-score-card">
+          <div class="modal-stepper-row">
+            <div class="modal-stepper-team-info">
+              <h3 id="modal-team2-names">Emma & David</h3>
+            </div>
+            <div class="stepper-controls">
+              <button class="stepper-btn" id="stepper-minus-2">
+                <span class="material-symbols-outlined">remove</span>
+              </button>
+              <div class="stepper-value-badge" id="stepper-val-2">0</div>
+              <button class="stepper-btn" id="stepper-plus-2">
+                <span class="material-symbols-outlined">add</span>
+              </button>
+              <button class="winner-btn" id="winner-btn-2" title="Set to 15 (Winner)">
+                <span class="material-symbols-outlined">emoji_events</span>
+              </button>
+            </div>
           </div>
-          <div class="stepper-controls">
-            <button class="stepper-btn" id="stepper-minus-2">
-              <span class="material-symbols-outlined">remove</span>
-            </button>
-            <input type="number" class="stepper-value" id="stepper-val-2" min="0" value="0" style="text-align: center; -moz-appearance: textfield;" />
-            <button class="stepper-btn" id="stepper-plus-2">
-              <span class="material-symbols-outlined">add</span>
-            </button>
-            <button class="winner-btn" id="winner-btn-2" title="Set to 15 (Winner)">
-              <span class="material-symbols-outlined">emoji_events</span>
-            </button>
+          <!-- 0-15 Quick Score Grid for Team 2 -->
+          <div class="score-grid-selector" id="score-grid-team2">
+            <button class="score-pill" data-team="2" data-val="0">0</button>
+            <button class="score-pill" data-team="2" data-val="1">1</button>
+            <button class="score-pill" data-team="2" data-val="2">2</button>
+            <button class="score-pill" data-team="2" data-val="3">3</button>
+            <button class="score-pill" data-team="2" data-val="4">4</button>
+            <button class="score-pill" data-team="2" data-val="5">5</button>
+            <button class="score-pill" data-team="2" data-val="6">6</button>
+            <button class="score-pill" data-team="2" data-val="7">7</button>
+            <button class="score-pill" data-team="2" data-val="8">8</button>
+            <button class="score-pill" data-team="2" data-val="9">9</button>
+            <button class="score-pill" data-team="2" data-val="10">10</button>
+            <button class="score-pill" data-team="2" data-val="11">11</button>
+            <button class="score-pill" data-team="2" data-val="12">12</button>
+            <button class="score-pill" data-team="2" data-val="13">13</button>
+            <button class="score-pill" data-team="2" data-val="14">14</button>
+            <button class="score-pill winner-pill" data-team="2" data-val="15">15</button>
           </div>
         </div>
       </div>

@@ -2023,23 +2023,29 @@ function renderScoreModal() {
   document.getElementById('modal-team1-names').textContent = `${formatPlayerName(match.team1Player1.name)} & ${formatPlayerName(match.team1Player2.name)}`;
   document.getElementById('modal-team2-names').textContent = `${formatPlayerName(match.team2Player1.name)} & ${formatPlayerName(match.team2Player2.name)}`;
 
-  // Steppers Score Text
+  // Steppers Score Badges
   const val1 = document.getElementById('stepper-val-1');
   const val2 = document.getElementById('stepper-val-2');
-  if (val1) val1.value = appState.modal.score1;
-  if (val2) val2.value = appState.modal.score2;
+  if (val1) val1.textContent = appState.modal.score1;
+  if (val2) val2.textContent = appState.modal.score2;
 
-  // Color highlights on winning stepper
-  if (appState.modal.score1 > appState.modal.score2) {
-    val1.className = 'stepper-value winning';
-    val2.className = 'stepper-value';
-  } else if (appState.modal.score2 > appState.modal.score1) {
-    val2.className = 'stepper-value winning';
-    val1.className = 'stepper-value';
-  } else {
-    val1.className = 'stepper-value';
-    val2.className = 'stepper-value';
+  // Color highlights on winning stepper badge
+  if (val1) {
+    val1.className = appState.modal.score1 > appState.modal.score2 ? 'stepper-value-badge winning' : 'stepper-value-badge';
   }
+  if (val2) {
+    val2.className = appState.modal.score2 > appState.modal.score1 ? 'stepper-value-badge winning' : 'stepper-value-badge';
+  }
+
+  // Update active state on 0-15 score grid pills
+  document.querySelectorAll('#score-grid-team1 .score-pill').forEach(pill => {
+    const val = parseInt(pill.dataset.val, 10);
+    pill.classList.toggle('active', val === appState.modal.score1);
+  });
+  document.querySelectorAll('#score-grid-team2 .score-pill').forEach(pill => {
+    const val = parseInt(pill.dataset.val, 10);
+    pill.classList.toggle('active', val === appState.modal.score2);
+  });
 
 
 }
@@ -2278,21 +2284,19 @@ function setupEventListeners() {
     });
   }
 
-  const val1Select = document.getElementById('stepper-val-1');
-  if (val1Select) {
-    val1Select.addEventListener('input', (e) => {
-      appState.modal.score1 = parseInt(e.target.value, 10) || 0;
+  // Score Grid Pill Listeners (0-15 selection)
+  document.querySelectorAll('.score-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const team = parseInt(pill.dataset.team, 10);
+      const val = parseInt(pill.dataset.val, 10);
+      if (team === 1) {
+        appState.modal.score1 = val;
+      } else if (team === 2) {
+        appState.modal.score2 = val;
+      }
       render();
     });
-  }
-
-  const val2Select = document.getElementById('stepper-val-2');
-  if (val2Select) {
-    val2Select.addEventListener('input', (e) => {
-      appState.modal.score2 = parseInt(e.target.value, 10) || 0;
-      render();
-    });
-  }
+  });
 
   // Modal Actions
   const modalCloseBtn = document.getElementById('modal-close-btn');

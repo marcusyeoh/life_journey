@@ -1447,14 +1447,86 @@ input:checked + .slider:before {
   gap: 16px;
 }
 
+.modal-team-score-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--surface);
+  border: 1px solid var(--surface-high);
+  border-radius: 24px;
+  padding: 16px;
+}
+
 .modal-stepper-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--surface-high);
-  border-radius: 24px;
-  padding: 16px;
-  background-color: var(--surface);
+}
+
+.stepper-value-badge {
+  font-size: 26px;
+  font-weight: 800;
+  font-family: monospace;
+  color: var(--text-primary);
+  min-width: 40px;
+  text-align: center;
+  user-select: none;
+}
+
+.stepper-value-badge.winning {
+  color: var(--neon);
+  font-size: 28px;
+}
+
+.score-grid-selector {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.score-pill {
+  height: 36px;
+  border-radius: 10px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--surface-highest);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.score-pill:hover {
+  border-color: var(--border-gloss);
+  background-color: var(--surface-high);
+  transform: translateY(-1px);
+}
+
+.score-pill:active {
+  transform: scale(0.92);
+}
+
+.score-pill.active {
+  background: var(--neon);
+  color: #000000;
+  border-color: var(--neon);
+  font-weight: 900;
+  box-shadow: 0 0 12px var(--neon-glow);
+}
+
+.score-pill.winner-pill.active {
+  background: #ffd60a;
+  color: #000000;
+  border-color: #ffd60a;
+  box-shadow: 0 0 14px rgba(255, 214, 10, 0.6);
 }
 
 .modal-stepper-team-info {
