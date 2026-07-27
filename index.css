@@ -2956,6 +2956,105 @@ input:checked + .slider:before {
   margin-bottom: 2px;
 }
 
+.overview-standings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.overview-standing-card {
+  background: var(--surface-high);
+  border: 1px solid var(--border-gloss);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+}
+
+[data-theme="light"] .overview-standing-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.overview-standing-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 8px;
+}
+
+.overview-standing-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.overview-standing-rank {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.overview-standing-names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.overview-standing-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.overview-standing-subrank {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.overview-standing-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="light"] .overview-standing-bottom {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.overview-games-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.overview-games-pills {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
 @media (max-width: 580px) {
   .overview-grid-container {
     grid-template-columns: 1fr;

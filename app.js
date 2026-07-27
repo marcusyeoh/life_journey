@@ -3689,21 +3689,21 @@ function renderOverview() {
         }
 
         standingsHtml += `
-          <div style="display: flex; flex-direction: column; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <div style="display: flex; align-items: center; justify-content: space-between; min-width: 0;">
-              <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex-grow: 1;">
-                <span style="font-size: 11px; font-weight: 800; color: var(--text-secondary); width: 16px;">#${groupRank}</span>
+          <div class="overview-standing-card">
+            <div class="overview-standing-top">
+              <div class="overview-standing-user-info">
+                <span class="overview-standing-rank">#${groupRank}</span>
                 ${renderPlayerAvatar(player, 20)}
-                <div style="display: flex; flex-direction: column; min-width: 0; flex-grow: 1;">
-                  <span style="font-size: 12px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;">${formatPlayerName(player.name)}</span>
-                  <span style="font-size: 9px; color: var(--text-secondary);">Rank: #${globalRank}</span>
+                <div class="overview-standing-names">
+                  <span class="overview-standing-name">${formatPlayerName(player.name)}</span>
+                  <span class="overview-standing-subrank">Rank #${globalRank}</span>
                 </div>
               </div>
               <span class="grid-player-total-badge ${totalClass}" style="font-size: 10px; padding: 2px 6px; border-radius: 6px; white-space: nowrap;">${totalVal} pts</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; margin-left: 24px;">
-              <span style="font-size: 9px; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.5px;">GAMES:</span>
-              <div style="display: flex; gap: 4px; align-items: center;">
+            <div class="overview-standing-bottom">
+              <span class="overview-games-label">GAMES:</span>
+              <div class="overview-games-pills">
                 ${pillsHtml}
               </div>
             </div>
@@ -3730,7 +3730,7 @@ function renderOverview() {
         
         <div class="overview-standings-section">
           <div class="overview-standings-title">Standings</div>
-          <div style="display: flex; flex-direction: column;">
+          <div class="overview-standings-list">
             ${standingsHtml}
           </div>
         </div>
