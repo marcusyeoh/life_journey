@@ -1478,6 +1478,33 @@ input:checked + .slider:before {
   font-size: 28px;
 }
 
+.score-grid-container-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-gloss);
+  border-radius: 16px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+[data-theme="light"] .score-grid-container-card {
+  background-color: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.score-selector-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .score-grid-selector {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
@@ -1487,26 +1514,33 @@ input:checked + .slider:before {
 }
 
 .score-pill {
-  height: 36px;
+  height: 34px;
   border-radius: 10px;
-  background-color: var(--input-bg);
-  border: 1px solid var(--surface-highest);
+  background-color: var(--surface-high);
+  border: 1px solid var(--border-gloss);
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   font-family: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   padding: 0;
   box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .score-pill {
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .score-pill:hover {
-  border-color: var(--border-gloss);
-  background-color: var(--surface-high);
+  border-color: var(--neon);
+  background-color: var(--surface-highest);
   transform: translateY(-1px);
 }
 
@@ -1515,17 +1549,17 @@ input:checked + .slider:before {
 }
 
 .score-pill.active {
-  background: var(--neon);
-  color: #000000;
-  border-color: var(--neon);
+  background: var(--neon) !important;
+  color: #000000 !important;
+  border-color: var(--neon) !important;
   font-weight: 900;
   box-shadow: 0 0 12px var(--neon-glow);
 }
 
 .score-pill.winner-pill.active {
-  background: #ffd60a;
-  color: #000000;
-  border-color: #ffd60a;
+  background: #ffd60a !important;
+  color: #000000 !important;
+  border-color: #ffd60a !important;
   box-shadow: 0 0 14px rgba(255, 214, 10, 0.6);
 }
 
