@@ -2238,14 +2238,6 @@ function setupEventListeners() {
     });
   }
 
-  const winnerBtn1 = document.getElementById('winner-btn-1');
-  if (winnerBtn1) {
-    winnerBtn1.addEventListener('click', () => {
-      appState.modal.score1 = 15;
-      render();
-    });
-  }
-
   const stepperMinus1 = document.getElementById('stepper-minus-1');
   if (stepperMinus1) {
     stepperMinus1.addEventListener('click', () => {
@@ -2263,14 +2255,6 @@ function setupEventListeners() {
         appState.modal.score2++;
         render();
       }
-    });
-  }
-
-  const winnerBtn2 = document.getElementById('winner-btn-2');
-  if (winnerBtn2) {
-    winnerBtn2.addEventListener('click', () => {
-      appState.modal.score2 = 15;
-      render();
     });
   }
 
