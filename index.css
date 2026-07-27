@@ -2702,15 +2702,15 @@ input:checked + .slider:before {
 
 /* Overview Screen Widescreen layout and styling */
 .overview-grid-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
   gap: 20px;
-  overflow-x: auto;
   padding: 10px 4px 20px 4px;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* Beautiful custom scrollbar for horizontal columns scroll */
+/* Custom scrollbar for horizontal or grid overflow */
 .overview-grid-container::-webkit-scrollbar {
   height: 8px;
 }
@@ -2728,15 +2728,17 @@ input:checked + .slider:before {
 }
 
 .overview-court-column {
-  flex: 0 0 340px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   background: var(--surface);
   border: 1px solid var(--border-gloss);
   border-radius: 20px;
   padding: 16px;
   box-shadow: var(--shadow-glass);
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .overview-court-header {
@@ -2762,20 +2764,28 @@ input:checked + .slider:before {
   letter-spacing: 1px;
 }
 
+.overview-court-body {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 16px;
+  align-items: start;
+}
+
 .overview-matches-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .overview-match-card {
   background: var(--surface-high);
   border: 1px solid var(--border-gloss);
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .overview-match-card.clickable {
@@ -2823,20 +2833,36 @@ input:checked + .slider:before {
 }
 
 .overview-standings-section {
-  border-top: 1px solid var(--border-gloss);
-  padding-top: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  border-left: 1px solid var(--border-gloss);
+  padding-left: 14px;
 }
 
 .overview-standings-title {
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+}
+
+@media (max-width: 580px) {
+  .overview-grid-container {
+    grid-template-columns: 1fr;
+  }
+  .overview-court-body {
+    grid-template-columns: 1fr;
+  }
+  .overview-standings-section {
+    border-left: none;
+    padding-left: 0;
+    border-top: 1px solid var(--border-gloss);
+    padding-top: 14px;
+  }
 }
 
 /* Override top padding for overview screen */

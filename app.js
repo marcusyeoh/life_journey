@@ -3734,15 +3734,17 @@ function renderOverview() {
         ${subtitleHtml}
       </div>
       
-      <div class="overview-matches-section">
-        <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Matches</div>
-        ${matchesHtml}
-      </div>
-      
-      <div class="overview-standings-section">
-        <div class="overview-standings-title">Standings</div>
-        <div style="display: flex; flex-direction: column;">
-          ${standingsHtml}
+      <div class="overview-court-body">
+        <div class="overview-matches-section">
+          <div style="font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Matches</div>
+          ${matchesHtml}
+        </div>
+        
+        <div class="overview-standings-section">
+          <div class="overview-standings-title">Standings</div>
+          <div style="display: flex; flex-direction: column;">
+            ${standingsHtml}
+          </div>
         </div>
       </div>
     `;
