@@ -277,6 +277,16 @@ const COURT_SCHEDULES = {
     { t1: [2, 4], t2: [3, 5] },
     { t1: [0, 6], t2: [1, 3] },
     { t1: [2, 6], t2: [4, 5] }
+  ],
+  8: [
+    { t1: [1, 4], t2: [5, 6] },
+    { t1: [3, 6], t2: [5, 7] },
+    { t1: [0, 3], t2: [2, 6] },
+    { t1: [1, 2], t2: [4, 7] },
+    { t1: [0, 6], t2: [2, 7] },
+    { t1: [1, 5], t2: [2, 3] },
+    { t1: [0, 7], t2: [4, 5] },
+    { t1: [0, 4], t2: [1, 3] }
   ]
 };
 
@@ -423,7 +433,7 @@ function generatePairingsForCourt(court) {
   court.activeRound = 1;
 
   const n = court.players.length;
-  if (n < 4 || n > 7) return; // Supported sizes are 4, 5, 6, 7
+  if (n < 4 || n > 8) return; // Supported sizes are 4, 5, 6, 7, 8
 
   // Build Stage 1 history of repeat matchups
   const history = buildStage1History();
@@ -452,7 +462,7 @@ function generatePairingsForCourt(court) {
 // INTEGER PARTITIONING ALGORITHM
 // ----------------------------------------------------
 function findOptimalPartition(playerCount, maxCourts = 6) {
-  if (playerCount < 4 || playerCount > 42) return null; // Supported up to 6 courts * 7 players = 42
+  if (playerCount < 4 || playerCount > 48) return null; // Supported up to 6 courts * 8 players = 48
 
   const results = [];
 
@@ -465,8 +475,8 @@ function findOptimalPartition(playerCount, maxCourts = 6) {
     }
     if (currentPartition.length >= maxCourts) return;
 
-    // Try sizes 7, 6, 5, 4 (prefer larger group sizes first as possibilities)
-    for (let size of [7, 6, 5, 4]) {
+    // Try sizes 8, 7, 6, 5, 4 (prefer larger group sizes first as possibilities)
+    for (let size of [8, 7, 6, 5, 4]) {
       if (remaining >= size) {
         currentPartition.push(size);
         backtrack(remaining - size, currentPartition);
@@ -1064,14 +1074,14 @@ function renderPlayerEntry(activeCourts) {
     const filledCount = entry.names.filter(n => n && n.trim() !== '').length;
 
     // Capacity validation badge styling
-    let badgeText = `${filledCount}/7 Players`;
+    let badgeText = `${filledCount}/8 Players`;
     let badgeClass = 'valid';
 
     if (filledCount < 4) {
-      badgeText = `Needs 4-7 Players`;
+      badgeText = `Needs 4-8 Players`;
       badgeClass = 'invalid';
-    } else if (filledCount === 7) {
-      badgeText = `7/7 (Full)`;
+    } else if (filledCount === 8) {
+      badgeText = `8/8 (Full)`;
       badgeClass = 'valid';
     }
 
@@ -1204,8 +1214,8 @@ function renderPlayerEntry(activeCourts) {
 
     col.appendChild(dragList);
 
-    // Inline + Add Player button at bottom of court list (max 7 players)
-    if (entry.names.length < 7) {
+    // Inline + Add Player button at bottom of court list (max 8 players)
+    if (entry.names.length < 8) {
       const addBtn = document.createElement('button');
       addBtn.className = 'inline-add-player-btn';
       addBtn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">add</span> Add Player`;
@@ -1241,8 +1251,8 @@ function validateEntryGeneration(activeCourts) {
       break;
     }
     const filledCount = entry.names.filter(n => n.trim() !== '').length;
-    // Each active court must have 4, 5, 6, or 7 players to generate pairings
-    if (filledCount < 4 || filledCount > 7) {
+    // Each active court must have 4, 5, 6, 7, or 8 players to generate pairings
+    if (filledCount < 4 || filledCount > 8) {
       allValid = false;
       break;
     }
@@ -1343,8 +1353,8 @@ function initDragAndDrop(activeCourts) {
           currentTargetList = hoveredCol.querySelector('.player-drag-list');
           const targetListId = currentTargetList.getAttribute('data-list-id');
 
-          // Enforce max 7 player slots on courts
-          const targetCapacity = 7;
+          // Enforce max 8 player slots on courts
+          const targetCapacity = 8;
           const targetNames = appState.entryState[targetListId].names;
           const currentCount = targetNames.length;
 
@@ -3060,7 +3070,7 @@ function launchFinalStageAutomatically() {
   const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
   const partition = findOptimalPartition(allPlayers.length, maxCourts);
   if (!partition) {
-    alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, or 6.");
+    alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, 6, 7, or 8.");
     return;
   }
 
@@ -3160,7 +3170,7 @@ function advanceToStage2() {
   const maxCourts = activeStage1Courts.length > 0 ? activeStage1Courts.length : 4;
   const partition = findOptimalPartition(allPlayers.length, maxCourts);
   if (!partition) {
-    alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, or 6.");
+    alert("Error: Mathematically unable to partition " + allPlayers.length + " players into groups of 4, 5, 6, 7, or 8.");
     return;
   }
 
@@ -4092,8 +4102,8 @@ function assignBalancedPlayersToCourts(extractedPlayers) {
     while (names.length < 4) {
       names.push('');
     }
-    if (names.length > 7) {
-      names.length = 7;
+    if (names.length > 8) {
+      names.length = 8;
     }
 
     appState.entryState[court.courtNumber] = {
