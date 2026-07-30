@@ -2872,8 +2872,8 @@ input:checked + .slider:before {
 
 .overview-court-body {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 16px;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 12px;
   align-items: start;
 }
 
@@ -2944,7 +2944,7 @@ input:checked + .slider:before {
   gap: 8px;
   min-width: 0;
   border-left: 1px solid var(--border-gloss);
-  padding-left: 14px;
+  padding-left: 10px;
 }
 
 .overview-standings-title {
@@ -2967,7 +2967,7 @@ input:checked + .slider:before {
   background: var(--surface-high);
   border: 1px solid var(--border-gloss);
   border-radius: 12px;
-  padding: 8px 10px;
+  padding: 8px 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -3032,7 +3032,8 @@ input:checked + .slider:before {
 .overview-standing-bottom {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 4px;
   padding-top: 4px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -3051,8 +3052,15 @@ input:checked + .slider:before {
 
 .overview-games-pills {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   align-items: center;
+}
+
+.overview-standing-card .game-pill {
+  min-width: 22px;
+  height: 18px;
+  font-size: 9px;
+  border-radius: 4px;
 }
 
 @media (max-width: 580px) {
