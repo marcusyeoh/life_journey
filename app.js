@@ -4111,7 +4111,6 @@ Respond ONLY with a JSON object in this format:
 }
 
 function assignBalancedPlayersToCourts(extractedPlayers) {
-  // extractedPlayers is an array of objects: { name: string, dupr: number }
   // Sort descending by dupr
   extractedPlayers.sort((a, b) => b.dupr - a.dupr);
 
@@ -4121,14 +4120,58 @@ function assignBalancedPlayersToCourts(extractedPlayers) {
 
   const numCourts = activeCourts.length;
 
+  // Calculate target sizes for each active court (lower-indexed active courts get remainder players first)
+  const baseSize = Math.floor(extractedPlayers.length / numCourts);
+  const remainder = extractedPlayers.length % numCourts;
+  const targetSizes = activeCourts.map((_, idx) => {
+    return baseSize + (idx < remainder ? 1 : 0);
+  });
+
   // Initialize player list for each active court
   const courtPlayersList = Array.from({ length: numCourts }, () => []);
 
-  // Snake draft distribution: C1 -> C2 -> C3 -> C3 -> C2 -> C1...
+  // Snake draft distribution: C1 -> C2 -> C3 -> C3 -> C2 -> C1... with target size enforcement
   let goingForward = true;
   let courtIndex = 0;
   for (let i = 0; i < extractedPlayers.length; i++) {
     const player = extractedPlayers[i];
+    
+    // Find the next court index in the draft direction that is not full
+    let selectedIndex = courtIndex;
+    let found = false;
+    for (let step = 0; step < numCourts; step++) {
+      if (courtPlayersList[selectedIndex].length < targetSizes[selectedIndex]) {
+        found = true;
+        break;
+      }
+      // If full, move to next court in the draft direction
+      if (goingForward) {
+        if (selectedIndex === numCourts - 1) {
+          selectedIndex = numCourts - 1;
+        } else {
+          selectedIndex++;
+        }
+      } else {
+        if (selectedIndex === 0) {
+          selectedIndex = 0;
+        } else {
+          selectedIndex--;
+        }
+      }
+    }
+    
+    // Fallback search if not found in draft direction
+    if (!found) {
+      for (let idx = 0; idx < numCourts; idx++) {
+        if (courtPlayersList[idx].length < targetSizes[idx]) {
+          selectedIndex = idx;
+          found = true;
+          break;
+        }
+      }
+    }
+    
+    // Format DUPR display
     let formattedDupr = player.dupr.toString();
     const dotIdx = formattedDupr.indexOf('.');
     if (dotIdx === -1) {
@@ -4140,7 +4183,10 @@ function assignBalancedPlayersToCourts(extractedPlayers) {
       }
     }
     const nameWithDupr = `${player.name} (${formattedDupr})`;
-    courtPlayersList[courtIndex].push(nameWithDupr);
+    courtPlayersList[selectedIndex].push(nameWithDupr);
+    
+    // Update starting point index for next iteration
+    courtIndex = selectedIndex;
 
     // Move to next court in snake draft sequence
     if (goingForward) {
