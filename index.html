@@ -223,6 +223,27 @@
 
 
 
+    <!-- Round 2 Seeding Method Option -->
+    <div class="card" id="setup-seeding-zone" style="margin-top: 24px; padding: 20px; background-color: var(--surface); border-radius: 16px;">
+      <h3 class="label-caps" style="color: var(--text-primary); margin: 0 0 8px 0; font-size: 14px; letter-spacing: 1px;">Round 2 Seeding Method</h3>
+      <p class="subtitle-md" style="margin-bottom: 16px; color: var(--text-secondary); font-size: 13px; line-height: 1.5;">Choose how players are distributed into Gold, Silver, and Bronze tiers for Round 2.</p>
+      
+      <div style="display: flex; background-color: var(--surface-high); border: 1px solid var(--border-gloss); padding: 4px; border-radius: 12px; gap: 4px;">
+        <button id="btn-seeding-score" class="leaderboard-toggle-btn active"
+          style="flex: 1; border: none; background: transparent; font-family: inherit; font-size: 12px; font-weight: 700; padding: 10px 6px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
+          Score-Based Waterfall
+        </button>
+        <button id="btn-seeding-rank" class="leaderboard-toggle-btn"
+          style="flex: 1; border: none; background: transparent; font-family: inherit; font-size: 12px; font-weight: 700; padding: 10px 6px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; white-space: nowrap;">
+          Rank-Based Waterfall
+        </button>
+      </div>
+      
+      <div id="seeding-logic-desc" style="margin-top: 12px; font-size: 11px; color: var(--text-secondary); line-height: 1.4;">
+        <strong>Score-Based</strong>: Sorts players strictly by Round 1 score differential (highest to lowest), promoting the absolute top scorers to the highest tier.
+      </div>
+    </div>
+
     <!-- Tournament Control Utilities -->
     <div class="card" id="setup-history-zone" style="display: none; margin-top: 24px; padding: 20px; background-color: var(--surface); border-radius: 16px;">
       <h3 class="label-caps" style="color: var(--text-primary); margin: 0 0 8px 0; font-size: 14px; letter-spacing: 1px;">Tournament Snapshot</h3>

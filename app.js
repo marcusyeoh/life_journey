@@ -42,6 +42,7 @@ const appState = {
   currentStage: 1, // 1: Qualifying, 2: Final Stage
   stage1Courts: null,
   draftingStyle: 'snake', // 'snake' | 'skill-grouped'
+  seedingLogic: 'score-based', // 'score-based' | 'rank-based'
   stage2ViewingQualifying: false,
   stage2PreviewTiers: [],
   leaderboardViewMode: 'cumulative', // 'cumulative' | 'stage2' | 'stage1'
@@ -573,6 +574,7 @@ async function startApp() {
         appState.currentStage = data.currentStage || 1;
         appState.stage1Courts = data.stage1Courts || null;
         appState.draftingStyle = data.draftingStyle || 'snake';
+        appState.seedingLogic = data.seedingLogic || 'score-based';
         appState.stage2ViewingQualifying = data.stage2ViewingQualifying || false;
         appState.stage2PreviewTiers = data.stage2PreviewTiers || [];
 
@@ -965,6 +967,22 @@ function renderCourtSetup() {
     nextBtn.innerHTML = hasActiveMixer
       ? `Edit Players & Regenerate <span class="material-symbols-outlined">refresh</span>`
       : `Next: Enter Players <span class="material-symbols-outlined">arrow_forward</span>`;
+  // Update Seeding Logic UI in admin setup view
+  const btnSeedingScore = document.getElementById('btn-seeding-score');
+  const btnSeedingRank = document.getElementById('btn-seeding-rank');
+  const seedingLogicDesc = document.getElementById('seeding-logic-desc');
+  if (btnSeedingScore && btnSeedingRank && seedingLogicDesc) {
+    const isScore = appState.seedingLogic === 'score-based';
+    btnSeedingScore.classList.toggle('active', isScore);
+    btnSeedingScore.style.color = isScore ? 'var(--neon)' : 'var(--text-secondary)';
+    btnSeedingRank.classList.toggle('active', !isScore);
+    btnSeedingRank.style.color = !isScore ? 'var(--neon)' : 'var(--text-secondary)';
+
+    if (isScore) {
+      seedingLogicDesc.innerHTML = `<strong>Score-Based</strong>: Sorts players strictly by Round 1 score differential (highest to lowest), promoting the absolute top scorers to the highest tier.`;
+    } else {
+      seedingLogicDesc.innerHTML = `<strong>Rank-Based</strong>: Sorts players by their Court Rank (1st place, then 2nd place, etc.), then by score. Top finishers of each court always seed higher than lower ranks.`;
+    }
   }
 }
 
@@ -2367,6 +2385,24 @@ function setupEventListeners() {
     });
   }
 
+  // Seeding Logic Selection Bindings
+  const btnSeedingScore = document.getElementById('btn-seeding-score');
+  const btnSeedingRank = document.getElementById('btn-seeding-rank');
+  if (btnSeedingScore) {
+    btnSeedingScore.addEventListener('click', () => {
+      appState.seedingLogic = 'score-based';
+      saveStateToCloud();
+      render();
+    });
+  }
+  if (btnSeedingRank) {
+    btnSeedingRank.addEventListener('click', () => {
+      appState.seedingLogic = 'rank-based';
+      saveStateToCloud();
+      render();
+    });
+  }
+
   // Stage 2 Navigation & Promotion Bindings
   const dashboardAdvanceBtn = document.getElementById('btn-dashboard-advance');
   if (dashboardAdvanceBtn) {
@@ -2810,6 +2846,7 @@ async function saveStateToCloud() {
       currentView: appState.currentView,
       currentStage: appState.currentStage,
       draftingStyle: appState.draftingStyle || 'snake',
+      seedingLogic: appState.seedingLogic || 'score-based',
       stage1Courts: appState.stage1Courts,
       stage2ViewingQualifying: appState.stage2ViewingQualifying,
       stage2PreviewTiers: appState.stage2PreviewTiers,
@@ -2947,6 +2984,7 @@ async function resetMixer() {
   appState.currentView = 'court-setup';
   appState.currentStage = 1;
   appState.draftingStyle = 'snake';
+  appState.seedingLogic = 'score-based';
   appState.stage1Courts = null;
   appState.stage2ViewingQualifying = false;
   appState.stage2PreviewTiers = [];
@@ -2986,6 +3024,7 @@ async function resetMixer() {
       currentView: 'court-setup',
       currentStage: 1,
       draftingStyle: 'snake',
+      seedingLogic: 'score-based',
       stage1Courts: null,
       stage2ViewingQualifying: false,
       stage2PreviewTiers: [],
@@ -3055,18 +3094,29 @@ function launchFinalStageAutomatically() {
     });
   });
 
-  // Seeding sort order:
-  // Sort strictly by Round 1 score differential (highest to lowest).
-  // If scores are tied, tie-break by better court rank, then stable index.
-  allPlayers.sort((a, b) => {
-    if (b.stage1Score !== a.stage1Score) {
+  // Seeding sort order based on selected seedingLogic
+  if (appState.seedingLogic === 'rank-based') {
+    // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
+    // 2. Higher qualifying score differential breaks ties
+    allPlayers.sort((a, b) => {
+      if (a.courtRank !== b.courtRank) {
+        return a.courtRank - b.courtRank;
+      }
       return b.stage1Score - a.stage1Score;
-    }
-    if (a.courtRank !== b.courtRank) {
-      return a.courtRank - b.courtRank;
-    }
-    return a.initialIndex - b.initialIndex;
-  });
+    });
+  } else {
+    // Sort strictly by Round 1 score differential (highest to lowest).
+    // If scores are tied, tie-break by better court rank, then stable index.
+    allPlayers.sort((a, b) => {
+      if (b.stage1Score !== a.stage1Score) {
+        return b.stage1Score - a.stage1Score;
+      }
+      if (a.courtRank !== b.courtRank) {
+        return a.courtRank - b.courtRank;
+      }
+      return a.initialIndex - b.initialIndex;
+    });
+  }
 
   // Partition into optimal tier sizes for Stage 2
   const activeStage1Courts = sourceCourtsForSeeding.filter(c => c.isActive);
@@ -3158,18 +3208,29 @@ function advanceToStage2() {
     });
   });
 
-  // Seeding sort order:
-  // Sort strictly by Round 1 score differential (highest to lowest).
-  // If scores are tied, tie-break by better court rank, then stable index.
-  allPlayers.sort((a, b) => {
-    if (b.stage1Score !== a.stage1Score) {
+  // Seeding sort order based on selected seedingLogic
+  if (appState.seedingLogic === 'rank-based') {
+    // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
+    // 2. Higher qualifying score differential breaks ties
+    allPlayers.sort((a, b) => {
+      if (a.courtRank !== b.courtRank) {
+        return a.courtRank - b.courtRank;
+      }
       return b.stage1Score - a.stage1Score;
-    }
-    if (a.courtRank !== b.courtRank) {
-      return a.courtRank - b.courtRank;
-    }
-    return a.initialIndex - b.initialIndex;
-  });
+    });
+  } else {
+    // Sort strictly by Round 1 score differential (highest to lowest).
+    // If scores are tied, tie-break by better court rank, then stable index.
+    allPlayers.sort((a, b) => {
+      if (b.stage1Score !== a.stage1Score) {
+        return b.stage1Score - a.stage1Score;
+      }
+      if (a.courtRank !== b.courtRank) {
+        return a.courtRank - b.courtRank;
+      }
+      return a.initialIndex - b.initialIndex;
+    });
+  }
 
   // Partition into optimal tier sizes for Stage 2
   const activeStage1Courts = appState.courts ? appState.courts.filter(c => c.isActive) : [];
