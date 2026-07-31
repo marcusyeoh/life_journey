@@ -3056,13 +3056,16 @@ function launchFinalStageAutomatically() {
   });
 
   // Seeding sort order:
-  // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
-  // 2. Higher qualifying score differential breaks ties
+  // Sort strictly by Round 1 score differential (highest to lowest).
+  // If scores are tied, tie-break by better court rank, then stable index.
   allPlayers.sort((a, b) => {
+    if (b.stage1Score !== a.stage1Score) {
+      return b.stage1Score - a.stage1Score;
+    }
     if (a.courtRank !== b.courtRank) {
       return a.courtRank - b.courtRank;
     }
-    return b.stage1Score - a.stage1Score;
+    return a.initialIndex - b.initialIndex;
   });
 
   // Partition into optimal tier sizes for Stage 2
@@ -3156,13 +3159,16 @@ function advanceToStage2() {
   });
 
   // Seeding sort order:
-  // 1. Lower court rank first (e.g. all Rank 1s seed higher than Rank 2s)
-  // 2. Higher qualifying score differential breaks ties
+  // Sort strictly by Round 1 score differential (highest to lowest).
+  // If scores are tied, tie-break by better court rank, then stable index.
   allPlayers.sort((a, b) => {
+    if (b.stage1Score !== a.stage1Score) {
+      return b.stage1Score - a.stage1Score;
+    }
     if (a.courtRank !== b.courtRank) {
       return a.courtRank - b.courtRank;
     }
-    return b.stage1Score - a.stage1Score;
+    return a.initialIndex - b.initialIndex;
   });
 
   // Partition into optimal tier sizes for Stage 2
