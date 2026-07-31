@@ -967,7 +967,8 @@ function renderCourtSetup() {
     nextBtn.innerHTML = hasActiveMixer
       ? `Edit Players & Regenerate <span class="material-symbols-outlined">refresh</span>`
       : `Next: Enter Players <span class="material-symbols-outlined">arrow_forward</span>`;
-  // Update Seeding Logic UI in admin setup view
+  }
+
   const btnSeedingScore = document.getElementById('btn-seeding-score');
   const btnSeedingRank = document.getElementById('btn-seeding-rank');
   const seedingLogicDesc = document.getElementById('seeding-logic-desc');
