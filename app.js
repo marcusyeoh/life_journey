@@ -264,11 +264,11 @@ const COURT_SCHEDULES = {
   ],
   6: [
     { t1: [0, 1], t2: [2, 3] },
-    { t1: [0, 2], t2: [1, 4] },
-    { t1: [0, 5], t2: [1, 2] },
-    { t1: [0, 3], t2: [4, 5] },
-    { t1: [1, 5], t2: [3, 4] },
-    { t1: [2, 4], t2: [3, 5] }
+    { t1: [0, 2], t2: [4, 5] },
+    { t1: [1, 4], t2: [3, 5] },
+    { t1: [0, 3], t2: [1, 2] },
+    { t1: [0, 4], t2: [2, 5] },
+    { t1: [1, 5], t2: [3, 4] }
   ],
   7: [
     { t1: [2, 6], t2: [3, 5] },
@@ -3982,22 +3982,24 @@ Iterate through the grid systematically row-by-row (from top to bottom), and for
 
 For each grid slot [Row R, Column C]:
 1. **Identify**: Check if there is an active player profile card.
-   - Ignore empty placeholder/invitation slots (e.g. slots showing a grey/dashed circle, '+', 'Add Player', or 'Invite').
+   - Include ALL players who have a name displayed below their avatar circle.
+   - IMPORTANT: Include slots that have a yellow "Reserved" or padlock icon if there is a player name written underneath (e.g. "Mama Janet Lye"). These are confirmed reserved players.
+   - ONLY ignore truly empty placeholder/invitation slots with no player name (e.g. slots showing an empty grey/dashed circle with no name, '+', 'Add Player', or 'Invite').
 2. **Extract Name**: Read the player's name.
    - Join names spanning multiple lines (e.g. "Kris" + "Cherlynn's +1" -> "Kris Cherlynn's +1").
-   - Strip status labels like "Friend", "Paid", "Going", "Invited", "Co-host".
+   - Strip status labels like "Friend", "Paid", "Going", "Invited", "Co-host", or "Reserved" if attached as a status tag. The actual person's name is the player name.
    - Keep guest indicators like "+1".
 3. **Isolate Track & Find DUPR Badge**:
    - Locate the blue DUPR badge for the player.
    - CRITICAL ALIGNMENT RULE: The DUPR badge MUST be directly underneath the player's name within the same vertical Track C.
    - LANE-JUMPING IS STRICTLY FORBIDDEN: If a player is in Track 3 and has no badge, and there is a badge (e.g., 3.544) in Track 4 under a player in Track 4, the Track 3 player gets the default 2.50. You must never assign a badge from an adjacent column.
-   - Default: If no valid blue DUPR rating badge exists directly below the player's name in their track, assign a default rating of 2.50.
+   - Default: If no valid blue DUPR rating badge exists directly below the player's name in their track (e.g., players with a "Reserved" avatar or unrated players), assign a default rating of 2.50.
 
 =========================================
 LOOP STEP 3: SELF-VERIFICATION LOOP
 =========================================
 Before outputting, loop through your transcribed players list and verify:
-1. Did you skip any active player profile visible in the grid?
+1. Did you skip any player profile visible in the grid that has a name (including those with "Reserved" yellow lock avatars)?
 2. Did you duplicate any player?
 3. For every player assigned a non-2.50 DUPR rating, is that rating badge vertically aligned with their name in the screenshot?
 
