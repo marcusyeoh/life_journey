@@ -20,36 +20,31 @@ module.exports = async (req, res) => {
   try {
     const clientPayload = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     
-    let apiKey = req.headers['x-api-key'];
-    let provider = req.headers['x-ai-provider'] || 'gemini';
+    let apiKey = req.headers['x-api-key'] || '';
+    let provider = 'gemini';
 
-    // Fallback to environment variables if header key is missing or empty
+    // Ignore legacy OpenAI keys sent from browser localStorage
+    if (apiKey.trim().startsWith('sk-')) {
+      apiKey = '';
+    }
+
+    // Fallback to environment variable if header key is missing or empty
     if (!apiKey || apiKey.trim() === '') {
-      if (provider === 'openai' && process.env.OPENAI_API_KEY) {
-        apiKey = process.env.OPENAI_API_KEY;
-      } else if (provider === 'gemini' && process.env.GEMINI_API_KEY) {
-        apiKey = process.env.GEMINI_API_KEY;
-      } else if (process.env.OPENAI_API_KEY) {
-        apiKey = process.env.OPENAI_API_KEY;
-        provider = 'openai';
-      } else if (process.env.GEMINI_API_KEY) {
-        apiKey = process.env.GEMINI_API_KEY;
-        provider = 'gemini';
-      }
+      apiKey = process.env.GEMINI_API_KEY || process.env.gemini || '';
     }
 
     if (!apiKey || apiKey.trim() === '') {
-      res.status(400).json({ error: 'Missing API Key. Please supply a key in the settings panel or configure it in Vercel environment variables.' });
+      res.status(400).json({ error: 'Missing Gemini API Key. Please supply a key in the settings panel or configure GEMINI_API_KEY in Vercel environment variables.' });
       return;
     }
 
     // Clean and sanitize API key to remove trailing spaces, newlines, or carriage returns
     apiKey = apiKey.trim().replace(/[\r\n]+/g, '');
 
-    if (provider === 'openai') {
-      await proxyOpenAI(apiKey, clientPayload, res);
-    } else if (provider === 'gemini') {
+    if (provider === 'gemini') {
       await proxyGemini(apiKey, clientPayload, res);
+    } else if (provider === 'openai') {
+      await proxyOpenAI(apiKey, clientPayload, res);
     } else {
       res.status(400).json({ error: `Unsupported AI Provider: ${provider}` });
     }

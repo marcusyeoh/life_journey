@@ -3956,8 +3956,13 @@ function convertFileToBase64(file) {
 
 async function extractPlayersAndDUPRFromImages(imageDataList) {
   appState.avatars = {};
-  const savedKey = localStorage.getItem('ai_api_key') || '';
-  const savedProvider = localStorage.getItem('ai_provider') || 'gemini';
+  let savedKey = localStorage.getItem('ai_api_key') || '';
+  if (savedKey.trim().startsWith('sk-')) {
+    savedKey = '';
+    localStorage.removeItem('ai_api_key');
+  }
+  const savedProvider = 'gemini';
+  localStorage.setItem('ai_provider', 'gemini');
   const base64Images = imageDataList.map(img => img.base64);
 
   const promptText = `You are a highly accurate pickleball registration and leaderboard transcription AI. Your task is to extract player names and DUPR ratings from the provided screenshot of player profiles.

@@ -142,38 +142,32 @@ function handleAIProxy(req, res) {
   req.on('end', () => {
     try {
       const payload = JSON.parse(body);
-      let apiKey = req.headers['x-api-key'];
-      let provider = req.headers['x-ai-provider'] || 'gemini';
+      let apiKey = req.headers['x-api-key'] || '';
+      let provider = 'gemini';
+
+      // Ignore legacy OpenAI keys sent from browser localStorage
+      if (apiKey.trim().startsWith('sk-')) {
+        apiKey = '';
+      }
 
       // Fallback to environment variables if header key is missing or empty
       if (!apiKey || apiKey.trim() === '') {
-        if (provider === 'openai' && process.env.OPENAI_API_KEY) {
-          apiKey = process.env.OPENAI_API_KEY;
-        } else if (provider === 'gemini' && process.env.GEMINI_API_KEY) {
-          apiKey = process.env.GEMINI_API_KEY;
-        } else if (process.env.OPENAI_API_KEY) {
-          // If a key is present and is OpenAI, default provider to openai
-          apiKey = process.env.OPENAI_API_KEY;
-          provider = 'openai';
-        } else if (process.env.GEMINI_API_KEY) {
-          apiKey = process.env.GEMINI_API_KEY;
-          provider = 'gemini';
-        }
+        apiKey = process.env.GEMINI_API_KEY || process.env.gemini || '';
       }
 
       if (!apiKey || apiKey.trim() === '') {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Missing API Key. Please supply a key in the settings panel or write it into a local .env file.' }));
+        res.end(JSON.stringify({ error: 'Missing Gemini API Key. Please supply a key in the settings panel or write GEMINI_API_KEY into a local .env file.' }));
         return;
       }
 
       // Clean and sanitize API key to remove trailing spaces, newlines, or carriage returns
       apiKey = apiKey.trim().replace(/[\r\n]+/g, '');
 
-      if (provider === 'openai') {
-        proxyOpenAI(apiKey, payload, res);
-      } else if (provider === 'gemini') {
+      if (provider === 'gemini') {
         proxyGemini(apiKey, payload, res);
+      } else if (provider === 'openai') {
+        proxyOpenAI(apiKey, payload, res);
       } else {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: `Unsupported AI Provider: ${provider}` }));
