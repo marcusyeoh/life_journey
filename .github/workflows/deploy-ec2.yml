@@ -21,11 +21,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Write .env file
-        if: ${{ secrets.ENV_FILE != '' }}
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
         run: |
-          printf "%s\n" "$ENV_FILE" > .env
+          if [ -n "$ENV_FILE" ]; then
+            printf "%s\n" "$ENV_FILE" > .env
+          fi
 
       - name: Configure SSH Key
         env:
