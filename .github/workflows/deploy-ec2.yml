@@ -1,0 +1,69 @@
+name: Deploy Life Journey to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-life-journey-ec2
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Sync & Restart on AWS EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write .env file
+        if: ${{ secrets.ENV_FILE != '' }}
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: |
+          printf "%s\n" "$ENV_FILE" > .env
+
+      - name: Configure SSH Key
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s\n" "$EC2_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Sync Life Journey to AWS EC2
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" "mkdir -p /home/admin/life_journey"
+          rsync -az --delete \
+            --exclude=".git" \
+            --exclude="scratch" \
+            --exclude=".DS_Store" \
+            --exclude="*.orig" \
+            --exclude="*.patch" \
+            --exclude=".env" \
+            -e "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no" \
+            ./ "$EC2_USER@$EC2_HOST:/home/admin/life_journey/"
+          if [ -f .env ]; then
+            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no .env "$EC2_USER@$EC2_HOST:/home/admin/life_journey/.env"
+          fi
+
+      - name: Restart PM2 Service on EC2
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" "
+            export PATH=\$PATH:/usr/local/bin:~/.nvm/versions/node/\$(ls ~/.nvm/versions/node 2>/dev/null | tail -n 1)/bin
+            cd /home/admin/life_journey
+            PORT=8082 NODE_ENV=production pm2 describe life_journey >/dev/null 2>&1 \
+              && PORT=8082 NODE_ENV=production pm2 restart life_journey --update-env \
+              || PORT=8082 NODE_ENV=production pm2 start server.js --name life_journey
+            pm2 save
+          "

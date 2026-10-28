@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const PORT = 8080;
+const PORT = Number(process.env.PORT) || 8082;
 
 // Robust crash protection process listeners
 process.on('uncaughtException', (err) => {
