@@ -110,9 +110,9 @@ function proxyOpenAI(apiKey, clientPayload, clientRes) {
 function proxyGemini(apiKey, clientPayload, clientRes) {
   return new Promise((resolve, reject) => {
     try {
-      let model = clientPayload.model || 'gemini-2.5-flash';
+      let model = clientPayload.model || 'gemini-3-flash-preview';
       if (!model.startsWith('gemini-')) {
-        model = 'gemini-2.5-flash';
+        model = 'gemini-3-flash-preview';
       }
 
       // Extract prompt and images from OpenAI-style payload

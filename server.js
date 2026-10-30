@@ -234,9 +234,9 @@ function proxyOpenAI(apiKey, clientPayload, clientRes) {
 
 function proxyGemini(apiKey, clientPayload, clientRes) {
   try {
-    let model = clientPayload.model || 'gemini-2.5-flash';
+    let model = clientPayload.model || 'gemini-3-flash-preview';
     if (!model.startsWith('gemini-')) {
-      model = 'gemini-2.5-flash'; // Force fallback to gemini-2.5-flash if an OpenAI model is passed to Gemini
+      model = 'gemini-3-flash-preview'; // Force fallback to gemini-3-flash-preview if an OpenAI model is passed to Gemini
     }
 
     // 1. Extract prompt and images from OpenAI-style payload
