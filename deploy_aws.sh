@@ -2,7 +2,7 @@
 set -euo pipefail
 
 EC2_USER="admin"
-EC2_HOST="18.221.114.95"
+EC2_HOST="56.69.211.171"
 SSH_KEY="/Users/marcus/Documents/cronserver.pem"
 REMOTE_DIR="/home/admin/life_journey"
 

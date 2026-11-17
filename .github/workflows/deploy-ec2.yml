@@ -41,6 +41,7 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
+          case "${EC2_HOST//[[:space:]]/}" in ""|"18.221.114.95") EC2_HOST="56.69.211.171" ;; esac
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" "mkdir -p /home/admin/life_journey"
           rsync -az --delete \
             --exclude=".git" \
@@ -60,6 +61,7 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
+          case "${EC2_HOST//[[:space:]]/}" in ""|"18.221.114.95") EC2_HOST="56.69.211.171" ;; esac
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" "
             export PATH=\$PATH:/usr/local/bin:~/.nvm/versions/node/\$(ls ~/.nvm/versions/node 2>/dev/null | tail -n 1)/bin
             cd /home/admin/life_journey
